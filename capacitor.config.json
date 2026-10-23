@@ -1,0 +1,19 @@
+{
+  "appId": "pt.bbtecnodev.mostrador",
+  "appName": "Mostrador OBD",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#0A0F14",
+    "adjustMarginsForEdgeToEdge": "auto"
+  },
+  "plugins": {
+    "BluetoothLe": {
+      "displayStrings": {
+        "scanning": "A procurar aparelhos…",
+        "cancel": "Cancelar",
+        "availableDevices": "Aparelhos encontrados",
+        "noDeviceFound": "Nenhum aparelho encontrado"
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+node_modules/
+android/
+notas.md
+*.apk
+*.jks
+*-chave-base64.txt
