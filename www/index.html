@@ -18,12 +18,12 @@
    Cockpit digital (preto profundo, arcos âmbar com brilho), Clássico (mostradores creme com aro cromado,
    ponteiro vermelho) e HUD de corrida (verde-ciano, linhas finas, barras em segmentos). */
 :root, [data-estilo="cockpit"] {
-  --bg: #050709; --chrome: #080B0F; --face: #0D1218; --face-2: #151C25; --ink: #ECF3F8; --muted: #7F8D9B;
-  --line: #1D2732; --tick: #AEBBC7; --accent: #FF8A1F; --accent-2: #38C9FF; --accent-ink: #1A0C00;
+  --bg: #08090B; --chrome: #0C0E11; --face: #121519; --face-2: #1A1E24; --ink: #EEF2F5; --muted: #858F99;
+  --line: #242A31; --tick: #AEBBC7; --accent: #FF8A1F; --accent-2: #38C9FF; --accent-ink: #1A0C00;
   --accent-soft: rgba(255, 138, 31, .14); --ok: #3DDC97; --ok-soft: rgba(61, 220, 151, .13);
   --warn: #FFC24B; --warn-soft: rgba(255, 194, 75, .14); --crit: #FF4D4D; --crit-ink: #1F0303; --crit-soft: rgba(255, 77, 77, .14);
   --shadow: 0 1px 0 rgba(255, 255, 255, .03) inset, 0 14px 30px -20px rgba(0, 0, 0, .95);
-  --tile-bg: radial-gradient(130% 95% at 50% 0%, #131B25 0%, #0B1016 68%);
+  --tile-bg: radial-gradient(130% 95% at 50% 0%, #171B21 0%, #0F1216 68%);
   --glow: drop-shadow(0 0 5px rgba(255, 138, 31, .6));
   --radius: 16px; --radius-s: 10px;
   --dial-face: transparent; --dial-ink: var(--tick); --bezel-1: #3A4552; --bezel-2: #10161D;
@@ -35,12 +35,12 @@
   color-scheme: dark;
 }
 [data-estilo="classico"] {
-  --bg: #120F0C; --chrome: #19140F; --face: #211A14; --face-2: #2B231B; --ink: #F3EADB; --muted: #A99A85;
-  --line: #3A3027; --tick: #1B1611; --accent: #D7262E; --accent-2: #E2B45C; --accent-ink: #FFFFFF;
+  --bg: #0E0F11; --chrome: #131417; --face: #1A1B1F; --face-2: #24262B; --ink: #F2EEE6; --muted: #9C9A95;
+  --line: #2E3036; --tick: #1B1611; --accent: #D7262E; --accent-2: #E2B45C; --accent-ink: #FFFFFF;
   --accent-soft: rgba(215, 38, 46, .16); --ok: #7FC48E; --ok-soft: rgba(127, 196, 142, .14);
   --warn: #E8B44F; --warn-soft: rgba(232, 180, 79, .15); --crit: #F0545B; --crit-ink: #200304; --crit-soft: rgba(240, 84, 91, .15);
   --shadow: 0 1px 0 rgba(255, 240, 220, .05) inset, 0 16px 30px -20px rgba(0, 0, 0, .9);
-  --tile-bg: linear-gradient(180deg, #261E17 0%, #1C1611 100%);
+  --tile-bg: linear-gradient(180deg, #1D1E22 0%, #16171A 100%);
   --glow: none;
   --radius: 20px; --radius-s: 12px;
   --dial-face: #F1E9D8; --dial-ink: #1B1611; --bezel-1: #F7F7F5; --bezel-2: #6E6E6C;
@@ -52,15 +52,15 @@
   color-scheme: dark;
 }
 [data-estilo="hud"] {
-  --bg: #010403; --chrome: #020806; --face: #04110D; --face-2: #072019; --ink: #D8FFF3; --muted: #5C9384;
-  --line: #0F3329; --tick: #3FF2C9; --accent: #19F2C6; --accent-2: #A5FF3A; --accent-ink: #00140F;
+  --bg: #08090B; --chrome: #0C0E10; --face: #111417; --face-2: #191D21; --ink: #E2F7F2; --muted: #7C8C8A;
+  --line: #232A2E; --tick: #3FF2C9; --accent: #19F2C6; --accent-2: #A5FF3A; --accent-ink: #00140F;
   --accent-soft: rgba(25, 242, 198, .12); --ok: #A5FF3A; --ok-soft: rgba(165, 255, 58, .12);
   --warn: #FFD23B; --warn-soft: rgba(255, 210, 59, .13); --crit: #FF3B5C; --crit-ink: #1A0007; --crit-soft: rgba(255, 59, 92, .14);
   --shadow: none;
-  --tile-bg: linear-gradient(180deg, rgba(25, 242, 198, .045), rgba(25, 242, 198, 0) 40%), #030D0A;
+  --tile-bg: linear-gradient(180deg, rgba(25, 242, 198, .03), rgba(25, 242, 198, 0) 40%), #0F1215;
   --glow: drop-shadow(0 0 4px rgba(25, 242, 198, .7));
   --radius: 3px; --radius-s: 2px;
-  --dial-face: transparent; --dial-ink: var(--tick); --bezel-1: #0F3329; --bezel-2: #04110D;
+  --dial-face: transparent; --dial-ink: var(--tick); --bezel-1: #232A2E; --bezel-2: #111417;
   --font-ui: "Barlow", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-display: "B612 Mono", ui-monospace, Menlo, Consolas, monospace;
   --font-num: "B612 Mono", ui-monospace, Menlo, Consolas, monospace;
@@ -81,10 +81,10 @@ body {
   -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent;
 }
 :root[data-estilo="hud"] body {
-  background: repeating-linear-gradient(0deg, rgba(25, 242, 198, .025) 0 1px, transparent 1px 3px), var(--bg);
+  background: repeating-linear-gradient(0deg, rgba(255, 255, 255, .012) 0 1px, transparent 1px 3px), var(--bg);
 }
 :root[data-estilo="classico"] body {
-  background: radial-gradient(120% 70% at 50% -10%, #241C15 0%, var(--bg) 60%);
+  background: radial-gradient(120% 70% at 50% -10%, #1C1D21 0%, var(--bg) 60%);
 }
 h1, h2, h3, p { margin: 0; }
 h2, h3 { text-wrap: balance; }
@@ -128,7 +128,7 @@ button { cursor: pointer; }
 .pill[data-state="connecting"] .dot, .pill[data-state="lost"] .dot { animation: blink 1s steps(2, start) infinite; }
 @keyframes blink { to { visibility: hidden; } }
 
-.notice { background: var(--accent-soft); border-bottom: 1px solid var(--line); flex: none; }
+.notice { background: var(--face); border-bottom: 1px solid var(--line); box-shadow: inset 3px 0 0 var(--accent); flex: none; }
 .notice .band { padding-block: 10px; font-size: 13.5px; line-height: 1.4; }
 .notice strong { font-weight: 700; }
 
@@ -634,7 +634,7 @@ dialog::backdrop { background: rgba(0, 0, 0, .65); }
 body.carmode .toast { bottom: calc(36px + env(safe-area-inset-bottom, 0px)); }
 
 /* ---------- Atualizações ---------- */
-.updbar { background: var(--accent-soft); border-bottom: 1px solid var(--line); flex: none; }
+.updbar { background: var(--face); border-bottom: 1px solid var(--line); box-shadow: inset 3px 0 0 var(--accent); flex: none; }
 .updbar .band { display: flex; align-items: center; gap: 10px; padding-block: 8px; font-weight: 600; font-size: 14px; }
 .updbar #updBannerText { flex: 1; min-width: 0; }
 .icon-btn.small { width: 36px; height: 36px; }
@@ -2495,7 +2495,8 @@ const OBD = (() => {
       'Perfis por carro, escolhidos pelo VIN, e modo de demonstração',
       'Com a ignição desligada, a ligação fica «À espera do carro» e as leituras voltam sozinhas quando a ligas. Se a ligação cair, a app volta a ligar durante cerca de 2 minutos',
       'Segurança: a consola só aceita comandos de leitura e não deixa apagar erros com o motor a trabalhar',
-      'Versão e compilação sempre à vista no topo: toca nelas para ver o que mudou'
+      'Versão e compilação sempre à vista no topo: toca nelas para ver o que mudou',
+      'Cores de fundo mais equilibradas: os três estilos usam o mesmo fundo grafite e só os mostradores mudam de cor'
     ]}
   ];
 
