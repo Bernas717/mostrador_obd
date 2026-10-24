@@ -394,6 +394,31 @@ body.carmode .car-page {
   font: 600 12px/1 var(--font-display); letter-spacing: var(--label-track); text-transform: uppercase; color: var(--muted); cursor: pointer;
 }
 .car-page { display: none; }
+.car-night { display: none; }
+body.carmode .car-night {
+  display: grid; place-items: center; position: fixed; z-index: 30;
+  bottom: calc(2px + env(safe-area-inset-bottom, 0px)); left: calc(10px + env(safe-area-inset-left, 0px));
+  width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line); background: var(--face); color: var(--muted);
+}
+body.carmode .car-night .icon { width: 16px; height: 16px; }
+body.carmode .car-night[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); }
+/* Modo noite: tudo em tons de vermelho escuro (a luz vermelha encandeia menos e não estraga a visão noturna) */
+body.carmode.noite #view-paineis > .view-band, body.carmode.noite .car-page {
+  filter: grayscale(1) sepia(1) saturate(5) hue-rotate(-38deg) brightness(.62) contrast(1.15);
+}
+body.carmode.noite { background: #000; }
+/* Clássico à noite: mostrador escuro com marcas claras, como um quadrante iluminado (o creme encandeava) */
+body.carmode.noite .k-face { fill: #15120F; }
+body.carmode.noite .k-bezel { fill: #3A3734; }
+body.carmode.noite .k-bezel-in { fill: #050505; }
+body.carmode.noite .k-major, body.carmode.noite .k-minor { stroke: #D8CFC2; }
+body.carmode.noite .k-label { fill: #D8CFC2; }
+body.carmode.noite .k-scale { fill: #8F8576; }
+body.carmode.noite .k-win { fill: #000; }
+body.carmode.noite .k-hub { fill: #4A4642; }
+body.carmode.noite .toast { background: #3A0A06; color: #FF9A8A; }
+#brilhoRow input[type=range] { width: 100%; accent-color: var(--accent); }
+
 @media (orientation: landscape) and (min-width: 700px) {
   body.carmode .grid { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
 }
@@ -738,6 +763,7 @@ body.carmode .toast { bottom: calc(36px + env(safe-area-inset-bottom, 0px)); }
   <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 12h3M11 12h9M4 17h11M19 17h1"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="17" r="2"/></symbol>
   <symbol id="i-car" viewBox="0 0 24 24"><path d="M5 16V12l2-5h10l2 5v4M3.5 12h17M5 16h14v2.5H5zM7.5 14.2h.01M16.5 14.2h.01"/></symbol>
   <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10z"/></symbol>
   <symbol id="i-full" viewBox="0 0 24 24"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></symbol>
   <symbol id="i-left"viewBox="0 0 24 24"><path d="M14.5 6l-6 6 6 6"/></symbol>
   <symbol id="i-right" viewBox="0 0 24 24"><path d="M9.5 6l6 6-6 6"/></symbol>
@@ -811,6 +837,7 @@ body.carmode .toast { bottom: calc(36px + env(safe-area-inset-bottom, 0px)); }
         <div class="page-dots" id="pageDots" aria-hidden="true"></div>
       </div>
       <button class="car-exit" id="btnCarExit" type="button" aria-label="Sair do modo carro"><svg class="icon"><use href="#i-x"/></svg></button>
+      <button class="car-night" id="btnCarNight" type="button" aria-label="Modo noite" aria-pressed="false"><svg class="icon"><use href="#i-moon"/></svg></button>
       <div class="car-page" id="carPage"></div>
     </section>
 
@@ -1048,6 +1075,15 @@ body.carmode .toast { bottom: calc(36px + env(safe-area-inset-bottom, 0px)); }
               <option value="carro">Painéis em modo carro (ecrã inteiro)</option>
             </select>
             <span class="hint">Para o tablet no carro, escolhe o modo carro: ao ligar, os mostradores enchem o ecrã.</span></div>
+          <div class="field"><label for="oNoite">Modo noite no modo carro</label>
+            <select id="oNoite">
+              <option value="auto">Automático (do pôr ao nascer do sol)</option>
+              <option value="on">Sempre</option>
+              <option value="off">Nunca</option>
+            </select>
+            <span class="hint" id="noiteHint">Escurece o ecrã e passa as cores para vermelho, para não encandear. No modo carro, o botão da lua liga e desliga à mão.</span></div>
+          <div class="field" id="brilhoRow"><label for="oBrilho">Brilho do ecrã à noite: <b id="brilhoTxt">30 %</b></label>
+            <input type="range" id="oBrilho" min="5" max="100" step="5" value="30"></div>
         </div>
 
         <h2 class="sec-h">Avisos</h2>
@@ -1128,6 +1164,22 @@ body.carmode .toast { bottom: calc(36px + env(safe-area-inset-bottom, 0px)); }
               <button class="btn ghost small" id="btnResetNo" type="button">Cancelar</button>
             </div>
           </div>
+        </div>
+
+        <h2 class="sec-h">Copiar para outro aparelho</h2>
+        <div class="card" id="copiaCard">
+          <p class="hint">Leva os perfis, as páginas dos painéis, os contadores do Início e as opções para o tablet (ou para outro telemóvel), sem montares tudo outra vez.</p>
+          <label class="check"><input type="checkbox" id="cpViagens"> Incluir as viagens e os resultados dos testes</label>
+          <div class="actions">
+            <button class="btn small primary" id="btnExport" type="button">Exportar ficheiro</button>
+            <button class="btn small" id="btnImport" type="button">Importar ficheiro</button>
+          </div>
+          <div class="actions">
+            <button class="btn small ghost" id="btnExportTxt" type="button">Copiar como texto</button>
+            <button class="btn small ghost" id="btnImportTxt" type="button">Colar texto</button>
+          </div>
+          <input type="file" id="importFile" hidden>
+          <p class="hint">No outro aparelho, abre o ficheiro com Importar ficheiro (ou cola o texto). O adaptador guardado não vai: da primeira vez, o tablet escolhe o V011 na lista.</p>
         </div>
 
         <h2 class="sec-h">Avançado</h2>
@@ -2676,7 +2728,9 @@ const OBD = (() => {
       'Teste de mistura (Testes): mede as correções de combustível ao ralenti e a 2500 rpm e diz se é fuga de ar, MAF, falta ou excesso de combustível',
       'Sondas lambda (Testes): gráfico da sonda antes e depois do catalisador e avaliação do catalisador. As sondas também podem ir para os painéis',
       'Verificação de carro usado (Avarias): há quanto tempo os erros foram apagados, monitores, luz do motor, km com a luz acesa, VIN e software da centralina. Entra no relatório',
-      'Avisos: bip e voz quando um mostrador passa o limite, e vigia de avarias que lê os erros de minuto a minuto e avisa logo que aparece um novo'
+      'Avisos: bip e voz quando um mostrador passa o limite, e vigia de avarias que lê os erros de minuto a minuto e avisa logo que aparece um novo',
+      'Copiar para outro aparelho (Definições): exporta os perfis, as páginas e as opções num ficheiro ou em texto e importa-os no tablet, a substituir ou a juntar',
+      'Modo noite no modo carro: baixa o brilho do ecrã e passa as cores para vermelho. Automático do pôr ao nascer do sol, sempre, ou à mão com o botão da lua'
     ]}
   ];
 
@@ -2740,6 +2794,63 @@ const OBD = (() => {
     viagem: { L: 0, km: 0, s: 0 }, viagens: [], testes: []
   });
 
+  // Limpa um perfil (guardado ou importado de outro aparelho): só passa o que a app conhece, com tipos certos
+  const num = (v, d) => (typeof v === 'number' && isFinite(v) ? v : d);
+  function cleanTile(t) {
+    if (!t || typeof t !== 'object' || !S[t.id]) return null;
+    const o = { id: t.id };
+    if (['dial', 'num', 'graf'].includes(t.style)) o.style = t.style;
+    if (t.size === 'wide' || t.size === 'big') o.size = t.size;
+    for (const k of ['min', 'max', 'hi', 'lo']) if (t[k] === null || (typeof t[k] === 'number' && isFinite(t[k]))) o[k] = t[k];
+    return o;
+  }
+  const PERF_TIPOS = ['0-100', '60-100', '100-0', '0-400'];
+  function cleanProfile(p) {
+    if (!p || typeof p !== 'object') return null;
+    const n = newProfile(String(p.nome || 'Carro').trim().slice(0, 40) || 'Carro');
+    if (typeof p.id === 'string' && /^[\w-]{1,40}$/.test(p.id)) n.id = p.id;
+    n.comb = ['auto', 'gasolina', 'gasoleo', 'gpl'].includes(p.comb) ? p.comb : 'auto';
+    for (const [k, lo, hi] of [['cil', 0.5, 8], ['ve', 40, 120], ['fator', 0.5, 2], ['afrDiesel', 14, 60]]) if (typeof p[k] === 'number' && p[k] >= lo && p[k] <= hi) n[k] = p[k];
+    n.preco = typeof p.preco === 'number' && p.preco >= 0 && p.preco <= 10 ? p.preco : null;
+    n.vin = typeof p.vin === 'string' && /^[A-HJ-NPR-Z0-9]{17}$/.test(p.vin) ? p.vin : '';
+    // Versões antigas tinham um só painel: passa a ser a página «Principal», com as páginas novas a seguir
+    const pages = Array.isArray(p.paginas) && p.paginas.length ? p.paginas
+      : Array.isArray(p.layout) && p.layout.length ? [{ nome: 'Principal', layout: p.layout }, ...DEFAULT_PAGES().slice(1)] : null;
+    if (pages) {
+      n.paginas = pages.filter(pg => pg && Array.isArray(pg.layout)).slice(0, MAX_PAGES).map(pg => ({
+        id: typeof pg.id === 'string' && /^[\w-]{1,40}$/.test(pg.id) ? pg.id : newId(),
+        nome: String(pg.nome || 'Página').trim().slice(0, 24) || 'Página',
+        layout: pg.layout.map(cleanTile).filter(Boolean).slice(0, 40)
+      }));
+      if (!n.paginas.length) n.paginas = DEFAULT_PAGES();
+    }
+    n.pagina = Number.isInteger(p.pagina) && p.pagina >= 0 && p.pagina < n.paginas.length ? p.pagina : 0;
+    if (Array.isArray(p.inicio) && p.inicio.length === 4 && p.inicio.every(id => S[id] && !S[id].special)) n.inicio = p.inicio.slice();
+    const v = p.viagem || {};
+    n.viagem = { L: num(v.L, 0), km: num(v.km, 0), s: num(v.s, 0) };
+    n.viagens = (Array.isArray(p.viagens) ? p.viagens : []).filter(r => r && typeof r.inicio === 'number').slice(0, 60).map(r => ({
+      inicio: r.inicio, fim: num(r.fim, r.inicio), km: num(r.km, 0), L: num(r.L, 0), s: num(r.s, 0), vmax: num(r.vmax, 0),
+      acel: num(r.acel, 0), trav: num(r.trav, 0), semConsumo: !!r.semConsumo }));
+    n.testes = (Array.isArray(p.testes) ? p.testes : []).filter(r => r && PERF_TIPOS.includes(r.tipo) && typeof r.tempo === 'number').slice(0, 40).map(r => ({
+      tipo: r.tipo, nome: String(r.nome || r.tipo).slice(0, 30), tempo: r.tempo, dist: num(r.dist, 0), vfim: num(r.vfim, 0), quando: num(r.quando, Date.now()) }));
+    return n;
+  }
+  const OPT_DEFAULTS = { uuidExtra: '', pausaMs: 0, ecraLigado: true, escrita: 'auto', estilo: 'cockpit', abrir: 'inicio', somAlerta: true, voz: false, vigia: true, noite: 'auto', brilhoNoite: 30 };
+  // Opções que fazem sentido levar para outro aparelho (o adaptador guardado e as atualizações ficam em cada um)
+  const OPT_COPIA = { estilo: ['cockpit', 'classico', 'hud'], abrir: ['inicio', 'paineis', 'carro'], escrita: ['auto', 'resp', 'noresp'], noite: ['auto', 'on', 'off'],
+    ecraLigado: 'bool', somAlerta: 'bool', voz: 'bool', vigia: 'bool', pausaMs: [0, 500], brilhoNoite: [5, 100] };
+  function cleanOpts(o) {
+    const out = {};
+    if (!o || typeof o !== 'object') return out;
+    for (const [k, rule] of Object.entries(OPT_COPIA)) {
+      const v = o[k];
+      if (rule === 'bool') { if (typeof v === 'boolean') out[k] = v; }
+      else if (typeof rule[0] === 'number') { if (typeof v === 'number' && v >= rule[0] && v <= rule[1]) out[k] = Math.round(v); }
+      else if (rule.includes(v)) out[k] = v;
+    }
+    return out;
+  }
+
   function loadStore() {
     let s = null;
     try { s = JSON.parse(localStorage.getItem(KEY)); } catch (e) { s = null; }
@@ -2747,27 +2858,9 @@ const OBD = (() => {
       const p = newProfile('O meu carro');
       s = { v: 1, perfis: [p], ativo: p.id };
     }
-    s.opts = Object.assign({ uuidExtra: '', pausaMs: 0, ecraLigado: true, escrita: 'auto', estilo: 'cockpit', abrir: 'inicio', somAlerta: true, voz: false, vigia: true }, s.opts || {});
-    for (const p of s.perfis) {
-      // Versões antigas tinham um só painel: passa a ser a página «Principal», com as páginas novas a seguir
-      if (!Array.isArray(p.paginas) || !p.paginas.length) {
-        const pages = DEFAULT_PAGES();
-        p.paginas = Array.isArray(p.layout) && p.layout.length ? [{ id: newId(), nome: 'Principal', layout: p.layout }, ...pages.slice(1)] : pages;
-      }
-      delete p.layout;
-      p.paginas = p.paginas.filter(pg => pg && Array.isArray(pg.layout)).slice(0, MAX_PAGES);
-      if (!p.paginas.length) p.paginas = DEFAULT_PAGES();
-      for (const pg of p.paginas) {
-        pg.id = pg.id || newId();
-        pg.nome = String(pg.nome || 'Página').slice(0, 24);
-        pg.layout = pg.layout.filter(t => t && S[t.id]);
-      }
-      if (!(p.pagina >= 0 && p.pagina < p.paginas.length)) p.pagina = 0;
-      if (!Array.isArray(p.inicio) || p.inicio.length !== 4 || !p.inicio.every(id => S[id] && !S[id].special)) p.inicio = HOME_DEFAULT.slice();
-      p.viagem = Object.assign({ L: 0, km: 0, s: 0 }, p.viagem || {});
-      if (!Array.isArray(p.viagens)) p.viagens = [];
-      if (!Array.isArray(p.testes)) p.testes = [];
-    }
+    s.opts = Object.assign({}, OPT_DEFAULTS, s.opts || {});
+    s.perfis = s.perfis.map(cleanProfile).filter(Boolean);
+    if (!s.perfis.length) s.perfis = [newProfile('O meu carro')];
     if (!s.perfis.some(p => p.id === s.ativo)) s.ativo = s.perfis[0].id;
     return s;
   }
@@ -3739,7 +3832,7 @@ ${opt.home ? '' : editBar()}`;
     checkAlarms();
     vigiaTick();
     if (st.grav) { if (st.view === 'viagens') renderGrav(); }
-    if (st.carMode) { const cl = carLabel(); if ($('#carPage').textContent !== cl) $('#carPage').textContent = cl; }
+    if (st.carMode) { const cl = carLabel(); if ($('#carPage').textContent !== cl) $('#carPage').textContent = cl; applyNight(); }
     if (st.view === 'definicoes') { renderAdapterLive(); renderConsole(); }
     if (st.view === 'viagens' && st.rec) renderViagens();
   }
@@ -3890,6 +3983,8 @@ ${opt.home ? '' : editBar()}`;
     if (on && st.view !== 'paineis') showView('paineis');
     if (on && st.editing) setEditing(false);
     document.body.classList.toggle('carmode', on);
+    if (!on) nightManual = null;
+    applyNight();
     const E = plug('Ecra');
     if (NATIVE && E) { try { await E.ecraInteiro({ ligado: on }); } catch (e) { /* as barras ficam */ } }
     else if (document.fullscreenEnabled) {
@@ -5325,6 +5420,7 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
     $('#profileName').textContent = p.nome;
     $('#oAbrir').value = store.opts.abrir || 'inicio';
     renderAvisos();
+    renderNoite();
     renderStylePick();
   }
 
@@ -5448,6 +5544,122 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
   }
   $('#defTabs').addEventListener('click', e => { const b = e.target.closest('[data-sub]'); if (b) showSub(b.dataset.sub); });
   const openSettings = sub => { showView('definicoes'); showSub(sub); };
+
+  /* ---------- Modo noite (no modo carro) ---------- */
+  // Nascer e pôr do sol (fórmulas do SunCalc), para Portugal continental
+  function sunTimes(date, lat, lng) {
+    const rad = Math.PI / 180, dayMs = 864e5, J1970 = 2440588, J2000 = 2451545, J0 = 0.0009;
+    const d = date.valueOf() / dayMs - 0.5 + J1970 - J2000, lw = rad * -lng, phi = rad * lat;
+    const n = Math.round(d - J0 - lw / (2 * Math.PI)), ds = J0 + lw / (2 * Math.PI) + n;
+    const M = rad * (357.5291 + 0.98560028 * ds);
+    const L = M + rad * (1.9148 * Math.sin(M) + 0.02 * Math.sin(2 * M) + 0.0003 * Math.sin(3 * M)) + rad * 102.9372 + Math.PI;
+    const dec = Math.asin(Math.sin(L) * Math.sin(rad * 23.4397));
+    const Jnoon = J2000 + ds + 0.0053 * Math.sin(M) - 0.0069 * Math.sin(2 * L);
+    const w = Math.acos((Math.sin(rad * -0.833) - Math.sin(phi) * Math.sin(dec)) / (Math.cos(phi) * Math.cos(dec)));
+    const Jset = J2000 + J0 + (w + lw) / (2 * Math.PI) + n + 0.0053 * Math.sin(M) - 0.0069 * Math.sin(2 * L);
+    const fromJ = j => new Date((j + 0.5 - J1970) * dayMs);
+    return { rise: fromJ(Jnoon - (Jset - Jnoon)), set: fromJ(Jset) };
+  }
+  const SOL = { lat: 39.5, lng: -8.0 };
+  function escuroLa(now = new Date()) {
+    const { rise, set } = sunTimes(now, SOL.lat, SOL.lng), m = 25 * 60000;   // crepúsculo: 25 min
+    return now < new Date(rise.valueOf() - m) || now > new Date(set.valueOf() + m);
+  }
+  let nightManual = null, nightOn = null;
+  const isNight = () => (nightManual != null ? nightManual : store.opts.noite === 'on' ? true : store.opts.noite === 'off' ? false : escuroLa());
+  async function applyNight(force) {
+    const on = st.carMode && isNight();
+    document.body.classList.toggle('noite', on);
+    $('#btnCarNight').setAttribute('aria-pressed', String(on));
+    if (on === nightOn && !force) return;
+    nightOn = on;
+    const E = plug('Ecra');
+    if (NATIVE && E && E.brilho) { try { await E.brilho({ nivel: on ? (store.opts.brilhoNoite || 30) / 100 : -1 }); } catch (e) { /* sem controlo do brilho */ } }
+  }
+  $('#btnCarNight').addEventListener('click', () => { nightManual = !isNight(); applyNight(); });
+  $('#oNoite').addEventListener('change', e => { store.opts.noite = e.target.value; save(); nightManual = null; applyNight(); renderNoite(); });
+  $('#oBrilho').addEventListener('input', e => { store.opts.brilhoNoite = +e.target.value; $('#brilhoTxt').textContent = e.target.value + ' %'; });
+  $('#oBrilho').addEventListener('change', () => { save(); applyNight(true); });
+  function renderNoite() {
+    $('#oNoite').value = store.opts.noite || 'auto';
+    $('#oBrilho').value = store.opts.brilhoNoite || 30;
+    $('#brilhoTxt').textContent = (store.opts.brilhoNoite || 30) + ' %';
+    $('#brilhoRow').hidden = !(NATIVE && plug('Ecra'));
+    const { rise, set } = sunTimes(new Date(), SOL.lat, SOL.lng);
+    $('#noiteHint').textContent = 'Escurece o ecrã e passa as cores para vermelho, para não encandear. ' +
+      (store.opts.noite === 'auto' ? `Hoje liga às ${fmtHora(set.valueOf() + 25 * 60000)} e desliga às ${fmtHora(rise.valueOf() - 25 * 60000)}. ` : '') +
+      'No modo carro, o botão da lua liga e desliga à mão.';
+  }
+
+  /* ---------- Copiar as definições para outro aparelho ---------- */
+  function exportData() {
+    const comViagens = $('#cpViagens').checked;
+    const perfis = store.perfis.map(p => {
+      const c = JSON.parse(JSON.stringify(p));
+      if (!comViagens) { c.viagens = []; c.testes = []; c.viagem = { L: 0, km: 0, s: 0 }; }
+      return c;
+    });
+    return { app: 'mostrador-obd', formato: 1, versao: APP_VER, quando: new Date().toISOString(), ativo: store.ativo, perfis, opts: cleanOpts(store.opts) };
+  }
+  const exportName = () => `mostrador-definicoes-${new Date().toISOString().slice(0, 10)}.json`;
+  $('#btnExport').addEventListener('click', async () => {
+    const txt = JSON.stringify(exportData(), null, 1), E = plug('Extras');
+    if (NATIVE && E && E.partilharFicheiro) {
+      try { await E.partilharFicheiro({ nome: exportName(), texto: txt, tipo: 'application/json' }); } catch (e) { toast('Não consegui partilhar: ' + nativeMsg(e).slice(0, 60)); }
+      return;
+    }
+    if (NATIVE) { toast('Esta versão da app ainda não partilha ficheiros. Usa Copiar como texto.'); return; }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([txt], { type: 'application/json' }));
+    a.download = exportName(); document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  });
+  $('#btnExportTxt').addEventListener('click', () => copyText(JSON.stringify(exportData()), 'Definições copiadas. Cola-as no outro aparelho, em Colar texto.'));
+  $('#btnImport').addEventListener('click', () => { const f = $('#importFile'); f.value = ''; f.click(); });
+  $('#importFile').addEventListener('change', async e => {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    if (f.size > 3e6) { toast('Ficheiro grande demais para ser uma cópia das definições.'); return; }
+    try { importText(await f.text()); } catch (x) { toast('Não consegui ler o ficheiro.'); }
+  });
+  $('#btnImportTxt').addEventListener('click', () => {
+    openDlg(`<form method="dialog" id="pasteForm"><div class="dlg-head"><h2 id="dlgTitle">Colar definições</h2></div>
+<div class="dlg-body"><p class="hint">Cola aqui o texto que copiaste no outro aparelho com Copiar como texto.</p>
+<textarea id="pasteTxt" rows="7" spellcheck="false" autocomplete="off" style="width:100%;font:12px var(--font-mono);background:var(--face-2);color:var(--ink);border:1px solid var(--line);border-radius:var(--radius-s);padding:10px"></textarea></div>
+<div class="dlg-foot"><span class="spacer"></span><button type="button" class="btn ghost" data-act="cancel">Cancelar</button><button type="submit" class="btn primary">Continuar</button></div></form>`);
+    $('#pasteForm [data-act="cancel"]').addEventListener('click', () => dlg.close());
+    $('#pasteForm').addEventListener('submit', ev => { ev.preventDefault(); const t = $('#pasteTxt').value; if (t.length > 3e6) { toast('Texto grande demais.'); return; } importText(t); });
+  });
+  function importText(txt) {
+    let d = null;
+    try { d = JSON.parse(String(txt).trim()); } catch (e) { d = null; }
+    if (!d || d.app !== 'mostrador-obd' || !Array.isArray(d.perfis)) { toast('Isto não é uma cópia das definições do Mostrador OBD.', 5000); return; }
+    const perfis = d.perfis.slice(0, 20).map(cleanProfile).filter(Boolean);
+    if (!perfis.length) { toast('A cópia não tem perfis.', 5000); return; }
+    const opts = cleanOpts(d.opts);
+    const nomes = perfis.map(p => `«${p.nome}» (${p.paginas.length} ${p.paginas.length === 1 ? 'página' : 'páginas'})`).join(', ');
+    openDlg(`<div class="dlg-head"><h2 id="dlgTitle">Importar definições</h2></div>
+<div class="dlg-body"><p>Cópia de ${esc(d.quando ? fmtData(Date.parse(d.quando)) : 'data desconhecida')}${d.versao ? ' · app v' + esc(String(d.versao).slice(0, 8)) : ''}.</p>
+<p>${perfis.length} ${perfis.length === 1 ? 'perfil' : 'perfis'}: ${esc(nomes)}.</p>
+<p class="hint"><b>Substituir</b> troca os perfis deste aparelho pelos da cópia. <b>Juntar</b> acrescenta-os: os que já existem (o mesmo perfil copiado antes) são atualizados e os outros ficam. Nos dois casos, o estilo e as opções passam a ser os da cópia.</p></div>
+<div class="dlg-foot"><button type="button" class="btn ghost" data-act="cancel">Cancelar</button><span class="spacer"></span><button type="button" class="btn" data-act="juntar">Juntar</button><button type="button" class="btn primary" data-act="subst">Substituir</button></div>`);
+    dlg.querySelector('[data-act="cancel"]').addEventListener('click', () => dlg.close());
+    const go = modo => {
+      closeRec();
+      if (modo === 'subst') store.perfis = perfis;
+      else for (const p of perfis) { const i = store.perfis.findIndex(x => x.id === p.id); if (i >= 0) store.perfis[i] = p; else store.perfis.push(p); }
+      if (store.perfis.length > 20) store.perfis.length = 20;
+      store.ativo = perfis.some(p => p.id === d.ativo) ? d.ativo : perfis[0].id;
+      Object.assign(store.opts, opts);
+      save(); dlg.close();
+      document.documentElement.dataset.estilo = estilo();
+      $('#stylePick').dataset.cur = '';
+      refreshPollList(); renderAll(); resetTiles(false); renderNoite();
+      toast(`Definições importadas: ${perfis.length} ${perfis.length === 1 ? 'perfil' : 'perfis'}.`, 4000);
+    };
+    dlg.querySelector('[data-act="juntar"]').addEventListener('click', () => go('juntar'));
+    dlg.querySelector('[data-act="subst"]').addEventListener('click', () => go('subst'));
+  }
 
   /* ---------- Separadores e botões do topo ---------- */
   const VIEWS = ['inicio', 'paineis', 'diag', 'testes', 'viagens', 'definicoes'];

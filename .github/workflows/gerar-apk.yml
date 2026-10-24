@@ -110,6 +110,19 @@ jobs:
                   });
               }
 
+              // Brilho só desta app (para o modo noite); nível < 0 volta ao brilho do sistema
+              @PluginMethod
+              public void brilho(final PluginCall call) {
+                  final Double n = call.getDouble("nivel", -1.0);
+                  getActivity().runOnUiThread(() -> {
+                      Window w = getActivity().getWindow();
+                      WindowManager.LayoutParams lp = w.getAttributes();
+                      lp.screenBrightness = (n == null || n < 0) ? WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE : (float) Math.max(0.02, Math.min(1.0, n));
+                      w.setAttributes(lp);
+                      call.resolve();
+                  });
+              }
+
               @PluginMethod
               public void ecraInteiro(final PluginCall call) {
                   final boolean ligado = Boolean.TRUE.equals(call.getBoolean("ligado", Boolean.TRUE));
