@@ -402,39 +402,42 @@ body.carmode .car-night {
 }
 body.carmode .car-night .icon { width: 16px; height: 16px; }
 body.carmode .car-night[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); }
-/* Modo noite: âmbar quente e suave, como um quadrante de carro à noite. Quem escurece é o brilho do ecrã
-   (na app instalada); as cores mantêm contraste para se lerem bem, sem brilhos à volta dos números. */
+/* Modo noite ao estilo do Waze: azul-marinho escuro (não preto puro), textos em branco suave e destaques
+   em azul-claro. Sem brilhos; quem escurece é o brilho do ecrã (na app instalada). */
 body.carmode.noite {
-  --bg: #000; --chrome: #000; --face: #0E0B08; --face-2: #18130E; --line: #2B2118;
-  --ink: #EBCFB0; --muted: #A88A6C; --tick: #BE9E7E; --dial-ink: #D9BD9E;
-  --accent: #E39A4F; --accent-2: #C7A27C; --accent-ink: #160B02; --accent-soft: rgba(227, 154, 79, .12);
-  --ok: #B9B07A; --ok-soft: rgba(185, 176, 122, .12); --warn: #E3B05F; --warn-soft: rgba(227, 176, 95, .12);
-  --crit: #E8705A; --crit-soft: rgba(232, 112, 90, .14);
-  --tile-bg: #0B0907; --shadow: none; --glow: none;
-  background: #000;
+  --bg: #0E1823; --chrome: #0E1823; --face: #15212E; --face-2: #1C2A39; --line: #263749;
+  --ink: #E3EAF1; --muted: #8DA0B3; --tick: #A9BACB; --dial-ink: #D5DEE8;
+  --accent: #36C5F0; --accent-2: #8EDBF5; --accent-ink: #04141C; --accent-soft: rgba(54, 197, 240, .13);
+  --ok: #4CD3A5; --ok-soft: rgba(76, 211, 165, .13); --warn: #FFC857; --warn-soft: rgba(255, 200, 87, .13);
+  --crit: #FF6B6B; --crit-soft: rgba(255, 107, 107, .15);
+  --tile-bg: linear-gradient(180deg, #172433 0%, #132029 100%); --shadow: none; --glow: none;
+  background: var(--bg);
 }
 body.carmode.noite * { text-shadow: none !important; }
 body.carmode.noite .c-val, body.carmode.noite .tab .icon, body.carmode.noite .dial-hud .d-value { filter: none; }
 body.carmode.noite .n-fill, body.carmode.noite .page-dots i.on, body.carmode.noite .tile.alarm { box-shadow: none; }
+body.carmode.noite .tile { border-color: #223244; }
 body.carmode.noite .tile.alarm { border-color: var(--crit); }
-body.carmode.noite .h-seg { fill: #1A140F; }
-body.carmode.noite .h-seg.z { fill: rgba(232, 112, 90, .2); }
+body.carmode.noite .c-track { stroke: #22344A; }
+body.carmode.noite .h-seg { fill: #1E2F40; }
+body.carmode.noite .h-seg.z { fill: rgba(255, 107, 107, .22); }
 body.carmode.noite .h-seg.on { fill: var(--accent); }
 body.carmode.noite .h-seg.on.hi { fill: var(--accent-2); }
 body.carmode.noite .h-seg.on.z { fill: var(--crit); }
 body.carmode.noite .n-value, body.carmode.noite .dial-hud .d-value { color: var(--ink); fill: var(--ink); }
-/* Clássico à noite: mostrador escuro com marcas claras, como um quadrante iluminado (o creme encandeava) */
-body.carmode.noite .k-face { fill: #120E0A; }
-body.carmode.noite .k-bezel { fill: #2E2620; }
-body.carmode.noite .k-bezel-in { fill: #050403; }
+/* Clássico à noite: mostrador azul-marinho com marcas claras e ponteiro coral */
+body.carmode.noite .k-face { fill: #132131; }
+body.carmode.noite .k-bezel { fill: #2B3B4D; }
+body.carmode.noite .k-bezel-in { fill: #0A121B; }
 body.carmode.noite .k-major, body.carmode.noite .k-minor { stroke: var(--dial-ink); }
 body.carmode.noite .k-label { fill: var(--dial-ink); }
 body.carmode.noite .k-scale { fill: var(--muted); }
-body.carmode.noite .k-win { fill: #000; }
-body.carmode.noite .k-hub { fill: #3A3029; stroke: #000; }
-body.carmode.noite .k-needle { fill: #E8705A; filter: none; }
+body.carmode.noite .k-zone { stroke: var(--crit); }
+body.carmode.noite .k-win { fill: #0A121B; }
+body.carmode.noite .k-hub { fill: #33465A; stroke: #0A121B; }
+body.carmode.noite .k-needle { fill: #FF7A59; filter: none; }
 body.carmode.noite .dial-classico .d-value { fill: var(--ink); }
-body.carmode.noite .toast { background: #1C150F; color: var(--ink); border: 1px solid var(--line); }
+body.carmode.noite .toast { background: #1C2A39; color: var(--ink); border: 1px solid var(--line); }
 /* Troca suave entre dia e noite */
 body.carmode #view-paineis > .view-band { transition: opacity .45s ease; }
 body.carmode.a-trocar #view-paineis > .view-band { opacity: .08; }
@@ -1135,7 +1138,7 @@ body.carmode .toast { bottom: calc(36px + env(safe-area-inset-bottom, 0px)); }
               <option value="on">Sempre</option>
               <option value="off">Nunca</option>
             </select>
-            <span class="hint" id="noiteHint">Cores em âmbar suave e brilho do ecrã mais baixo, para não cansar a vista. No modo carro, o botão da lua liga e desliga à mão.</span></div>
+            <span class="hint" id="noiteHint">Cores azul-marinho como no Waze e brilho do ecrã mais baixo, para não cansar a vista. No modo carro, o botão da lua liga e desliga à mão.</span></div>
           <div class="field" id="brilhoRow"><span class="label">Brilho do ecrã no modo carro</span>
             <div class="bri"><span>Dia</span><input type="range" id="oBrilhoDia" min="5" max="100" step="5" value="80" aria-label="Brilho de dia"><b id="brilhoDiaTxt">auto</b></div>
             <label class="check"><input type="checkbox" id="oBrilhoDiaAuto"> De dia, usar o brilho do telemóvel (automático)</label>
@@ -2872,7 +2875,7 @@ const OBD = (() => {
       'Verificação de carro usado (Avarias): há quanto tempo os erros foram apagados, monitores, luz do motor, km com a luz acesa, VIN e software da centralina. Entra no relatório',
       'Avisos: bip e voz quando um mostrador passa o limite, e vigia de avarias que lê os erros de minuto a minuto e avisa logo que aparece um novo',
       'Copiar para outro aparelho (Definições): exporta os perfis, as páginas e as opções num ficheiro ou em texto e importa-os no tablet, a substituir ou a juntar',
-      'Modo noite no modo carro: cores em âmbar suave e legível, sem brilhos, e o brilho do ecrã desce aos poucos. Automático do pôr ao nascer do sol, sempre, ou à mão com o botão da lua',
+      'Modo noite no modo carro: cores azul-marinho ao estilo do Waze, suaves e legíveis, sem brilhos, e o brilho do ecrã desce aos poucos. Automático do pôr ao nascer do sol, sempre, ou à mão com o botão da lua',
       'Brilho do ecrã no modo carro, de dia e de noite: em Definições, Aparência, e no botão do sol do próprio modo carro',
       'Telemóvel e tablet ligados pelo GitHub (repositório privado teu): perfis, páginas, opções e histórico ficam iguais nos dois, sozinhos',
       'Histórico de cada carro (Avarias): cada diagnóstico e verificação de carro usado fica guardado com o relatório, para comparar antes e depois',
@@ -5903,7 +5906,7 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
     $('#brilhoHint').textContent = nat ? 'Também mudas no próprio modo carro, no botão do sol (canto inferior esquerdo).'
       : 'Só funciona na app instalada: no browser a página não pode mudar o brilho do ecrã.';
     const { rise, set } = sunTimes(new Date(), SOL.lat, SOL.lng);
-    $('#noiteHint').textContent = 'Cores em âmbar suave e brilho do ecrã mais baixo, para não cansar a vista. ' +
+    $('#noiteHint').textContent = 'Cores azul-marinho como no Waze e brilho do ecrã mais baixo, para não cansar a vista. ' +
       (store.opts.noite === 'auto' ? `Hoje liga às ${fmtHora(set.valueOf() + 25 * 60000)} e desliga às ${fmtHora(rise.valueOf() - 25 * 60000)}. ` : '') +
       'No modo carro, o botão da lua liga e desliga à mão.';
   }
