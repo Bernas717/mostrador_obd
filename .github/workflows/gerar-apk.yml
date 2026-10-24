@@ -77,6 +77,7 @@ jobs:
               public void onCreate(Bundle savedInstanceState) {
                   registerPlugin(InstaladorPlugin.class);
                   registerPlugin(EcraPlugin.class);
+                  registerPlugin(ExtrasPlugin.class);
                   super.onCreate(savedInstanceState);
               }
           }
@@ -227,9 +228,90 @@ jobs:
               }
           }
           JAVA
+          cat > "$PKG/ExtrasPlugin.java" <<'JAVA'
+          package pt.bbtecnodev.mostrador;
+
+          import android.content.ClipData;
+          import android.content.Intent;
+          import android.net.Uri;
+          import android.speech.tts.TextToSpeech;
+          import androidx.core.content.FileProvider;
+          import com.getcapacitor.JSObject;
+          import com.getcapacitor.Plugin;
+          import com.getcapacitor.PluginCall;
+          import com.getcapacitor.PluginMethod;
+          import com.getcapacitor.annotation.CapacitorPlugin;
+          import java.io.File;
+          import java.io.FileOutputStream;
+          import java.io.OutputStream;
+          import java.nio.charset.StandardCharsets;
+          import java.util.Locale;
+
+          // Avisos em voz alta (voz do Android) e partilha de ficheiros (gravações em CSV)
+          @CapacitorPlugin(name = "Extras")
+          public class ExtrasPlugin extends Plugin {
+              private TextToSpeech tts;
+              private boolean vozOk = false;
+
+              private void prepararVoz() {
+                  if (tts != null) return;
+                  tts = new TextToSpeech(getContext(), status -> {
+                      if (status != TextToSpeech.SUCCESS) return;
+                      int r = tts.setLanguage(new Locale("pt", "PT"));
+                      if (r == TextToSpeech.LANG_MISSING_DATA || r == TextToSpeech.LANG_NOT_SUPPORTED) r = tts.setLanguage(new Locale("pt"));
+                      vozOk = r != TextToSpeech.LANG_MISSING_DATA && r != TextToSpeech.LANG_NOT_SUPPORTED;
+                  });
+              }
+
+              @Override
+              public void load() { prepararVoz(); }
+
+              @PluginMethod
+              public void falar(PluginCall call) {
+                  String texto = call.getString("texto", "");
+                  if (!vozOk || texto == null || texto.isEmpty()) { call.reject("Sem voz"); return; }
+                  tts.speak(texto, TextToSpeech.QUEUE_FLUSH, null, "mostrador");
+                  call.resolve();
+              }
+
+              @PluginMethod
+              public void partilharFicheiro(PluginCall call) {
+                  String nome = call.getString("nome", "ficheiro.txt").replaceAll("[^A-Za-z0-9._-]", "_");
+                  String texto = call.getString("texto", "");
+                  String tipo = call.getString("tipo", "text/plain");
+                  try {
+                      File dir = new File(getContext().getCacheDir(), "partilhas");
+                      if (!dir.exists() && !dir.mkdirs()) throw new Exception("sem espaço na cache");
+                      File f = new File(dir, nome);
+                      try (OutputStream out = new FileOutputStream(f)) {
+                          if (tipo.contains("csv")) out.write(new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF});
+                          out.write(texto.getBytes(StandardCharsets.UTF_8));
+                      }
+                      Uri uri = FileProvider.getUriForFile(getContext(), getContext().getPackageName() + ".fileprovider", f);
+                      Intent i = new Intent(Intent.ACTION_SEND);
+                      i.setType(tipo);
+                      i.putExtra(Intent.EXTRA_STREAM, uri);
+                      i.putExtra(Intent.EXTRA_SUBJECT, nome);
+                      i.setClipData(ClipData.newRawUri(nome, uri));
+                      i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                      Intent ch = Intent.createChooser(i, "Partilhar " + nome);
+                      ch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                      getContext().startActivity(ch);
+                      call.resolve();
+                  } catch (Exception e) {
+                      call.reject(e.getMessage() != null ? e.getMessage() : e.toString());
+                  }
+              }
+
+              @Override
+              protected void handleOnDestroy() { if (tts != null) tts.shutdown(); }
+          }
+          JAVA
           MAN=android/app/src/main/AndroidManifest.xml
           grep -q REQUEST_INSTALL_PACKAGES "$MAN" || sed -i 's#<uses-permission android:name="android.permission.INTERNET" />#&\n    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />#' "$MAN"
           grep -q REQUEST_INSTALL_PACKAGES "$MAN" || { echo "::error::Não consegui adicionar a permissão ao AndroidManifest"; exit 1; }
+          grep -q TTS_SERVICE "$MAN" || sed -i 's#</manifest>#    <queries>\n        <intent>\n            <action android:name="android.intent.action.TTS_SERVICE" />\n        </intent>\n    </queries>\n</manifest>#' "$MAN"
+          grep -q TTS_SERVICE "$MAN" || { echo "::error::Não consegui declarar o serviço de voz no AndroidManifest"; exit 1; }
           grep -q 'android:authorities="${applicationId}.fileprovider"' "$MAN" || { echo "::error::FileProvider não encontrado no AndroidManifest"; cat "$MAN"; exit 1; }
           mkdir -p android/app/src/main/res/xml
           printf '%s\n' '<?xml version="1.0" encoding="utf-8"?>' '<paths xmlns:android="http://schemas.android.com/apk/res/android">' '    <external-path name="my_images" path="." />' '    <cache-path name="my_cache_images" path="." />' '</paths>' > android/app/src/main/res/xml/file_paths.xml

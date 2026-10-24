@@ -574,6 +574,51 @@ details.adv > .adv-body { display: grid; gap: 12px; padding-bottom: 14px; }
 .step-note { font-size: 13.5px; }
 .step-note:empty { display: none; }
 
+/* ---------- Testes de sondas e mistura, carro usado, gravações ---------- */
+.verdict { padding: 12px 14px; border-radius: var(--radius-s); background: var(--face-2); display: grid; gap: 6px; font-size: 14px; }
+.verdict:empty { display: none; }
+.verdict b { font: 700 15px/1.25 var(--font-display); letter-spacing: .03em; text-transform: uppercase; }
+.verdict.ok { background: var(--ok-soft); } .verdict.ok b { color: var(--ok); }
+.verdict.warn { background: var(--warn-soft); } .verdict.warn b { color: var(--warn); }
+.verdict.crit { background: var(--crit-soft); } .verdict.crit b { color: var(--crit); }
+.verdict ul { margin: 0; padding-left: 18px; display: grid; gap: 3px; }
+.verdict dl { margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 3px 12px; font-size: 13px; }
+.verdict dt { color: var(--muted); } .verdict dd { margin: 0; text-align: right; font-family: var(--font-mono); font-size: 12.5px; }
+.verdict .note { color: var(--muted); font-size: 13px; }
+.o2-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
+.o2-legend .lg::before { content: ""; display: inline-block; width: 14px; height: 3px; border-radius: 2px; margin-right: 6px; vertical-align: middle; background: var(--c); }
+.lg.a { --c: var(--accent); } .lg.b { --c: var(--accent-2); }
+.o2-canvas { display: block; width: 100%; height: 150px; border-radius: var(--radius-s); background: var(--face); border: 1px solid var(--line); }
+.checks { list-style: none; margin: 0; padding: 0; }
+.checks:empty { display: none; }
+.checks li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; padding: 10px 0; border-top: 1px solid var(--line); }
+.checks li:first-child { border-top: 0; padding-top: 2px; }
+.checks b { font-weight: 600; }
+.checks p { grid-column: 1 / -1; font-size: 13.5px; color: var(--muted); overflow-wrap: anywhere; }
+.vigia { color: var(--warn); font-weight: 600; }
+.grav-list { list-style: none; margin: 0; padding: 0; }
+.grav-list:empty { display: none; }
+.grav-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 10px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+.grav-list .g-t b { display: block; font-weight: 600; }
+.grav-list .g-t span { font-size: 12.5px; color: var(--muted); }
+.grav-list .actions { justify-content: flex-end; }
+.gv-canvas { display: block; width: 100%; height: 240px; touch-action: none; border-radius: var(--radius-s); background: var(--bg); border: 1px solid var(--line); }
+.gv-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.gv-chip { border: 1px solid var(--line); background: var(--face-2); color: var(--muted); border-radius: 999px; padding: 5px 10px; font: 600 12.5px/1.2 var(--font-ui); display: inline-flex; gap: 6px; align-items: center; }
+.gv-chip i { width: 10px; height: 10px; border-radius: 50%; background: var(--c); opacity: .35; }
+.gv-chip[aria-pressed="true"] { color: var(--ink); border-color: var(--c); }
+.gv-chip[aria-pressed="true"] i { opacity: 1; }
+.gv-vals { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; font-size: 13.5px; margin: 0; }
+.gv-vals dt { display: flex; align-items: center; gap: 6px; } .gv-vals dt i { width: 9px; height: 9px; border-radius: 50%; background: var(--c); flex: none; }
+.gv-vals dd { margin: 0; text-align: right; font-family: var(--font-mono); font-size: 12.5px; }
+.gv-vals dd.mm { grid-column: 1 / -1; text-align: left; color: var(--muted); font-size: 12px; padding: 0 0 6px 15px; border-bottom: 1px solid var(--line); }
+.gv-zoom { display: flex; align-items: center; gap: 8px; }
+.gv-zoom input[type=range] { flex: 1; accent-color: var(--accent); }
+.pick-list { display: grid; gap: 2px; }
+.pick-list label { display: flex; gap: 10px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); font-size: 14px; }
+.pick-list label small { color: var(--muted); margin-left: auto; font-size: 12px; }
+.pick-list input { width: 20px; height: 20px; accent-color: var(--accent); flex: none; }
+
 /* ---------- Viagens ---------- */
 .trip-sum, .trip { background: var(--tile-bg); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); }
 .trip-sum:empty { display: none; }
@@ -795,6 +840,7 @@ body.carmode .toast { bottom: calc(36px + env(safe-area-inset-bottom, 0px)); }
             <div class="card-head"><h2>Códigos de avaria</h2><span class="hint" id="dtcCount"></span></div>
             <ol class="dtc-list" id="dtcList"></ol>
             <p class="empty" id="dtcEmpty">Liga o adaptador e toca em Diagnóstico completo.</p>
+            <p class="hint vigia" id="vigiaText" hidden></p>
             <p class="hint">Os códigos que começam por P1, P3 ou U1 são do fabricante: a descrição exata depende da marca.</p>
           </div>
           <div class="cols">
@@ -818,6 +864,12 @@ body.carmode .toast { bottom: calc(36px + env(safe-area-inset-bottom, 0px)); }
             <h2>Testes da centralina</h2>
             <p class="hint" id="m6Hint">Resultados dos autotestes do motor (modo 06), com os limites que a centralina usa.</p>
             <div class="m6" id="m6List"></div>
+          </div>
+          <div class="card" id="usadoCard">
+            <div class="card-head"><h2>Verificação de carro usado</h2><span class="hint" id="usadoWhen"></span></div>
+            <p class="hint">Vê se os erros foram apagados há pouco (truque comum antes de vender), se o carro andou com a luz do motor acesa, o VIN e o software da centralina. Ignição ligada; o motor pode estar parado ou a trabalhar.</p>
+            <ul class="checks" id="usadoList"></ul>
+            <div class="actions"><button class="btn primary" id="btnUsado" type="button">Verificar</button></div>
           </div>
           <div class="card">
             <h2>Relatório</h2>
@@ -880,6 +932,32 @@ body.carmode .toast { bottom: calc(36px + env(safe-area-inset-bottom, 0px)); }
             </ol>
             <p class="hint">O V011 mede a tensão na ficha OBD com uma margem de cerca de 0,2 V. Para um veredicto final sobre a bateria, usa um testador de carga.</p>
           </div>
+          <div class="card" id="mixCard">
+            <h2>Teste de mistura</h2>
+            <p class="hint">Descobre fugas de ar, MAF sujo ou falta de combustível pelas correções que a centralina faz. Para motores a gasolina, com o motor quente (acima de 80 °C).</p>
+            <ol class="steps">
+              <li class="step">
+                <div class="step-head"><b>1. Ralenti</b><span class="chip" id="mixIdleChip">por medir</span></div>
+                <p class="hint">Motor ao ralenti, sem tocar no acelerador, com o ar condicionado e as luzes desligados.</p>
+                <div class="step-row"><span class="step-v" id="mixIdleV">—</span><button class="btn small" type="button" data-mix="idle">Medir</button></div>
+              </li>
+              <li class="step">
+                <div class="step-head"><b>2. A 2500 rpm</b><span class="chip" id="mixHighChip">por medir</span></div>
+                <p class="hint">Parado e em ponto morto, segura o acelerador a cerca de 2500 rpm até a app terminar (8 segundos).</p>
+                <div class="step-row"><span class="step-v" id="mixHighV">—</span><button class="btn small" type="button" data-mix="high">Medir</button></div>
+              </li>
+            </ol>
+            <div class="verdict" id="mixVerdict"></div>
+          </div>
+          <div class="card" id="o2Card">
+            <h2>Sondas lambda e catalisador</h2>
+            <p class="hint">Motor quente. Mantém cerca de 2000–2500 rpm parado, ou anda a velocidade constante. A app compara a sonda de antes com a de depois do catalisador durante 20 segundos.</p>
+            <div class="o2-legend"><span class="lg a">Antes do catalisador</span><span class="lg b">Depois</span></div>
+            <canvas class="o2-canvas" id="o2Canvas"></canvas>
+            <p class="hint" id="o2Info"></p>
+            <div class="verdict" id="o2Verdict"></div>
+            <div class="actions"><button class="btn primary" id="btnO2" type="button">Começar</button></div>
+          </div>
         </div>
       </div>
     </section>
@@ -888,6 +966,12 @@ body.carmode .toast { bottom: calc(36px + env(safe-area-inset-bottom, 0px)); }
     <section class="view" id="view-viagens" aria-label="Viagens" hidden>
       <div class="band view-band">
         <div class="stack">
+          <div class="card" id="gravCard">
+            <div class="card-head"><h2>Gravações</h2><span class="chip crit" id="gravChip" hidden>● a gravar</span></div>
+            <p class="hint" id="gravHint">Grava os valores do carro durante a condução para veres depois num gráfico ou mandares em Excel (CSV). Serve para as avarias que só aparecem às vezes.</p>
+            <div class="actions"><button class="btn primary" id="btnGrav" type="button">Começar a gravar</button></div>
+            <ol class="grav-list" id="gravList"></ol>
+          </div>
           <div class="trip-sum" id="tripSum"></div>
           <ol class="trips" id="tripList"></ol>
           <p class="empty" id="tripEmpty">Ainda não há viagens. Cada vez que andas com o adaptador ligado, a viagem fica guardada aqui.</p>
@@ -964,6 +1048,15 @@ body.carmode .toast { bottom: calc(36px + env(safe-area-inset-bottom, 0px)); }
               <option value="carro">Painéis em modo carro (ecrã inteiro)</option>
             </select>
             <span class="hint">Para o tablet no carro, escolhe o modo carro: ao ligar, os mostradores enchem o ecrã.</span></div>
+        </div>
+
+        <h2 class="sec-h">Avisos</h2>
+        <div class="card">
+          <label class="check"><input type="checkbox" id="oSom"> Bip quando um mostrador entra em alerta</label>
+          <label class="check"><input type="checkbox" id="oVoz"> Dizer o aviso em voz alta</label>
+          <label class="check"><input type="checkbox" id="oVigia"> Vigiar avarias novas durante a condução</label>
+          <p class="hint" id="avisosHint">Os alertas usam os limites de cada mostrador (Painéis, lápis, Ajustar): contam os da página aberta e os do Início. A vigia lê os erros uma vez por minuto com o motor a trabalhar.</p>
+          <div class="actions"><button class="btn small ghost" id="btnTestAviso" type="button">Testar aviso</button></div>
         </div>
 
         <h2 class="sec-h">Veículo</h2>
@@ -1246,6 +1339,40 @@ const OBD = (() => {
     return txt.length >= 17 ? txt.slice(-17) : null;
   }
 
+  // Modo 09 genérico: devolve os bytes de dados (sem o byte de contagem)
+  function parse09(lines, pid) {
+    const head = '49' + pid;
+    const msgs = messagesOf(lines);
+    if (msgs.length === 1 && msgs[0].length > 14) {
+      const h = msgs[0], i = h.indexOf(head);
+      return i < 0 ? [] : bytesOf(h.slice(i + 6));
+    }
+    const parts = [];
+    for (const h of msgs) {
+      const i = h.indexOf(head);
+      if (i < 0) continue;
+      if (h.length - i <= 14) parts.push({ seq: 0, d: h.slice(i + 6) });   // CAN numa só trama (ex.: CVN)
+      else parts.push({ seq: parseInt(h.slice(i + 4, i + 6), 16), d: h.slice(i + 6, i + 14) });
+    }
+    parts.sort((a, b) => a.seq - b.seq);
+    return bytesOf(parts.map(p => p.d).join(''));
+  }
+  const asciiOf = bytes => bytes.map(b => (b >= 32 && b < 127 ? String.fromCharCode(b) : '')).join('').trim();
+  // Software da centralina: identificação da calibração (CALID), CVN e nome da centralina
+  async function readEcuInfo(elm) {
+    const out = { calid: [], cvn: [], nome: '' };
+    const ask = async pid => {
+      try { const r = splitResponse(await elm.cmd('09' + pid, 4000), '09' + pid); return r.error ? [] : parse09(r.lines, pid); }
+      catch (e) { if (e.code === 'TIMEOUT') return []; throw e; }
+    };
+    const cal = await ask('04');
+    for (let i = 0; i + 16 <= cal.length; i += 16) { const t = asciiOf(cal.slice(i, i + 16)); if (t) out.calid.push(t); }
+    const cvn = await ask('06');
+    for (let i = 0; i + 4 <= cvn.length; i += 4) out.cvn.push(cvn.slice(i, i + 4).map(hex2).join(''));
+    out.nome = asciiOf(await ask('0A')).replace(/\s*-\s*/, ' · ');
+    return out;
+  }
+
   function parseVolt(raw) {
     const m = String(raw).match(/(\d{1,2}(?:\.\d+)?)\s*V/i);
     return m ? parseFloat(m[1]) : null;
@@ -1292,18 +1419,26 @@ const OBD = (() => {
     '0F': { len: 1, f: b => b[0] - 40 },
     '10': { len: 2, f: b => u16(b) / 100 },              // g/s
     '11': { len: 1, f: pct },
+    '13': { len: 1, f: b => b[0] },                      // sondas presentes (máscara)
+    '14': { len: 2, f: b => b[0] / 200 },                // V, sonda B1S1 (estreita)
+    '15': { len: 2, f: b => b[0] / 200 },                // V, sonda B1S2
     '1C': { len: 1, f: b => b[0] },
     '1F': { len: 2, f: u16 },                            // segundos
     '21': { len: 2, f: u16 },
     '23': { len: 2, f: b => u16(b) / 10 },               // bar (unidades de 10 kPa)
+    '24': { len: 4, f: b => u16(b) * 2 / 65536 },        // λ, sonda larga B1S1 (tensão)
     '2F': { len: 1, f: pct },
+    '30': { len: 1, f: b => b[0] },                      // arranques a quente desde apagar erros
     '31': { len: 2, f: u16 },
     '33': { len: 1, f: b => b[0] },
+    '34': { len: 4, f: b => u16(b) * 2 / 65536 },        // λ, sonda larga B1S1 (corrente)
     '42': { len: 2, f: b => u16(b) / 1000 },
     '43': { len: 2, f: b => u16(b) * 100 / 255 },
     '44': { len: 2, f: b => u16(b) * 2 / 65536 },        // lambda
     '46': { len: 1, f: b => b[0] - 40 },
     '49': { len: 1, f: pct },
+    '4D': { len: 2, f: u16 },                            // minutos com a luz do motor acesa
+    '4E': { len: 2, f: u16 },                            // minutos desde apagar erros
     '51': { len: 1, f: b => b[0] },
     '5C': { len: 1, f: b => b[0] - 40 },
     '5E': { len: 2, f: b => u16(b) / 20 },               // L/h
@@ -1339,12 +1474,17 @@ const OBD = (() => {
     { id: 'nivel', nome: 'Nível de combustível', un: '%', grupo: 'Combustível', pid: '2F', rate: 'slow', dec: 0, min: 0, max: 100, lo: 15 },
     { id: 'prail', nome: 'Pressão na rampa', un: 'bar', grupo: 'Combustível', pid: '23', rate: 'fast', dec: 0, min: 0, max: 2000 },
     { id: 'pcomb', nome: 'Pressão de combustível', un: 'bar', grupo: 'Combustível', pid: '0A', rate: 'slow', dec: 2, min: 0, max: 7 },
+    { id: 'o2a', nome: 'Sonda lambda antes do catalisador', un: 'V', grupo: 'Sondas lambda', pid: '14', rate: 'fast', dec: 2, min: 0, max: 1.1 },
+    { id: 'o2b', nome: 'Sonda lambda depois do catalisador', un: 'V', grupo: 'Sondas lambda', pid: '15', rate: 'fast', dec: 2, min: 0, max: 1.1 },
+    { id: 'o2w', nome: 'Sonda lambda larga (antes do catalisador)', un: 'λ', grupo: 'Sondas lambda', pid: '24', rate: 'fast', dec: 2, min: 0.7, max: 1.3 },
+    { id: 'o2c', nome: 'Sonda lambda larga (corrente)', un: 'λ', grupo: 'Sondas lambda', pid: '34', rate: 'fast', dec: 2, min: 0.7, max: 1.3 },
     { id: 'bat', nome: 'Bateria', un: 'V', grupo: 'Elétrico', at: 'ATRV', rate: 'slow', dec: 1, min: 10, max: 16, lo: 12, hi: 15 },
     { id: 'vecu', nome: 'Tensão na centralina', un: 'V', grupo: 'Elétrico', pid: '42', rate: 'slow', dec: 1, min: 10, max: 16, lo: 12 },
     { id: 'tempo', nome: 'Tempo desde o arranque', un: 'h:min:s', grupo: 'Viagem', pid: '1F', rate: 'slow', fmt: 'dur', plain: true, min: 0, max: 3600 },
     { id: 'odo', nome: 'Conta-quilómetros', un: 'km', grupo: 'Viagem', pid: 'A6', rate: 'vslow', dec: 0, min: 0, max: 400000, plain: true },
     { id: 'distmil', nome: 'Distância com luz do motor', un: 'km', grupo: 'Viagem', pid: '21', rate: 'vslow', dec: 0, min: 0, max: 1000, plain: true },
-    { id: 'distclr', nome: 'Distância desde apagar erros', un: 'km', grupo: 'Viagem', pid: '31', rate: 'vslow', dec: 0, min: 0, max: 5000, plain: true }
+    { id: 'distclr', nome: 'Distância desde apagar erros', un: 'km', grupo: 'Viagem', pid: '31', rate: 'vslow', dec: 0, min: 0, max: 5000, plain: true },
+    { id: 'arrclr', nome: 'Arranques desde apagar erros', un: '', grupo: 'Viagem', pid: '30', rate: 'vslow', dec: 0, min: 0, max: 255, plain: true }
   ];
   const SENSOR = Object.fromEntries(SENSORS.map(s => [s.id, s]));
 
@@ -2297,8 +2437,8 @@ const OBD = (() => {
     if (list.some(p => p > base + 0x20)) mask |= 1;
     return [(mask >>> 24) & 255, (mask >>> 16) & 255, (mask >>> 8) & 255, mask & 255];
   }
-  const DEMO_PIDS = [0x01, 0x03, 0x04, 0x05, 0x06, 0x07, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x13, 0x1C, 0x1F, 0x20,
-    0x21, 0x2F, 0x31, 0x33, 0x40, 0x42, 0x44, 0x46, 0x49, 0x51];
+  const DEMO_PIDS = [0x01, 0x03, 0x04, 0x05, 0x06, 0x07, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x13, 0x14, 0x15, 0x1C, 0x1F, 0x20,
+    0x21, 0x2F, 0x30, 0x31, 0x33, 0x40, 0x42, 0x44, 0x46, 0x49, 0x4D, 0x4E, 0x51];
 
   // Um percurso de 70 s que se repete: arranque forte, estrada, travagem forte, cidade, paragem
   function demoCar(t, tTotal) {
@@ -2325,7 +2465,9 @@ const OBD = (() => {
       maf: rpm / 1000 * (1.15 + 0.105 * carga),
       map: 26 + carga * 0.95 + (modo === 'acelera' ? 28 : 0),
       tmotor: 72 + 19 * (1 - Math.exp(-tTotal / 45)) + 0.6 * Math.sin(t * 0.3),
-      tar: 29 + 0.5 * Math.sin(t * 0.2), stft: 3 * Math.sin(t * 2.3), ltft: 4.7,
+      tar: 29 + 0.5 * Math.sin(t * 0.2), stft: 3 * Math.sin(t * 2.3), ltft: rpm < 1000 ? 13.3 : 4.7,   // fuga de ar: pobre só ao ralenti
+      // sondas: a da frente oscila ~1 vez por segundo; a de trás já copia metade (catalisador a enfraquecer, P0420)
+      o2a: corte ? 0.06 : 0.45 + 0.4 * Math.sin(t * 6.9), o2b: corte ? 0.1 : 0.64 + 0.17 * Math.sin(t * 6.9 - 0.8),
       avanco: corte ? 2 : 12 + carga * 0.2, bat: v > 1 || rpm > 500 ? 14.1 + 0.05 * Math.sin(t) : 12.6,
       tempo: tTotal
     };
@@ -2454,8 +2596,14 @@ const OBD = (() => {
         const w = x => { const u = x < 0 ? x + 0x10000 : x; return [(u >> 8) & 255, u & 255]; };
         return this._frames([0x46, ...recs.flatMap(([tid, uas, v, mn, mx]) => [mid, tid, uas, ...w(v), ...w(mn), ...w(mx)])]);
       }
-      if (mode === '09' && c.slice(2, 4) === '02') {
-        return this._frames([0x49, 0x02, 0x01, ...DEMO_VIN.split('').map(ch => ch.charCodeAt(0))]);
+      if (mode === '09') {
+        const p9 = c.slice(2, 4), asc = (txt, n) => txt.padEnd(n, '\0').slice(0, n).split('').map(ch => ch.charCodeAt(0));
+        if (p9 === '00') return [this._bytes([0x49, 0x00, 0x55, 0x40, 0x00, 0x00])];
+        if (p9 === '02') return this._frames([0x49, 0x02, 0x01, ...asc(DEMO_VIN, 17)]);
+        if (p9 === '04') return this._frames([0x49, 0x04, 0x01, ...asc('0261S1234500DEMO', 16)]);
+        if (p9 === '06') return this._frames([0x49, 0x06, 0x01, 0x1A, 0x2B, 0x3C, 0x4D]);
+        if (p9 === '0A') return this._frames([0x49, 0x0A, 0x01, ...asc('ECM-EngineControl', 20)]);
+        return ['NO DATA'];
       }
       if (mode !== '01') return ['NO DATA'];
       const pid = parseInt(c.slice(2, 4), 16);
@@ -2471,7 +2619,9 @@ const OBD = (() => {
         0x05: [r(d.tmotor + 40)], 0x06: [r(d.stft * 1.28 + 128)], 0x07: [r(d.ltft * 1.28 + 128)],
         0x0B: [r(d.map)], 0x0C: w(r(d.rpm * 4)), 0x0D: [r(d.v)], 0x0E: [r((d.avanco + 64) * 2)],
         0x0F: [r(d.tar + 40)], 0x10: w(r(d.maf * 100)), 0x11: [r(d.borb * 2.55)], 0x13: [0x03], 0x1C: [0x06],
-        0x1F: w(r(d.tempo)), 0x21: w(this.stored.length ? 37 : 0), 0x2F: [120], 0x31: w(212), 0x33: [101],
+        0x14: [r(d.o2a * 200), r(d.stft * 1.28 + 128)], 0x15: [r(d.o2b * 200), 0xFF],
+        0x1F: w(r(d.tempo)), 0x21: w(this.stored.length ? 37 : 0), 0x2F: [120], 0x31: w(this.cleared ? 0 : 212), 0x33: [101],
+        0x30: [this.cleared ? 1 : 38], 0x4D: w(this.stored.length ? 95 : 0), 0x4E: w(this.cleared ? 2 : 1260),
         0x42: w(r(d.bat * 1000 - 200)), 0x44: w(Math.min(65535, r(d.lambda * 32768))), 0x46: [58],
         0x49: [r(d.pedal * 2.55)], 0x51: [0x01]
       }[pid];
@@ -2480,7 +2630,7 @@ const OBD = (() => {
   }
 
   return {
-    sleep, hex2, compact, splitResponse, parsePid, parseSupported, parseSupportedHead, parseDtcs, parseVin, parseVolt,
+    sleep, hex2, compact, splitResponse, parsePid, parse09, readEcuInfo, parseSupported, parseSupportedHead, parseDtcs, parseVin, parseVolt,
     decodeDtc, dtcInfo, dtcAdvice, SEV, readinessOf, initAdapter, initCar, isCarError, FUEL_SYS, readFreezeFrame, parseMode06, readMode06, midName, misfiresOf,
     PROTOCOLS, FUEL_TYPES, FUEL_NAMES, OBD_STD, FUELS, PIDS, RATES, SENSORS, SENSOR, fuelSource, fuelLph,
     Elm, ElmError, initElm, readDtcs, clearDtcs, Poller, PERF, PerfTest, BleTransport, bleServiceList, NativeBleTransport, pickBleChars, textToHex, hexToText,
@@ -2521,7 +2671,12 @@ const OBD = (() => {
       'Segurança: a consola só aceita comandos de leitura e não deixa apagar erros com o motor a trabalhar',
       'Versão e compilação sempre à vista no topo: toca nelas para ver o que mudou',
       'Cores de fundo mais equilibradas: os três estilos usam o mesmo fundo grafite e só os mostradores mudam de cor',
-      'Definições com três abas: Geral, Atualizações (procurar e instalar versões novas) e Novidades (o que mudou em cada versão). Tocar na versão no topo abre as Novidades'
+      'Definições com três abas: Geral, Atualizações (procurar e instalar versões novas) e Novidades (o que mudou em cada versão). Tocar na versão no topo abre as Novidades',
+      'Gravações (Viagens): grava até 10 valores durante a condução, revê-os num gráfico com zoom e cursor, e exporta em CSV para o Excel',
+      'Teste de mistura (Testes): mede as correções de combustível ao ralenti e a 2500 rpm e diz se é fuga de ar, MAF, falta ou excesso de combustível',
+      'Sondas lambda (Testes): gráfico da sonda antes e depois do catalisador e avaliação do catalisador. As sondas também podem ir para os painéis',
+      'Verificação de carro usado (Avarias): há quanto tempo os erros foram apagados, monitores, luz do motor, km com a luz acesa, VIN e software da centralina. Entra no relatório',
+      'Avisos: bip e voz quando um mostrador passa o limite, e vigia de avarias que lê os erros de minuto a minuto e avisa logo que aparece um novo'
     ]}
   ];
 
@@ -2592,7 +2747,7 @@ const OBD = (() => {
       const p = newProfile('O meu carro');
       s = { v: 1, perfis: [p], ativo: p.id };
     }
-    s.opts = Object.assign({ uuidExtra: '', pausaMs: 0, ecraLigado: true, escrita: 'auto', estilo: 'cockpit', abrir: 'inicio' }, s.opts || {});
+    s.opts = Object.assign({ uuidExtra: '', pausaMs: 0, ecraLigado: true, escrita: 'auto', estilo: 'cockpit', abrir: 'inicio', somAlerta: true, voz: false, vigia: true }, s.opts || {});
     for (const p of s.perfis) {
       // Versões antigas tinham um só painel: passa a ser a página «Principal», com as páginas novas a seguir
       if (!Array.isArray(p.paginas) || !p.paginas.length) {
@@ -2865,7 +3020,8 @@ const OBD = (() => {
     st.info = info; st.adapterName = name; st.carAbsent = carAbsent;
     logLine('info', carAbsent ? `Adaptador ligado: ${info.version}` : `Ligado: ${info.version} · ${info.protocol} · ${info.supported.size} PIDs`);
     st.live = {}; st.na = new Set(); st.calc = { lph: null, cons: null };
-    st.diag = null; st.bat = {}; st.spdHist = [];
+    st.diag = null; st.bat = {}; st.spdHist = []; st.usado = null;
+    resetVigia();
     if (mode === 'demo') { st.demoTrip = { L: 0, km: 0, s: 0 }; st.demoRecs = []; st.demoTests = []; }
     if (mode === 'on' && NATIVE && st.nativeId) { store.opts.lastDev = { id: st.nativeId, name }; save(); }
     if (mode === 'on' && !carAbsent) matchProfileByVin();
@@ -2915,6 +3071,7 @@ const OBD = (() => {
     st.carAbsent = false;
     closeRec();
     if (st.perf) perfStop(true);
+    o2Stop(); mix.busy = null; gravStop(true);
     if (st.poller) st.poller.stop();
     const t = st.transport;
     st.poller = null; st.elm = null; st.transport = null;
@@ -2930,6 +3087,7 @@ const OBD = (() => {
     const t = pnow();
     st.live[key] = { v, t };
     if (key === '0D') onSpeed(v, t);
+    o2Feed(key, v, t);
   }
 
   async function onPollFail(e) {
@@ -2958,7 +3116,7 @@ const OBD = (() => {
       if (p) p.stop();
       if (old) { try { await old.close(); } catch (e) { /* já fechado */ } }   // larga a ligação presa
       setMode('lost', 'a tentar voltar a ligar…');
-      const diag = st.diag;
+      const diag = st.diag, usado = st.usado;
       for (let i = 0; i < RETRY_S.length; i++) {
         await OBD.sleep(RETRY_S[i] * 1000);
         if (st.userClosed || st.mode !== 'lost') return;
@@ -2970,8 +3128,8 @@ const OBD = (() => {
           if (st.userClosed || st.mode !== 'lost') { await t.close(); return; }
           st.transport = t;
           await openSession(t, 'on', st.adapterName);
-          st.diag = diag;
-          renderDiag();
+          st.diag = diag; st.usado = usado;
+          renderDiag(); renderUsado();
           toast('Ligação recuperada.');
           return;
         } catch (e) {
@@ -3002,7 +3160,20 @@ const OBD = (() => {
     if (!st.poller || !st.info) return;
     const sup = st.info.supported;
     st.fuelSrc = OBD.fuelSource(sup, fuelType());
-    if (st.pollOverride) { st.poller.setItems(st.pollOverride); return; }
+    if (st.pollOverride) {
+      // Durante um teste, o que está a ser gravado continua a ser lido (mais devagar)
+      const list = [...st.pollOverride];
+      if (st.grav) for (const id of st.grav.ch) {
+        const d = S[id], add = pid => { if (sup.has(parseInt(pid, 16)) && !list.some(x => x.key === pid)) list.push({ key: pid, kind: 'pid', pid, rate: 'medium' }); };
+        if (!d) continue;
+        if (d.pid) add(d.pid);
+        else if (d.at) { if (!list.some(x => x.key === 'bat')) list.push({ key: 'bat', kind: 'at', cmd: 'ATRV', rate: 'slow' }); }
+        else if (d.calc === 'turbo') { add('0B'); add('33'); }
+        else if (d.calc === 'lph' || d.calc === 'cons') { if (st.fuelSrc) st.fuelSrc.pids.forEach(add); if (d.calc === 'cons') add('0D'); }
+      }
+      st.poller.setItems(list);
+      return;
+    }
     const items = new Map();
     const add = (pid, rate) => {
       if (!sup.has(parseInt(pid, 16))) return;
@@ -3014,7 +3185,7 @@ const OBD = (() => {
       for (const p of st.fuelSrc.pids) add(p, p === '0F' ? 'slow' : p === '44' ? 'medium' : 'fast');
     };
     // A página aberta em Painéis, mais os contadores do Início
-    const ids = new Set([...curLayout().map(t => t.id), ...prof().inicio, 'viagem']);
+    const ids = new Set([...curLayout().map(t => t.id), ...prof().inicio, 'viagem', ...(st.grav ? st.grav.ch : [])]);
     for (const id of ids) {
       const d = S[id];
       if (!d) continue;
@@ -3084,6 +3255,7 @@ const OBD = (() => {
       if (b) f.push(fmtN(b, 1) + ' V');
     } else if (st.mode === 'lost') f = [st.step || 'a tentar voltar a ligar…'];
     else f = [st.lastError || (btState() === 'ok' ? 'Bluetooth pronto' : 'Bluetooth indisponível nesta página')];
+    if (st.grav) f.unshift('● a gravar ' + fmtDur(gravDur(st.grav)));
     const facts = $('#facts');
     facts.textContent = f.filter(Boolean).join(' · ');
     facts.classList.toggle('err', st.mode === 'off' && !!st.lastError);
@@ -3339,10 +3511,15 @@ ${opt.home ? '' : editBar()}`;
     $('#pages').innerHTML = p.paginas.map((pg, i) =>
       `<button type="button" class="page-chip" data-page="${i}" aria-pressed="${i === p.pagina}">${esc(pg.nome)}</button>`).join('');
     $('#pageDots').innerHTML = p.paginas.length > 1 ? p.paginas.map((pg, i) => `<i class="${i === p.pagina ? 'on' : ''}"></i>`).join('') : '';
-    $('#carPage').textContent = `${curPage().nome}${p.paginas.length > 1 ? ` · ${p.pagina + 1} de ${p.paginas.length}` : ''}`;
+    $('#carPage').textContent = carLabel();
     $('#pageName2').textContent = curPage().nome;
     const on = $('#pages [aria-pressed="true"]');
     if (on && on.scrollIntoView) on.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }
+
+  function carLabel() {
+    const p = prof();
+    return `${st.grav ? '● REC · ' : ''}${curPage().nome}${p.paginas.length > 1 ? ` · ${p.pagina + 1} de ${p.paginas.length}` : ''}`;
   }
 
   // Início: quatro contadores principais e o computador de bordo
@@ -3524,6 +3701,7 @@ ${opt.home ? '' : editBar()}`;
     if (st.view === 'paineis') { for (const T of st.tiles) if (T.kind !== 'trip') updateTile(T, k, t); }
     else if (st.view === 'inicio') { for (const T of st.homeTiles) if (T.kind !== 'trip') updateTile(T, k, t); }
     if (st.view === 'testes' && st.perf) renderPerfTimer();
+    if (st.view === 'testes' && o2.on && t - o2.lastDraw > 120) { o2.lastDraw = t; drawO2(); if (++o2.frames % 4 === 0) renderO2(); }
     requestAnimationFrame(frame);
   }
 
@@ -3558,6 +3736,10 @@ ${opt.home ? '' : editBar()}`;
     }
     renderTripComputer();
     renderStatus();
+    checkAlarms();
+    vigiaTick();
+    if (st.grav) { if (st.view === 'viagens') renderGrav(); }
+    if (st.carMode) { const cl = carLabel(); if ($('#carPage').textContent !== cl) $('#carPage').textContent = cl; }
     if (st.view === 'definicoes') { renderAdapterLive(); renderConsole(); }
     if (st.view === 'viagens' && st.rec) renderViagens();
   }
@@ -3961,9 +4143,11 @@ ${d.id === cur ? '<span class="on-panel">Atual</span>' : `<button type="button" 
     empty.textContent = !st.diag ? (live() ? 'Toca em Diagnóstico completo para ler a centralina.' : 'Liga o adaptador e toca em Diagnóstico completo.')
       : 'Sem códigos de avaria. A centralina não tem erros guardados nem pendentes.';
     $('#dtcCount').textContent = st.diag ? `lido às ${fmtHora(st.diag.quando)}` : '';
+    const extra = vigia.novos.filter(n => !codes.some(c => c.code === n.code)).length;
     const badge = $('#dtcBadge');
-    badge.hidden = !codes.length;
-    badge.textContent = codes.length;
+    badge.hidden = !(codes.length + extra);
+    badge.textContent = codes.length + extra;
+    renderVigia();
 
     // dados congelados
     const ff = st.diag && st.diag.ff;
@@ -4143,6 +4327,7 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
       if (b.run) L.push(`  A carregar: ${fmtN(b.run.v, 2)} V · ${batVerdict('run', b.run).txt}`);
       L.push('');
     }
+    L.push(...usadoReport());
     L.push(`Lido com a app Mostrador OBD v${APP_VER} e um adaptador ELM327 (V011).`);
     return L.join('\n');
   }
@@ -4191,6 +4376,7 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
   function perfStart() {
     if (!needCar()) return;
     if (!st.info.supported.has(0x0D)) { toast('Este carro não envia a velocidade.'); return; }
+    if (otherTest()) return;
     st.perf = new OBD.PerfTest(st.perfTipo);
     st.perfMsg = '';
     // Só a velocidade a toda a velocidade; o consumo continua a ser lido uma vez por segundo
@@ -4343,6 +4529,627 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
     renderBat();
   }
   document.querySelector('.bat').addEventListener('click', e => { const b = e.target.closest('[data-bat]'); if (b) batMeasure(b.dataset.bat); });
+
+  /* ==========================================================================
+     AVISOS (bip e voz), VIGIA DE AVARIAS, TESTE DE MISTURA, SONDAS LAMBDA,
+     VERIFICAÇÃO DE CARRO USADO E GRAVAÇÕES
+     ========================================================================== */
+  const Extras = () => plug('Extras');
+  let actx = null;
+  function unlockAudio() {
+    try {
+      if (!actx) { const AC = window.AudioContext || window.webkitAudioContext; if (AC) actx = new AC(); }
+      if (actx && actx.state === 'suspended') actx.resume();
+    } catch (e) { actx = null; }
+  }
+  document.addEventListener('pointerdown', unlockAudio, { passive: true });
+  function beep(kind) {
+    if (!actx) return;
+    try {
+      const t0 = actx.currentTime + 0.02;
+      const notes = kind === 'avaria' ? [[660, 0], [880, 0.17], [660, 0.34]] : [[880, 0], [880, 0.22]];
+      for (const [f, dt] of notes) {
+        const o = actx.createOscillator(), g = actx.createGain();
+        o.type = 'square'; o.frequency.value = f;
+        g.gain.setValueAtTime(0.0001, t0 + dt);
+        g.gain.exponentialRampToValueAtTime(0.22, t0 + dt + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + dt + 0.14);
+        o.connect(g); g.connect(actx.destination);
+        o.start(t0 + dt); o.stop(t0 + dt + 0.15);
+      }
+    } catch (e) { /* sem som */ }
+  }
+  async function speak(text) {
+    const E = Extras();
+    if (NATIVE && E && E.falar) { try { await E.falar({ texto: text }); return true; } catch (e) { return false; } }
+    if ('speechSynthesis' in window && window.SpeechSynthesisUtterance) {
+      try { const u = new SpeechSynthesisUtterance(text); u.lang = 'pt-PT'; speechSynthesis.cancel(); speechSynthesis.speak(u); return true; } catch (e) { /* sem voz */ }
+    }
+    return false;
+  }
+  function alertUser(msg, voz, kind) {
+    toast(msg, 6000);
+    if (store.opts.somAlerta !== false) beep(kind);
+    if (store.opts.voz && voz) setTimeout(() => speak(voz), kind === 'avaria' ? 650 : 480);
+  }
+  const UN_FALADA = { '°C': 'graus', 'V': 'volts', 'km/h': 'quilómetros por hora', 'rpm': 'rotações', '%': 'por cento', 'bar': 'bar',
+    'L/100 km': 'litros aos cem', 'L/h': 'litros por hora', 'kPa': 'quilopascal', 'g/s': 'gramas por segundo', 'km': 'quilómetros' };
+  const nomeFalado = n => n.replace(/^Temp\. /, 'Temperatura ').replace(/\(.*?\)/g, '').trim();
+  const codigoFalado = c => c.split('').join(' ');
+
+  // Alertas dos mostradores (limites de cada um): só avisa depois de 2 s em alerta e volta a avisar
+  // depois de 10 s normal, para não repetir com valores a oscilar no limite
+  const alarmSt = {};
+  function checkAlarms() {
+    if (!live() || st.carAbsent || (st.sweepAt && pnow() - st.sweepAt < SWEEP_MS + 500)) return;
+    const t = pnow(), seen = new Set();
+    for (const T of [...st.tiles, ...st.homeTiles]) {
+      if (T.kind === 'trip' || seen.has(T.def.id) || (T.hi == null && T.lo == null)) continue;
+      seen.add(T.def.id);
+      const d = T.def, v = sensorValue(d);
+      const a = alarmSt[d.id] || (alarmSt[d.id] = { since: 0, ok: 0, fired: 0 });
+      const hi = v != null && T.hi != null && v >= T.hi, lo = v != null && T.lo != null && v <= T.lo;
+      if (hi || lo) {
+        a.ok = 0;
+        if (!a.since) a.since = t;
+        if (!a.fired && t - a.since >= 2000) {
+          a.fired = t;
+          alertUser(`${d.nome}: ${hi ? 'acima' : 'abaixo'} do limite (${fmtVal(d, v)} ${d.un})`,
+            `Atenção. ${nomeFalado(d.nome)}: ${fmtVal(d, v)} ${UN_FALADA[d.un] || ''}, ${hi ? 'acima' : 'abaixo'} do limite.`, 'alerta');
+        }
+      } else if (v != null) {
+        a.since = 0;
+        if (a.fired) { if (!a.ok) a.ok = t; if (t - a.ok > 10000) a.fired = 0; }
+      }
+    }
+  }
+
+  // Vigia: com o motor a trabalhar, lê os erros uma vez por minuto e avisa logo que aparece um novo
+  const vigia = { known: null, novos: [], next: 0, busy: false };
+  function resetVigia() { vigia.known = null; vigia.novos = []; vigia.next = pnow() + 20000; }
+  async function vigiaTick() {
+    if (store.opts.vigia === false || !live() || st.carAbsent || !st.elm || !st.info || !st.info.carReady) return;
+    if (vigia.busy || st.scanning || st.pollOverride || st.batBusy || st.usadoBusy || (fresh('0C') ?? 0) < 300) return;
+    const t = pnow();
+    if (t < vigia.next) return;
+    vigia.next = t + 60000; vigia.busy = true;
+    const elm = st.elm, info = st.info;
+    try {
+      const d = await withPaused(() => OBD.readDtcs(elm, info));
+      if (st.elm !== elm) return;
+      if (!vigia.known) {
+        vigia.known = new Set([...d.codes.map(c => c.code), ...(st.diag ? st.diag.codes.map(c => c.code) : [])]);
+        logLine('info', `Vigia de avarias ativa (${vigia.known.size} ${vigia.known.size === 1 ? 'código já conhecido' : 'códigos já conhecidos'})`);
+        return;
+      }
+      for (const c of d.codes) {
+        if (vigia.known.has(c.code)) continue;
+        vigia.known.add(c.code);
+        vigia.novos.push({ ...c, quando: Date.now() });
+        logLine('err', `Código novo durante a condução: ${c.code} (${c.tipo})`);
+        alertUser(`Novo código de avaria: ${c.code}${c.desc ? ' · ' + c.desc : ''}`,
+          `Atenção. Apareceu um código de avaria novo: ${codigoFalado(c.code)}. ${c.desc || ''}`, 'avaria');
+      }
+      renderDiag();
+    } catch (e) { /* a recuperação da ligação trata das falhas */ } finally { vigia.busy = false; }
+  }
+  function renderVigia() {
+    const el = $('#vigiaText');
+    if (!vigia.novos.length) { el.hidden = true; return; }
+    el.hidden = false;
+    el.textContent = 'Durante a condução apareceu: ' + vigia.novos.map(c => `${c.code} (${(TIPO[c.tipo] || c.tipo).toLowerCase()}, ${fmtHora(c.quando)})`).join(', ') + '. Toca em Diagnóstico completo para ver os pormenores.';
+  }
+
+  // Testes que precisam do adaptador só para alguns valores não podem correr ao mesmo tempo
+  const testBusy = () => (st.perf ? 'desempenho' : o2.on ? 'sondas' : mix.busy ? 'mistura' : null);
+  const otherTest = () => { const b = testBusy(); if (b) { toast(`Acaba primeiro o teste de ${b}.`); return true; } return false; };
+  const pidItem = (pid, rate) => ({ key: pid, kind: 'pid', pid, rate });
+
+  /* ---------- Teste de mistura (correções de combustível ao ralenti e a 2500 rpm) ---------- */
+  const mix = { busy: null, live: null, idle: null, high: null };
+  const sg = v => (v > 0 ? '+' : '') + fmtN(v, 1) + ' %';
+  async function mixMeasure(kind) {
+    if (mix.busy === kind) { mix.busy = null; return; }        // segundo toque cancela
+    if (!needCar() || otherTest()) return;
+    const sup = st.info.supported;
+    if (!sup.has(0x06) || !sup.has(0x07)) { toast('Este carro não envia as correções de combustível. Nos motores a gasóleo é normal.', 5000); return; }
+    mix.busy = kind; mix.live = null; mix[kind] = null;
+    st.pollOverride = [pidItem('06', 'fast'), pidItem('07', 'fast'), pidItem('0C', 'fast'), pidItem('05', 'slow')];
+    refreshPollList(); renderMix();
+    const need = 8000, t0 = pnow();
+    const inRange = r => (kind === 'idle' ? r > 400 && r < 1100 : r >= 2100 && r <= 2900);
+    let acc = 0, last = 0, sum = 0, n = 0, cancel = false;
+    try {
+      while (pnow() - t0 < 90000 && acc < need) {
+        await OBD.sleep(200);
+        if (mix.busy !== kind) { cancel = true; break; }
+        if (!live() || st.carAbsent) break;
+        const now = pnow(), dt = last ? now - last : 0; last = now;
+        const rpm = fresh('0C'), s = fresh('06'), l = fresh('07');
+        const ok = rpm != null && inRange(rpm) && s != null && l != null;
+        if (ok) { acc += dt; sum += s + l; n++; }
+        mix.live = { rpm, total: s != null && l != null ? s + l : null, ok, pct: Math.min(100, Math.round(acc / need * 100)) };
+        renderMix();
+      }
+      if (cancel) mix[kind] = null;
+      else mix[kind] = n >= 10 && acc >= need ? { v: sum / n, quando: Date.now(), tm: fresh('05') }
+        : { erro: kind === 'idle' ? 'Não consegui medir: deixa o motor ao ralenti (abaixo de 1100 rpm) sem tocar no acelerador.'
+          : 'Não consegui medir: segura as rotações entre 2100 e 2900 rpm durante 8 segundos.' };
+    } finally {
+      mix.busy = null; mix.live = null;
+      if (!testBusy()) st.pollOverride = null;
+      refreshPollList(); renderMix();
+    }
+  }
+  function mixVerdict() {
+    const i = mix.idle && mix.idle.v, h = mix.high && mix.high.v;
+    if (i == null || h == null) return null;
+    const L = 10;
+    const worst = Math.max(Math.abs(i), Math.abs(h)) > 20 ? 'crit' : 'warn';
+    const base = `Correção total (curta + longa): ${sg(i)} ao ralenti e ${sg(h)} a 2500 rpm. Positivo = a centralina junta combustível (mistura pobre); negativo = tira (rica).`;
+    if (Math.abs(i) <= L && Math.abs(h) <= L) return { cls: 'ok', t: 'Mistura normal', d: base + ' Dentro de ±10 %: sem sinais de fugas de ar nem de falta de combustível.' };
+    if (i > L && i - h >= 6) return { cls: worst, t: 'Fuga de ar (vácuo) provável', d: base + ' Pobre ao ralenti e melhora com rotação: entra ar que o MAF não mede, e isso pesa mais quando passa pouco ar.',
+      c: ['Tubos de vácuo rachados ou soltos', 'Junta do coletor de admissão', 'Tubo do servofreio', 'Válvula PCV ou respiro do cárter', 'Tubo entre o MAF e a borboleta mal apertado'] };
+    if (h > L && h - i >= 6) return { cls: worst, t: 'Falta de combustível em carga', d: base + ' Pobre só com mais rotação: o motor pede mais combustível do que chega.',
+      c: ['Pressão de combustível baixa (bomba, filtro, regulador)', 'Injetores sujos', 'MAF a ler menos ar do que entra'] };
+    if (i > L && h > L) return { cls: worst, t: 'Pobre em toda a gama', d: base + ' A centralina junta combustível sempre.',
+      c: ['MAF sujo ou avariado (experimenta limpá-lo com spray próprio)', 'Pressão de combustível baixa', 'Injetores entupidos', 'Fuga no escape antes da sonda (dá falsa leitura de pobre)'] };
+    if (i < -L && h < -L) return { cls: worst, t: 'Rica em toda a gama', d: base + ' A centralina tira combustível sempre.',
+      c: ['Injetor a pingar', 'Pressão de combustível alta (regulador)', 'MAF a ler ar a mais', 'Óleo contaminado com gasolina', 'Sonda lambda da frente a ler mal'] };
+    if (i < -L) return { cls: worst, t: 'Rica ao ralenti', d: base,
+      c: ['Válvula de purga do canister (EVAP) presa aberta', 'Injetor a pingar', 'Regulador de pressão com fuga'] };
+    if (h < -L) return { cls: worst, t: 'Rica em rotação', d: base, c: ['Pressão de combustível alta', 'MAF a ler ar a mais', 'Injetor a pingar'] };
+    return { cls: 'warn', t: 'Correção alta', d: base + ' Repete o teste com o motor bem quente.' };
+  }
+  function verdictHtml(v) {
+    if (!v) return '';
+    return `<b>${esc(v.t)}</b><p>${esc(v.d)}</p>${v.c ? `<p class="note">O que verificar, por ordem:</p><ul>${v.c.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}${v.dl ? `<dl>${v.dl.map(([a, b]) => `<dt>${esc(a)}</dt><dd>${esc(b)}</dd>`).join('')}</dl>` : ''}${(v.n || []).map(x => `<p class="note">${esc(x)}</p>`).join('')}`;
+  }
+  function renderMix() {
+    for (const [k, id] of [['idle', 'Idle'], ['high', 'High']]) {
+      const r = mix[k], busy = mix.busy === k, chip = $('#mix' + id + 'Chip');
+      let cls = '', txt = 'por medir', val = '—';
+      if (busy) {
+        const L = mix.live;
+        txt = L ? `${L.pct} %` : 'a medir…'; cls = 'accent';
+        val = L ? `${L.rpm != null ? fmtVal(S.rpm, L.rpm) + ' rpm' : '—'}${L.total != null ? ' · ' + sg(L.total) : ''}${L.ok ? '' : k === 'high' ? ' · sobe para 2500' : ' · larga o acelerador'}` : '—';
+      } else if (r && r.erro) { txt = 'sem leitura'; cls = 'warn'; val = r.erro; }
+      else if (r) { const a = Math.abs(r.v); cls = a <= 10 ? 'ok' : a <= 20 ? 'warn' : 'crit'; txt = a <= 10 ? 'normal' : r.v > 0 ? 'pobre' : 'rica'; val = sg(r.v); }
+      chip.className = 'chip ' + cls; chip.textContent = txt;
+      const vEl = $('#mix' + id + 'V');
+      vEl.textContent = val;
+      vEl.style.fontSize = r && r.erro && !busy ? '14px' : '';
+    }
+    document.querySelectorAll('[data-mix]').forEach(b => { b.textContent = mix.busy === b.dataset.mix ? 'Cancelar' : 'Medir'; b.disabled = !!mix.busy && mix.busy !== b.dataset.mix; });
+    const v = mixVerdict(), el = $('#mixVerdict');
+    el.className = 'verdict' + (v ? ' ' + v.cls : '');
+    el.innerHTML = verdictHtml(v);
+  }
+  $('#mixCard').addEventListener('click', e => { const b = e.target.closest('[data-mix]'); if (b) mixMeasure(b.dataset.mix); });
+
+  /* ---------- Sondas lambda e catalisador ---------- */
+  const o2 = { on: false, s: [], t0: 0, front: null, rear: null, lastDraw: 0, frames: 0 };
+  function o2Pids() {
+    const sup = (st.info && st.info.supported) || new Set();
+    const front = sup.has(0x14) ? { pid: '14', kind: 'v' } : sup.has(0x24) ? { pid: '24', kind: 'l' } : sup.has(0x34) ? { pid: '34', kind: 'l' } : null;
+    return { front, rear: sup.has(0x15) ? '15' : null };
+  }
+  function o2Start() {
+    if (!needCar() || otherTest()) return;
+    const { front, rear } = o2Pids();
+    if (!front && !rear) { toast('Este carro não envia as sondas lambda pelo OBD. Nos motores a gasóleo é normal.', 5000); return; }
+    Object.assign(o2, { on: true, s: [], t0: pnow(), front, rear });
+    st.pollOverride = [front && pidItem(front.pid, 'fast'), rear && pidItem(rear, 'fast'), pidItem('0C', 'medium'), pidItem('05', 'slow')].filter(Boolean);
+    refreshPollList(); renderO2();
+  }
+  function o2Stop() {
+    if (!o2.on) return;
+    o2.on = false;
+    if (!testBusy()) st.pollOverride = null;
+    refreshPollList(); renderO2();
+  }
+  function o2Feed(key, v, t) {
+    if (!o2.on || v == null || !isFinite(v)) return;
+    if ((o2.front && key === o2.front.pid) || key === o2.rear) {
+      o2.s.push({ t, k: key, v });
+      while (o2.s.length && t - o2.s[0].t > 32000) o2.s.shift();
+    }
+  }
+  function o2Analyse() {
+    const t = pnow(), W = 20000;
+    const fr = o2.front, A = fr ? o2.s.filter(x => x.k === fr.pid && t - x.t <= W).map(x => x.v) : [];
+    const B = o2.rear ? o2.s.filter(x => x.k === o2.rear && t - x.t <= W).map(x => x.v) : [];
+    if (t - o2.t0 < W) return { wait: Math.ceil((W - (t - o2.t0)) / 1000) };
+    if (A.length < 15 && B.length < 15) return { cls: 'warn', t: 'Poucas leituras', d: 'O carro está a responder devagar às sondas. Espera mais um pouco.' };
+    const sorted = arr => [...arr].sort((a, b) => a - b);
+    const amp = arr => { const s = sorted(arr); return s[Math.floor(s.length * 0.95)] - s[Math.floor(s.length * 0.05)]; };
+    const mean = arr => arr.reduce((a, b) => a + b, 0) / arr.length;
+    const cross = arr => { let n = 0; for (let i = 1; i < arr.length; i++) if ((arr[i - 1] - 0.45) * (arr[i] - 0.45) < 0) n++; return n; };
+    const n = [], dl = [];
+    const tm = fresh('05'), rpm = fresh('0C');
+    if (tm != null && tm < 75) n.push(`O motor ainda está frio (${fmtN(tm)} °C). Repete quando passar dos 80 °C.`);
+    if (rpm != null && rpm < 1500) n.push('Ao ralenti a avaliação é menos fiável: repete a 2000–2500 rpm.');
+    const rng = (arr, d, u) => `${fmtN(Math.min(...arr), d)} a ${fmtN(Math.max(...arr), d)} ${u}`;
+    if (fr && fr.kind === 'v' && A.length >= 15) {
+      const aA = amp(A), cA = cross(A);
+      dl.push(['Sonda antes', `${rng(A, 2, 'V')} · ${Math.floor(cA / 2)} oscilações em 20 s`]);
+      if (aA < 0.3) return { cls: 'warn', t: 'A sonda da frente quase não oscila', dl, n,
+        d: 'Sem oscilação não dá para avaliar o catalisador. Acontece com o motor frio, em corte de injeção (a descer sem acelerar) ou com a sonda gasta. Mantém 2000–2500 rpm e espera.' };
+      if (cA < 8) n.push('A sonda da frente está lenta (menos de 4 oscilações em 20 s): pode estar gasta ou suja.');
+      if (B.length >= 15) {
+        const aB = amp(B), r = aB / aA;
+        dl.push(['Sonda depois', rng(B, 2, 'V')], ['Oscilação depois ÷ antes', fmtN(r, 2)]);
+        if (r < 0.35) return { cls: 'ok', t: 'Catalisador a funcionar', dl, n,
+          d: 'A sonda de trás está estável enquanto a da frente oscila: o catalisador está a guardar e a usar o oxigénio como deve.' };
+        if (r < 0.65) return { cls: 'warn', t: 'Catalisador a perder eficiência', dl, n,
+          d: 'A sonda de trás já acompanha parte da oscilação da frente. Ainda pode passar, mas é o início do P0420. Confirma também que não há fugas no escape antes da sonda de trás.' };
+        return { cls: 'crit', t: 'Catalisador provavelmente gasto', dl, n,
+          d: 'A sonda de trás copia a da frente: o catalisador já não guarda oxigénio. Antes de o trocar, resolve fugas no escape, falhas de ignição e mistura rica, que estragam também o novo.' };
+      }
+      return { cls: 'ok', t: 'Sonda da frente a funcionar', dl, n, d: 'O carro não envia a sonda de depois do catalisador pelo OBD, por isso não dá para avaliar o catalisador.' };
+    }
+    if (fr && fr.kind === 'l' && A.length >= 15) dl.push(['Sonda antes (larga)', `λ ${rng(A, 2, '')}`.trim()]);
+    if (B.length >= 15) {
+      const aB = amp(B), mB = mean(B);
+      dl.push(['Sonda depois', rng(B, 2, 'V')]);
+      n.push('Este carro tem sonda larga à frente: o catalisador é avaliado só pela sonda de trás.');
+      if (mB < 0.3) return { cls: 'warn', t: 'A sonda de trás marca sempre pobre', dl, n, d: 'Pode ser fuga no escape antes da sonda, sonda avariada ou mistura muito pobre.' };
+      if (aB < 0.2) return { cls: 'ok', t: 'Catalisador a funcionar', dl, n, d: 'A sonda de trás está estável, como deve estar com o catalisador bom.' };
+      if (aB < 0.45) return { cls: 'warn', t: 'Catalisador a perder eficiência', dl, n, d: 'A sonda de trás já oscila. Confirma que não há fugas no escape.' };
+      return { cls: 'crit', t: 'Catalisador provavelmente gasto', dl, n, d: 'A sonda de trás oscila muito: o catalisador já não guarda oxigénio.' };
+    }
+    if (A.length >= 15) {
+      const m = mean(A);
+      return { cls: Math.abs(m - 1) < 0.05 ? 'ok' : 'warn', t: 'Só há a sonda da frente', dl, n,
+        d: `Mistura média λ ${fmtN(m, 2)} (${Math.abs(m - 1) < 0.05 ? 'certa' : m > 1 ? 'pobre' : 'rica'}). Sem a sonda de trás não dá para avaliar o catalisador.` };
+    }
+    return { cls: 'warn', t: 'Poucas leituras', d: 'Espera mais um pouco.' };
+  }
+  function renderO2() {
+    const { front, rear } = o2.on ? o2 : o2Pids();
+    const b = $('#btnO2');
+    b.textContent = o2.on ? 'Parar' : 'Começar';
+    b.classList.toggle('primary', !o2.on);
+    let info = '';
+    if (o2.on) {
+      const fv = front ? fresh(front.pid) : null, rv = rear ? fresh(rear) : null;
+      info = [front ? `Antes: ${fv == null ? '—' : front.kind === 'v' ? fmtN(fv, 2) + ' V' : 'λ ' + fmtN(fv, 2)}` : 'Sem sonda da frente',
+        rear ? `Depois: ${rv == null ? '—' : fmtN(rv, 2) + ' V'}` : 'sem sonda de trás'].join(' · ');
+      if (front && front.kind === 'l') info += ' (sonda larga: escala λ 0,8 a 1,2)';
+    } else if (st.info && st.info.carReady && !front && !rear) info = 'Este carro não envia as sondas lambda pelo OBD.';
+    $('#o2Info').textContent = info;
+    const v = o2.on || o2.s.length ? o2Analyse() : null, el = $('#o2Verdict');
+    if (v && v.wait) { el.className = 'verdict'; el.innerHTML = `<p>A recolher… faltam ${v.wait} s.</p>`; }
+    else { el.className = 'verdict' + (v ? ' ' + v.cls : ''); el.innerHTML = verdictHtml(v); }
+  }
+  function drawO2() {
+    const c = $('#o2Canvas'), w = c.clientWidth, h = c.clientHeight;
+    if (!w || !h) return;
+    const dpr = Math.min(3, window.devicePixelRatio || 1);
+    if (c.width !== Math.round(w * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); }
+    const ctx = c.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
+    const cs = getComputedStyle(document.documentElement), col = n => cs.getPropertyValue(n).trim();
+    const t = pnow(), SPAN = 20000, X = tt => w - (t - tt) / SPAN * w;
+    const Yv = v => h - 6 - Math.min(1, Math.max(0, v / 1.1)) * (h - 12);
+    const Yl = v => h - 6 - Math.min(1, Math.max(0, (v - 0.8) / 0.4)) * (h - 12);
+    ctx.strokeStyle = col('--line'); ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
+    const y45 = Math.round(Yv(0.45)) + 0.5; ctx.beginPath(); ctx.moveTo(0, y45); ctx.lineTo(w, y45); ctx.stroke(); ctx.setLineDash([]);
+    const line = (key, Y, color) => {
+      ctx.beginPath(); let first = true;
+      for (const p of o2.s) { if (p.k !== key || t - p.t > SPAN) continue; const x = X(p.t), y = Y(p.v); if (first) { ctx.moveTo(x, y); first = false; } else ctx.lineTo(x, y); }
+      ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.lineJoin = 'round'; ctx.stroke();
+    };
+    if (o2.front) line(o2.front.pid, o2.front.kind === 'v' ? Yv : Yl, col('--accent'));
+    if (o2.rear) line(o2.rear, Yv, col('--accent-2'));
+  }
+  $('#btnO2').addEventListener('click', () => (o2.on ? o2Stop() : o2Start()));
+
+  /* ---------- Verificação de carro usado ---------- */
+  const fmtMin = m => (m == null ? '—' : m >= 2880 ? `${fmtN(m / 1440, 0)} dias de ignição ligada` : m >= 60 ? `${Math.floor(m / 60)} h ${p2(m % 60)} min de ignição ligada` : `${m} min de ignição ligada`);
+  async function runUsado() {
+    if (st.usadoBusy || !needCar()) return;
+    const elm = st.elm, info = st.info;
+    st.usadoBusy = true; renderUsado();
+    try {
+      const r = await withPaused(async () => {
+        const out = {};
+        const d = await OBD.readDtcs(elm, info);
+        out.codes = d.codes; out.status = d.status || info.status;
+        const rd = async pid => {
+          if (!info.supported.has(parseInt(pid, 16))) return null;
+          try {
+            const x = OBD.splitResponse(await elm.cmd('01' + pid, 3000), '01' + pid), P = OBD.PIDS[pid], b = OBD.parsePid(x.lines, 1, pid);
+            return b && b.length >= P.len ? P.f(b) : null;
+          } catch (e) { if (e.code === 'TIMEOUT') return null; throw e; }
+        };
+        out.km = await rd('31'); out.arr = await rd('30'); out.min = await rd('4E');
+        out.kmMil = await rd('21'); out.minMil = await rd('4D'); out.odo = await rd('A6');
+        out.ecu = await OBD.readEcuInfo(elm);
+        return out;
+      });
+      if (st.elm !== elm) throw Object.assign(new Error('A ligação terminou a meio da verificação.'), { code: 'GONE' });
+      st.usado = { ...r, quando: Date.now(), vin: info.vin, demo: st.mode === 'demo' };
+      logLine('info', 'Verificação de carro usado feita');
+    } catch (e) { toast(e.code === 'GONE' ? e.message : errorText(e), 5000); }
+    st.usadoBusy = false;
+    renderUsado();
+  }
+  function usadoChecks(u) {
+    const C = [];
+    const det = [u.km != null ? `${fmtN(u.km)} km` : null, u.arr != null ? `${u.arr} arranques com o motor a aquecer` : null, u.min != null ? fmtMin(u.min) : null].filter(Boolean).join(' · ');
+    if (u.km != null || u.arr != null) {
+      const pouco = (u.km != null && u.km < 100) || (u.arr != null && u.arr < 10);
+      const medio = !pouco && ((u.km != null && u.km < 500) || (u.arr != null && u.arr < 30));
+      C.push({ cls: pouco ? 'crit' : medio ? 'warn' : 'ok', chip: pouco ? 'há muito pouco' : medio ? 'há pouco' : 'há bastante', t: 'Erros apagados',
+        d: `Desde que os erros foram apagados (ou a bateria desligada): ${det}.` + (pouco ? ' Apagar os erros pouco antes de vender é um truque comum para esconder avarias: pergunta porquê e volta a ler daqui a uns dias de uso.' : medio ? ' Pergunta ao vendedor porque foram apagados.' : '') });
+    } else C.push({ cls: '', chip: 'sem dados', t: 'Erros apagados', d: 'Este carro não diz há quanto tempo os erros foram apagados. Usa os monitores das emissões, abaixo.' });
+    const rd = OBD.readinessOf(u.status);
+    if (rd) {
+      const inc = rd.monitores.filter(m => !m.pronto);
+      C.push({ cls: !inc.length ? 'ok' : inc.length <= 1 ? 'warn' : 'crit', chip: `${rd.prontos} de ${rd.monitores.length} prontos`, t: 'Monitores das emissões',
+        d: inc.length ? `Incompletos: ${inc.map(m => m.nome).join(', ')}. Vários incompletos juntos é sinal de erros apagados ou bateria desligada há pouco.` : 'Todos completos: os erros não foram apagados recentemente.' });
+    }
+    const by = tipo => u.codes.filter(c => c.tipo === tipo).map(c => c.code);
+    const conf = by('guardado'), pend = by('pendente'), perm = by('permanente');
+    const mil = u.status && u.status.mil;
+    C.push({ cls: conf.length || perm.length || mil ? 'crit' : pend.length ? 'warn' : 'ok',
+      chip: u.codes.length ? `${u.codes.length} ${u.codes.length === 1 ? 'código' : 'códigos'}` : 'nenhum', t: 'Luz do motor e códigos',
+      d: [mil ? 'Luz do motor ACESA.' : 'Luz do motor apagada.', conf.length ? `Confirmados: ${conf.join(', ')}.` : '', pend.length ? `Pendentes: ${pend.join(', ')}.` : '',
+        perm.length ? `Permanentes: ${perm.join(', ')}. Estes só desaparecem quando a avaria é reparada e a centralina confirma; apagar os erros não os tira.` : '',
+        !u.codes.length ? 'Sem códigos guardados, pendentes nem permanentes.' : 'Vê os pormenores em Códigos de avaria, acima.'].filter(Boolean).join(' ') });
+    if (u.kmMil != null || u.minMil != null) {
+      const on = (u.kmMil || 0) > 0 || (u.minMil || 0) > 0;
+      C.push({ cls: on ? 'warn' : 'ok', chip: on ? (u.kmMil != null ? `${fmtN(u.kmMil)} km` : fmtMin(u.minMil)) : 'não', t: 'Andou com a luz do motor acesa',
+        d: on ? `Desde que os erros foram apagados, andou ${u.kmMil != null ? fmtN(u.kmMil) + ' km' : ''}${u.minMil != null ? ` (${fmtMin(u.minMil)})` : ''} com a luz acesa.` : 'Não andou com a luz do motor acesa desde que os erros foram apagados.' });
+    }
+    C.push({ cls: u.vin ? 'ok' : '', chip: u.vin ? 'lido' : 'não enviado', t: 'VIN (número do quadro)',
+      d: u.vin ? `${u.vin}. Confirma que é igual ao do documento único (DUA) e ao gravado no chassis.` : 'O carro não envia o VIN pelo OBD (comum antes de 2005). Confirma no chassis e no documento.' });
+    const e = u.ecu;
+    if (e && (e.calid.length || e.cvn.length)) C.push({ cls: '', chip: 'informação', t: 'Software da centralina',
+      d: `${e.nome ? e.nome + '. ' : ''}Calibração: ${e.calid.join(', ') || '—'}. CVN: ${e.cvn.join(', ') || '—'}. Uma reprogramação (chip, «remap») muda o CVN: compara com outro carro igual ou pergunta na marca.` });
+    else C.push({ cls: '', chip: 'não enviado', t: 'Software da centralina', d: 'A centralina não envia a identificação do software (comum em carros mais antigos).' });
+    if (u.odo != null) C.push({ cls: '', chip: `${fmtN(u.odo)} km`, t: 'Quilómetros na centralina', d: 'Compara com o conta-quilómetros do quadrante: se forem diferentes, desconfia.' });
+    else C.push({ cls: '', chip: 'não dá', t: 'Quilómetros', d: 'Pelo OBD normal não dá para confirmar os quilómetros deste carro. Vê o histórico das inspeções e das revisões.' });
+    return C;
+  }
+  function renderUsado() {
+    const u = st.usado, b = $('#btnUsado');
+    b.disabled = !!st.usadoBusy;
+    b.textContent = st.usadoBusy ? 'A verificar…' : u ? 'Verificar outra vez' : 'Verificar';
+    $('#usadoWhen').textContent = u ? `lido às ${fmtHora(u.quando)}${u.demo ? ' · simulado' : ''}` : '';
+    $('#usadoList').innerHTML = u ? usadoChecks(u).map(c => `<li><b>${esc(c.t)}</b><span class="chip ${c.cls}">${esc(c.chip)}</span><p>${esc(c.d)}</p></li>`).join('') : '';
+  }
+  $('#btnUsado').addEventListener('click', runUsado);
+  function usadoReport() {
+    const u = st.usado;
+    if (!u) return [];
+    const L = ['VERIFICAÇÃO DE CARRO USADO' + (u.demo ? ' (simulada)' : '')];
+    for (const c of usadoChecks(u)) L.push(`  ${c.t}: ${c.chip}`, `     ${c.d}`);
+    L.push('');
+    return L;
+  }
+
+  /* ---------- Gravações ---------- */
+  const GRAV_KEY = 'mostrador-obd.grav';
+  const GRAV_MAX_ROWS = 7200;              // 60 min a 2 leituras por segundo
+  const GV_COLORS = ['#FF8A1F', '#38C9FF', '#3DDC97', '#FFC24B', '#C084FC', '#FF5C7A', '#E2E8F0', '#A3E635', '#60A5FA', '#F472B6'];
+  let gravs = [];
+  try { gravs = JSON.parse(localStorage.getItem(GRAV_KEY)) || []; if (!Array.isArray(gravs)) gravs = []; } catch (e) { gravs = []; }
+  function saveGravs() {
+    for (;;) {
+      try { localStorage.setItem(GRAV_KEY, JSON.stringify(gravs)); return true; }
+      catch (e) {
+        if (gravs.length <= 1) { toast('Sem espaço para guardar a gravação no telemóvel. Exporta-a em CSV.', 6000); return false; }
+        const out = gravs.pop();
+        toast(`Sem espaço: apaguei a gravação mais antiga (${fmtData(out.inicio)}).`, 5000);
+      }
+    }
+  }
+  const roundFor = (d, v) => { if (v == null || !isFinite(v)) return null; const k = Math.pow(10, Math.min(3, (d.dec ?? 0) + 1)); return Math.round(v * k) / k; };
+  function gravAvail(d) { const a = sensorAvailable(d); return !d.special && a !== false; }
+  function openGravDialog() {
+    if (!needLive()) return;
+    if (st.grav) return;
+    const pre = new Set([...curLayout().map(t => t.id), 'vel', 'rpm'].filter(id => S[id] && gravAvail(S[id])));
+    const list = OBD.SENSORS.filter(gravAvail);
+    openDlg(`<form method="dialog" id="gravForm"><div class="dlg-head"><h2 id="dlgTitle">O que gravar</h2><span class="hint" id="gravCount"></span></div>
+<div class="dlg-body"><p class="hint">Escolhe até 10 valores. Quantos menos escolheres, mais leituras por segundo tem cada um. A gravação para sozinha ao fim de 60 minutos.</p>
+<div class="pick-list">${list.map(d => `<label><input type="checkbox" value="${d.id}"${pre.has(d.id) ? ' checked' : ''}> ${esc(d.nome)}<small>${esc(d.un || '')}</small></label>`).join('')}</div>
+<p class="hint err-text" id="gravErr" hidden></p></div>
+<div class="dlg-foot"><span class="spacer"></span><button type="button" class="btn ghost" data-act="cancel">Cancelar</button><button type="submit" class="btn primary">Gravar</button></div></form>`);
+    const form = $('#gravForm');
+    const count = () => { const n = form.querySelectorAll('input:checked').length; $('#gravCount').textContent = `${n} de 10`; return n; };
+    count();
+    form.addEventListener('change', count);
+    form.querySelector('[data-act="cancel"]').addEventListener('click', () => dlg.close());
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const ch = [...form.querySelectorAll('input:checked')].map(i => i.value);
+      const err = $('#gravErr');
+      if (!ch.length || ch.length > 10) { err.hidden = false; err.textContent = ch.length ? 'Escolhe no máximo 10.' : 'Escolhe pelo menos um valor.'; return; }
+      dlg.close(); gravStart(ch);
+    });
+  }
+  function gravStart(ch) {
+    if (!live()) return;
+    st.grav = { id: newId(), inicio: Date.now(), t0: pnow(), ch, rows: [], demo: st.mode === 'demo', perfil: prof().nome, vin: (st.info && st.info.vin) || '' };
+    refreshPollList(); renderGrav(); renderStatus();
+    toast('A gravar. Para parar, vai a Viagens.', 3500);
+  }
+  function gravSample() {
+    const g = st.grav;
+    if (!g) return;
+    const t = Math.round((pnow() - g.t0) / 100) / 10;
+    g.rows.push([t, ...g.ch.map(id => (live() && !st.carAbsent ? roundFor(S[id], sensorValue(S[id])) : null))]);
+    if (g.rows.length >= GRAV_MAX_ROWS) { gravStop(); toast('Gravação parada: chegou aos 60 minutos.', 5000); }
+  }
+  function gravStop(quiet) {
+    const g = st.grav;
+    if (!g) return;
+    st.grav = null;
+    refreshPollList();
+    if (g.rows.length >= 4) {
+      const rec = { id: g.id, inicio: g.inicio, fim: Date.now(), ch: g.ch, rows: g.rows, demo: g.demo, perfil: g.perfil, vin: g.vin };
+      gravs.unshift(rec);
+      if (gravs.length > 10) gravs.length = 10;
+      saveGravs();
+      if (!quiet) toast('Gravação guardada em Viagens.');
+    } else if (!quiet) toast('Gravação demasiado curta: não ficou guardada.');
+    renderGrav(); renderStatus();
+  }
+  const gravDur = g => (g.rows.length ? g.rows[g.rows.length - 1][0] : 0);
+  function renderGrav() {
+    const g = st.grav;
+    $('#gravChip').hidden = !g;
+    if (g) $('#gravChip').textContent = `● a gravar ${fmtDur(gravDur(g))}`;
+    const b = $('#btnGrav');
+    b.textContent = g ? 'Parar e guardar' : 'Começar a gravar';
+    b.classList.toggle('danger', !!g); b.classList.toggle('primary', !g);
+    const html = gravs.map((r, i) => `<li data-i="${i}"><div class="g-t"><b>${esc(cap(fmtDia(r.inicio)))} · ${fmtHora(r.inicio)}${r.demo ? ' · simulado' : ''}</b>
+<span>${fmtDur(gravDur(r))} · ${r.ch.length} ${r.ch.length === 1 ? 'valor' : 'valores'}: ${esc(r.ch.map(id => (S[id] ? S[id].nome : id)).join(', '))}</span></div>
+<div class="actions"><button type="button" class="btn small" data-g="ver">Ver</button><button type="button" class="btn small ghost" data-g="csv">CSV</button><button type="button" class="btn small danger-text" data-g="del">Apagar</button></div></li>`).join('');
+    const list = $('#gravList');
+    if (list.innerHTML !== html) list.innerHTML = html;
+  }
+  $('#btnGrav').addEventListener('click', () => (st.grav ? gravStop() : openGravDialog()));
+  let gravDelArmed = { i: -1, t: 0 };
+  $('#gravList').addEventListener('click', e => {
+    const b = e.target.closest('[data-g]');
+    if (!b) return;
+    const i = +b.closest('li').dataset.i, r = gravs[i];
+    if (!r) return;
+    if (b.dataset.g === 'ver') openGravViewer(r);
+    else if (b.dataset.g === 'csv') exportCsv(r);
+    else if (gravDelArmed.i === i && Date.now() - gravDelArmed.t < 3000) {
+      gravs.splice(i, 1); saveGravs(); gravDelArmed = { i: -1, t: 0 }; renderGrav(); toast('Gravação apagada.');
+    } else { gravDelArmed = { i, t: Date.now() }; b.textContent = 'Toca de novo'; setTimeout(() => { if (b.isConnected) b.textContent = 'Apagar'; }, 3000); }
+  });
+  function gravCsv(r) {
+    const num = (v, d) => (v == null ? '' : String(v).replace('.', ','));
+    const head = ['Tempo (s)', 'Hora', ...r.ch.map(id => { const d = S[id]; return d ? `${d.nome}${d.un ? ' (' + d.un + ')' : ''}` : id; })];
+    const lines = [head.map(h => `"${h.replace(/"/g, '""')}"`).join(';')];
+    for (const row of r.rows) lines.push([num(row[0]), new Date(r.inicio + row[0] * 1000).toLocaleTimeString('pt-PT'), ...row.slice(1).map(v => num(v))].join(';'));
+    return lines.join('\r\n') + '\r\n';
+  }
+  async function exportCsv(r) {
+    const d = new Date(r.inicio), nome = `gravacao-${d.toISOString().slice(0, 10)}-${p2(d.getHours())}${p2(d.getMinutes())}.csv`;
+    const csv = gravCsv(r), E = Extras();
+    if (NATIVE && E && E.partilharFicheiro) {
+      try { await E.partilharFicheiro({ nome, texto: csv, tipo: 'text/csv' }); return; }
+      catch (e) { toast('Não consegui partilhar o ficheiro: ' + nativeMsg(e).slice(0, 60)); return; }
+    }
+    if (NATIVE) { toast('Esta versão da app ainda não partilha ficheiros. Atualiza a app.'); return; }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }));
+    a.download = nome; document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  }
+
+  // Ver uma gravação: gráfico com os valores escolhidos (cada um na sua escala), cursor e zoom
+  function openGravViewer(r) {
+    const V = { r, on: r.ch.map((_, i) => i < 3), zoom: 1, pos: 1, cur: null };
+    const dur = Math.max(1, gravDur(r));
+    const stats = r.ch.map((id, k) => {
+      const vals = r.rows.map(x => x[k + 1]).filter(v => v != null);
+      return vals.length ? { min: Math.min(...vals), max: Math.max(...vals), avg: vals.reduce((a, b) => a + b, 0) / vals.length } : null;
+    });
+    openDlg(`<div class="dlg-head"><h2 id="dlgTitle">${esc(cap(fmtDia(r.inicio)))} · ${fmtHora(r.inicio)}</h2><button type="button" class="btn small ghost" data-act="close">Fechar</button></div>
+<div class="dlg-body">
+  <div class="gv-chips" id="gvChips">${r.ch.map((id, k) => `<button type="button" class="gv-chip" data-k="${k}" style="--c:${GV_COLORS[k % GV_COLORS.length]}" aria-pressed="${V.on[k]}"><i></i>${esc(S[id] ? S[id].nome : id)}</button>`).join('')}</div>
+  <canvas class="gv-canvas" id="gvCanvas"></canvas>
+  <div class="gv-zoom"><button type="button" class="btn small ghost" data-z="out">Afastar</button>
+    <input type="range" id="gvPos" min="0" max="1000" value="1000" aria-label="Posição no tempo">
+    <button type="button" class="btn small" data-z="in">Aproximar ×<span id="gvZ">1</span></button></div>
+  <p class="hint" id="gvTime">Toca no gráfico para ver os valores num instante.</p>
+  <dl class="gv-vals" id="gvVals"></dl>
+  <div class="actions"><button type="button" class="btn small" data-act="csv">Exportar CSV</button></div>
+</div>`);
+    const cv = $('#gvCanvas');
+    const win = () => { const span = dur / V.zoom, start = Math.max(0, Math.min(dur - span, V.pos * (dur - span))); return [start, start + span]; };
+    function vals() {
+      const t = V.cur;
+      let row = null;
+      if (t != null) { let best = Infinity; for (const x of r.rows) { const dd = Math.abs(x[0] - t); if (dd < best) { best = dd; row = x; } else if (x[0] > t) break; } }
+      $('#gvTime').textContent = row ? `Aos ${fmtDur(row[0])} (${new Date(r.inicio + row[0] * 1000).toLocaleTimeString('pt-PT')})` : 'Toca no gráfico para ver os valores num instante.';
+      $('#gvVals').innerHTML = r.ch.map((id, k) => {
+        const d = S[id] || { nome: id, un: '', dec: 1 }, s = stats[k];
+        const now = row ? (row[k + 1] == null ? '—' : fmtVal(d, row[k + 1])) : '';
+        return `<dt style="--c:${GV_COLORS[k % GV_COLORS.length]}"><i></i>${esc(d.nome)}</dt><dd>${row ? esc(now + ' ' + (d.un || '')) : ''}</dd><dd class="mm">${s ? `mín ${esc(fmtVal(d, s.min))} · média ${esc(fmtVal(d, s.avg))} · máx ${esc(fmtVal(d, s.max))} ${esc(d.un || '')}` : 'sem leituras'}</dd>`;
+      }).join('');
+    }
+    function draw() {
+      const w = cv.clientWidth, h = cv.clientHeight;
+      if (!w || !h) return;
+      const dpr = Math.min(3, window.devicePixelRatio || 1);
+      if (cv.width !== Math.round(w * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+      const ctx = cv.getContext('2d');
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
+      const cs = getComputedStyle(document.documentElement);
+      const [a, b] = win(), X = t => (t - a) / (b - a) * w;
+      ctx.strokeStyle = cs.getPropertyValue('--line').trim(); ctx.lineWidth = 1;
+      for (const f of [0.25, 0.5, 0.75]) { const y = Math.round(f * h) + 0.5; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+      r.ch.forEach((id, k) => {
+        if (!V.on[k] || !stats[k]) return;
+        let lo = stats[k].min, hi = stats[k].max;
+        if (hi - lo < 1e-6) { lo -= 1; hi += 1; }
+        const pad = (hi - lo) * 0.08, Y = v => h - 4 - (v - lo + pad) / (hi - lo + 2 * pad) * (h - 8);
+        ctx.strokeStyle = GV_COLORS[k % GV_COLORS.length]; ctx.lineWidth = 1.6; ctx.lineJoin = 'round';
+        ctx.beginPath();
+        let pen = false, bx = -1, bmin = 0, bmax = 0;
+        const flush = () => { if (bx < 0) return; const x = bx + 0.5; if (!pen) { ctx.moveTo(x, Y(bmin)); pen = true; } else ctx.lineTo(x, Y(bmin)); if (bmax !== bmin) ctx.lineTo(x, Y(bmax)); };
+        for (const row of r.rows) {
+          const t = row[0];
+          if (t < a - 1 || t > b + 1) continue;
+          const v = row[k + 1];
+          if (v == null) { flush(); bx = -1; pen = false; continue; }
+          const x = Math.floor(X(t));
+          if (x !== bx) { flush(); bx = x; bmin = bmax = v; } else { bmin = Math.min(bmin, v); bmax = Math.max(bmax, v); }
+        }
+        flush(); ctx.stroke();
+      });
+      if (V.cur != null && V.cur >= a && V.cur <= b) {
+        const x = Math.round(X(V.cur)) + 0.5;
+        ctx.strokeStyle = cs.getPropertyValue('--ink').trim(); ctx.globalAlpha = 0.6;
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); ctx.globalAlpha = 1;
+      }
+      $('#gvZ').textContent = V.zoom;
+    }
+    const pick = e => { const rc = cv.getBoundingClientRect(), [a, b] = win(); V.cur = a + (e.clientX - rc.left) / rc.width * (b - a); draw(); vals(); };
+    cv.addEventListener('pointerdown', e => { cv.setPointerCapture(e.pointerId); pick(e); });
+    cv.addEventListener('pointermove', e => { if (e.buttons || e.pointerType === 'mouse') pick(e); });
+    dlg.querySelector('.dlg-body').addEventListener('click', e => {
+      const c = e.target.closest('[data-k]'), z = e.target.closest('[data-z]');
+      if (c) { const k = +c.dataset.k; V.on[k] = !V.on[k]; c.setAttribute('aria-pressed', String(V.on[k])); draw(); }
+      else if (z) {
+        const keep = V.cur;
+        V.zoom = z.dataset.z === 'in' ? Math.min(32, V.zoom * 2) : Math.max(1, V.zoom / 2);
+        if (keep != null && V.zoom > 1) { const span = dur / V.zoom; V.pos = Math.max(0, Math.min(1, (keep - span / 2) / Math.max(1e-6, dur - span))); $('#gvPos').value = Math.round(V.pos * 1000); }
+        draw();
+      } else if (e.target.closest('[data-act="csv"]')) exportCsv(r);
+    });
+    $('#gvPos').addEventListener('input', e => { V.pos = +e.target.value / 1000; draw(); });
+    dlg.querySelector('[data-act="close"]').addEventListener('click', () => dlg.close());
+    requestAnimationFrame(() => { draw(); vals(); });
+  }
+
+  /* ---------- Definições dos avisos ---------- */
+  function renderAvisos() {
+    $('#oSom').checked = store.opts.somAlerta !== false;
+    $('#oVoz').checked = !!store.opts.voz;
+    $('#oVigia').checked = store.opts.vigia !== false;
+  }
+  $('#oSom').addEventListener('change', e => { store.opts.somAlerta = e.target.checked; save(); });
+  $('#oVoz').addEventListener('change', e => { store.opts.voz = e.target.checked; save(); if (e.target.checked) speak('A voz está ligada.'); });
+  $('#oVigia').addEventListener('change', e => { store.opts.vigia = e.target.checked; save(); if (e.target.checked) resetVigia(); });
+  $('#btnTestAviso').addEventListener('click', async () => {
+    unlockAudio();
+    beep('alerta');
+    if (store.opts.voz) {
+      const ok = await speak('Atenção. Temperatura motor: 108 graus, acima do limite.');
+      if (!ok) toast('Este telemóvel não tem voz disponível para a app. Instala ou ativa a «Conversão de texto em voz» do Google.', 6000);
+    } else toast('Bip de teste. Liga «Dizer o aviso em voz alta» para ouvir também a voz.');
+  });
 
   /* ---------- Viagens ---------- */
   function tripCard(r, emCurso) {
@@ -4517,6 +5324,7 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
     $('#btnDelProfile').disabled = store.perfis.length < 2;
     $('#profileName').textContent = p.nome;
     $('#oAbrir').value = store.opts.abrir || 'inicio';
+    renderAvisos();
     renderStylePick();
   }
 
@@ -4643,7 +5451,7 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
 
   /* ---------- Separadores e botões do topo ---------- */
   const VIEWS = ['inicio', 'paineis', 'diag', 'testes', 'viagens', 'definicoes'];
-  function renderAllViews() { renderDiag(); renderPerf(); renderBat(); renderViagens(); renderLigacao(); renderStatus(); }
+  function renderAllViews() { renderDiag(); renderPerf(); renderBat(); renderMix(); renderO2(); renderUsado(); renderGrav(); renderViagens(); renderLigacao(); renderStatus(); }
   function renderAll() { renderAjustes(); renderGrid(); renderHome(); renderAllViews(); }
   function showView(v) {
     st.view = v;
@@ -4653,8 +5461,9 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
     if (v === 'definicoes') { renderAjustes(); renderLigacao(); renderConsole(true); }
     renderUpdates();
     if (v === 'diag') renderDiag();
-    if (v === 'testes') { renderPerf(); renderBat(); }
-    if (v === 'viagens') renderViagens();
+    if (v === 'testes') { renderPerf(); renderBat(); renderMix(); renderO2(); requestAnimationFrame(drawO2); }
+    else { if (o2.on) o2Stop(); mix.busy = null; }
+    if (v === 'viagens') { renderViagens(); renderGrav(); }
     if (v === 'paineis') requestAnimationFrame(() => { for (const T of st.tiles) if (T.kind === 'graf') drawGraph(T, pnow()); });
     else if (st.carMode) setCarMode(false);
     if (v !== 'paineis' && st.editing) setEditing(false);
@@ -4864,6 +5673,7 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
   requestAnimationFrame(frame);
   setInterval(tick, 1000);
   setInterval(sampleGraphs, 250);
+  setInterval(gravSample, 500);
   window.addEventListener('pagehide', () => { closeRec(); if (st.mode === 'on') save(); });
   const bs = btState();
   if (bs !== 'ok') { showNotice(bs); setTimeout(startDemo, 350); }
