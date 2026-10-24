@@ -267,16 +267,31 @@ jobs:
           KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           KS_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
         run: |
-          echo "$KS_B64" | tr -d '\r\n ' | base64 -d > chave.jks
+          # Cada problema dá uma mensagem clara (aparece no resumo da compilação)
+          if ! echo "$KS_B64" | tr -d '\r\n ' | base64 -d > chave.jks 2>/dev/null; then
+            echo "::error::O segredo ANDROID_KEYSTORE_BASE64 não é um texto base64 válido. Abre o mostrador-chave-base64.txt, Ctrl+A, Ctrl+C e cola de novo."; exit 1
+          fi
+          SZ=$(stat -c%s chave.jks)
+          if [ "$SZ" -lt 1000 ]; then
+            echo "::error::O segredo ANDROID_KEYSTORE_BASE64 parece incompleto ($SZ bytes depois de descodificado). Copia de novo todo o conteúdo do .txt."; exit 1
+          fi
+          if ! KL=$(keytool -list -keystore chave.jks -storepass:env KS_PASS 2>&1); then
+            echo "::error::A chave não abre com a palavra-passe do segredo ANDROID_KEYSTORE_PASSWORD (ou o ficheiro não é uma chave). Detalhe: $(echo "$KL" | grep -v '^Picked up' | head -3 | tr '\n' ' ')"; exit 1
+          fi
+          echo "$KL" | grep -v '^Picked up' | head -8
           BT=$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)
           IN=android/app/build/outputs/apk/release/app-release-unsigned.apk
           OUT=Mostrador-OBD-v${{ steps.v.outputs.versao }}-b${{ github.run_number }}.apk
-          # Serve a mesma chave da 7Chaves: com uma só chave no ficheiro, o nome (alias) não é preciso
+          test -f "$IN" || { echo "::error::APK por assinar não encontrado: $(ls android/app/build/outputs/apk/release/ 2>&1 | tr '\n' ' ')"; exit 1; }
           ALIAS=()
           if [ -n "$KS_ALIAS" ]; then ALIAS=(--ks-key-alias "$KS_ALIAS"); fi
-          "$ANDROID_HOME/build-tools/$BT/zipalign" -f -p 4 "$IN" alinhado.apk
-          "$ANDROID_HOME/build-tools/$BT/apksigner" sign --ks chave.jks "${ALIAS[@]}" \
-            --ks-pass env:KS_PASS --key-pass env:KS_PASS --out "$OUT" alinhado.apk
+          if ! L=$("$ANDROID_HOME/build-tools/$BT/zipalign" -f -p 4 "$IN" alinhado.apk 2>&1); then
+            echo "::error::Falhou o zipalign: $(echo "$L" | tail -3 | tr '\n' ' ')"; exit 1
+          fi
+          if ! L=$("$ANDROID_HOME/build-tools/$BT/apksigner" sign --ks chave.jks "${ALIAS[@]}" \
+              --ks-pass env:KS_PASS --key-pass env:KS_PASS --out "$OUT" alinhado.apk 2>&1); then
+            echo "::error::Falhou a assinatura: $(echo "$L" | grep -v '^Picked up' | tail -4 | tr '\n' ' ')"; exit 1
+          fi
           "$ANDROID_HOME/build-tools/$BT/apksigner" verify "$OUT"
           rm -f chave.jks alinhado.apk
           echo "APK=$OUT" >> $GITHUB_ENV
