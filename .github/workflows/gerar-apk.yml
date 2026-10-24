@@ -110,6 +110,21 @@ jobs:
                   });
               }
 
+              // Brilho atual (desta app, ou o do sistema), de 0 a 1
+              @PluginMethod
+              public void brilhoAtual(final PluginCall call) {
+                  getActivity().runOnUiThread(() -> {
+                      float v = getActivity().getWindow().getAttributes().screenBrightness;
+                      if (v < 0) {
+                          try { v = android.provider.Settings.System.getInt(getContext().getContentResolver(), android.provider.Settings.System.SCREEN_BRIGHTNESS) / 255f; }
+                          catch (Exception e) { v = -1; }
+                      }
+                      com.getcapacitor.JSObject r = new com.getcapacitor.JSObject();
+                      r.put("nivel", (double) v);
+                      call.resolve(r);
+                  });
+              }
+
               // Brilho só desta app (para o modo noite); nível < 0 volta ao brilho do sistema
               @PluginMethod
               public void brilho(final PluginCall call) {

@@ -402,21 +402,42 @@ body.carmode .car-night {
 }
 body.carmode .car-night .icon { width: 16px; height: 16px; }
 body.carmode .car-night[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); }
-/* Modo noite: tudo em tons de vermelho escuro (a luz vermelha encandeia menos e não estraga a visão noturna) */
-body.carmode.noite #view-paineis > .view-band, body.carmode.noite .car-page {
-  filter: grayscale(1) sepia(1) saturate(5) hue-rotate(-38deg) brightness(.62) contrast(1.15);
+/* Modo noite: âmbar quente e suave, como um quadrante de carro à noite. Quem escurece é o brilho do ecrã
+   (na app instalada); as cores mantêm contraste para se lerem bem, sem brilhos à volta dos números. */
+body.carmode.noite {
+  --bg: #000; --chrome: #000; --face: #0E0B08; --face-2: #18130E; --line: #2B2118;
+  --ink: #EBCFB0; --muted: #A88A6C; --tick: #BE9E7E; --dial-ink: #D9BD9E;
+  --accent: #E39A4F; --accent-2: #C7A27C; --accent-ink: #160B02; --accent-soft: rgba(227, 154, 79, .12);
+  --ok: #B9B07A; --ok-soft: rgba(185, 176, 122, .12); --warn: #E3B05F; --warn-soft: rgba(227, 176, 95, .12);
+  --crit: #E8705A; --crit-soft: rgba(232, 112, 90, .14);
+  --tile-bg: #0B0907; --shadow: none; --glow: none;
+  background: #000;
 }
-body.carmode.noite { background: #000; }
+body.carmode.noite * { text-shadow: none !important; }
+body.carmode.noite .c-val, body.carmode.noite .tab .icon, body.carmode.noite .dial-hud .d-value { filter: none; }
+body.carmode.noite .n-fill, body.carmode.noite .page-dots i.on, body.carmode.noite .tile.alarm { box-shadow: none; }
+body.carmode.noite .tile.alarm { border-color: var(--crit); }
+body.carmode.noite .h-seg { fill: #1A140F; }
+body.carmode.noite .h-seg.z { fill: rgba(232, 112, 90, .2); }
+body.carmode.noite .h-seg.on { fill: var(--accent); }
+body.carmode.noite .h-seg.on.hi { fill: var(--accent-2); }
+body.carmode.noite .h-seg.on.z { fill: var(--crit); }
+body.carmode.noite .n-value, body.carmode.noite .dial-hud .d-value { color: var(--ink); fill: var(--ink); }
 /* Clássico à noite: mostrador escuro com marcas claras, como um quadrante iluminado (o creme encandeava) */
-body.carmode.noite .k-face { fill: #15120F; }
-body.carmode.noite .k-bezel { fill: #3A3734; }
-body.carmode.noite .k-bezel-in { fill: #050505; }
-body.carmode.noite .k-major, body.carmode.noite .k-minor { stroke: #D8CFC2; }
-body.carmode.noite .k-label { fill: #D8CFC2; }
-body.carmode.noite .k-scale { fill: #8F8576; }
+body.carmode.noite .k-face { fill: #120E0A; }
+body.carmode.noite .k-bezel { fill: #2E2620; }
+body.carmode.noite .k-bezel-in { fill: #050403; }
+body.carmode.noite .k-major, body.carmode.noite .k-minor { stroke: var(--dial-ink); }
+body.carmode.noite .k-label { fill: var(--dial-ink); }
+body.carmode.noite .k-scale { fill: var(--muted); }
 body.carmode.noite .k-win { fill: #000; }
-body.carmode.noite .k-hub { fill: #4A4642; }
-body.carmode.noite .toast { background: #3A0A06; color: #FF9A8A; }
+body.carmode.noite .k-hub { fill: #3A3029; stroke: #000; }
+body.carmode.noite .k-needle { fill: #E8705A; filter: none; }
+body.carmode.noite .dial-classico .d-value { fill: var(--ink); }
+body.carmode.noite .toast { background: #1C150F; color: var(--ink); border: 1px solid var(--line); }
+/* Troca suave entre dia e noite */
+body.carmode #view-paineis > .view-band { transition: opacity .45s ease; }
+body.carmode.a-trocar #view-paineis > .view-band { opacity: .08; }
 #brilhoRow input[type=range] { width: 100%; accent-color: var(--accent); }
 
 @media (orientation: landscape) and (min-width: 700px) {
@@ -1081,7 +1102,7 @@ body.carmode .toast { bottom: calc(36px + env(safe-area-inset-bottom, 0px)); }
               <option value="on">Sempre</option>
               <option value="off">Nunca</option>
             </select>
-            <span class="hint" id="noiteHint">Escurece o ecrã e passa as cores para vermelho, para não encandear. No modo carro, o botão da lua liga e desliga à mão.</span></div>
+            <span class="hint" id="noiteHint">Cores em âmbar suave e brilho do ecrã mais baixo, para não cansar a vista. No modo carro, o botão da lua liga e desliga à mão.</span></div>
           <div class="field" id="brilhoRow"><label for="oBrilho">Brilho do ecrã à noite: <b id="brilhoTxt">30 %</b></label>
             <input type="range" id="oBrilho" min="5" max="100" step="5" value="30"></div>
         </div>
@@ -2730,7 +2751,7 @@ const OBD = (() => {
       'Verificação de carro usado (Avarias): há quanto tempo os erros foram apagados, monitores, luz do motor, km com a luz acesa, VIN e software da centralina. Entra no relatório',
       'Avisos: bip e voz quando um mostrador passa o limite, e vigia de avarias que lê os erros de minuto a minuto e avisa logo que aparece um novo',
       'Copiar para outro aparelho (Definições): exporta os perfis, as páginas e as opções num ficheiro ou em texto e importa-os no tablet, a substituir ou a juntar',
-      'Modo noite no modo carro: baixa o brilho do ecrã e passa as cores para vermelho. Automático do pôr ao nascer do sol, sempre, ou à mão com o botão da lua'
+      'Modo noite no modo carro: cores em âmbar suave e legível, sem brilhos, e o brilho do ecrã desce aos poucos. Automático do pôr ao nascer do sol, sempre, ou à mão com o botão da lua'
     ]}
   ];
 
@@ -3734,7 +3755,7 @@ ${opt.home ? '' : editBar()}`;
     const ctx = c.getContext('2d');
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, w, h);
-    const cs = getComputedStyle(document.documentElement), col = n => cs.getPropertyValue(n).trim();
+    const cs = getComputedStyle(document.body), col = n => cs.getPropertyValue(n).trim();
     const accent = col('--accent'), grid = col('--line'), face = col('--face'), muted = col('--muted');
     const hist = st.hist[T.def.id] || [];
     const pts = hist.filter(p => p.v != null && isFinite(p.v));
@@ -4924,7 +4945,7 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
     if (c.width !== Math.round(w * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); }
     const ctx = c.getContext('2d');
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
-    const cs = getComputedStyle(document.documentElement), col = n => cs.getPropertyValue(n).trim();
+    const cs = getComputedStyle(document.body), col = n => cs.getPropertyValue(n).trim();
     const t = pnow(), SPAN = 20000, X = tt => w - (t - tt) / SPAN * w;
     const Yv = v => h - 6 - Math.min(1, Math.max(0, v / 1.1)) * (h - 12);
     const Yl = v => h - 6 - Math.min(1, Math.max(0, (v - 0.8) / 0.4)) * (h - 12);
@@ -5180,7 +5201,7 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
       if (cv.width !== Math.round(w * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
       const ctx = cv.getContext('2d');
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
-      const cs = getComputedStyle(document.documentElement);
+      const cs = getComputedStyle(document.body);
       const [a, b] = win(), X = t => (t - a) / (b - a) * w;
       ctx.strokeStyle = cs.getPropertyValue('--line').trim(); ctx.lineWidth = 1;
       for (const f of [0.25, 0.5, 0.75]) { const y = Math.round(f * h) + 0.5; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
@@ -5565,16 +5586,37 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
     const { rise, set } = sunTimes(now, SOL.lat, SOL.lng), m = 25 * 60000;   // crepúsculo: 25 min
     return now < new Date(rise.valueOf() - m) || now > new Date(set.valueOf() + m);
   }
-  let nightManual = null, nightOn = null;
+  let nightManual = null, nightOn = null, rampa = 0;
   const isNight = () => (nightManual != null ? nightManual : store.opts.noite === 'on' ? true : store.opts.noite === 'off' ? false : escuroLa());
+  // Muda o brilho do ecrã aos poucos (cerca de 2 s), para a vista se ir habituando
+  async function rampaBrilho(para) {
+    const E = plug('Ecra');
+    if (!(NATIVE && E && E.brilho)) return;
+    const id = ++rampa;
+    let de = 0.6;
+    try { const r = await E.brilhoAtual(); if (r && r.nivel >= 0) de = r.nivel; } catch (e) { /* sem leitura: parte de 60 % */ }
+    const alvo = para < 0 ? de : para;
+    if (para < 0) {    // volta ao brilho do sistema: sobe da noite até lá e depois larga
+      for (let i = 1; i <= 12 && id === rampa; i++) { await E.brilho({ nivel: (store.opts.brilhoNoite || 30) / 100 + (alvo - (store.opts.brilhoNoite || 30) / 100) * i / 12 }).catch(() => {}); await OBD.sleep(160); }
+      if (id === rampa) await E.brilho({ nivel: -1 }).catch(() => {});
+      return;
+    }
+    for (let i = 1; i <= 12 && id === rampa; i++) { await E.brilho({ nivel: de + (alvo - de) * i / 12 }).catch(() => {}); await OBD.sleep(160); }
+  }
   async function applyNight(force) {
     const on = st.carMode && isNight();
-    document.body.classList.toggle('noite', on);
     $('#btnCarNight').setAttribute('aria-pressed', String(on));
-    if (on === nightOn && !force) return;
+    if (on === nightOn && !force) { document.body.classList.toggle('noite', on); return; }
+    const mudou = nightOn !== null && on !== nightOn && st.carMode && !reduceMotion;
     nightOn = on;
-    const E = plug('Ecra');
-    if (NATIVE && E && E.brilho) { try { await E.brilho({ nivel: on ? (store.opts.brilhoNoite || 30) / 100 : -1 }); } catch (e) { /* sem controlo do brilho */ } }
+    if (mudou) {                                  // escurece, troca as cores e volta a aparecer
+      document.body.classList.add('a-trocar');
+      await OBD.sleep(450);
+      document.body.classList.toggle('noite', on);
+      requestAnimationFrame(() => { for (const T of st.tiles) if (T.kind === 'graf') drawGraph(T, pnow()); });
+      document.body.classList.remove('a-trocar');
+    } else document.body.classList.toggle('noite', on);
+    rampaBrilho(on ? (store.opts.brilhoNoite || 30) / 100 : -1);
   }
   $('#btnCarNight').addEventListener('click', () => { nightManual = !isNight(); applyNight(); });
   $('#oNoite').addEventListener('change', e => { store.opts.noite = e.target.value; save(); nightManual = null; applyNight(); renderNoite(); });
@@ -5586,7 +5628,7 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
     $('#brilhoTxt').textContent = (store.opts.brilhoNoite || 30) + ' %';
     $('#brilhoRow').hidden = !(NATIVE && plug('Ecra'));
     const { rise, set } = sunTimes(new Date(), SOL.lat, SOL.lng);
-    $('#noiteHint').textContent = 'Escurece o ecrã e passa as cores para vermelho, para não encandear. ' +
+    $('#noiteHint').textContent = 'Cores em âmbar suave e brilho do ecrã mais baixo, para não cansar a vista. ' +
       (store.opts.noite === 'auto' ? `Hoje liga às ${fmtHora(set.valueOf() + 25 * 60000)} e desliga às ${fmtHora(rise.valueOf() - 25 * 60000)}. ` : '') +
       'No modo carro, o botão da lua liga e desliga à mão.';
   }
