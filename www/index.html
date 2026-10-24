@@ -9,51 +9,63 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=B612+Mono:wght@400;700&family=Barlow+Semi+Condensed:wght@600;700&family=Barlow:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=B612+Mono:wght@400;700&family=Barlow+Semi+Condensed:wght@600;700&family=Barlow:wght@400;500;600;700&family=Oswald:wght@400;500;600;700&family=Saira+Condensed:wght@500;600;700&display=swap" media="print" onload="this.media='all'">
 <style>
-/* Layout: ecrã único de quadrante — barra de estado em cima, grelha de mostradores que se adapta
-   ao telemóvel na vertical e na horizontal, separadores em baixo ao alcance do polegar.
-   De dia o mostrador tem fundo branco; à noite fica grafite com escala clara. A agulha é laranja-sinal. */
-:root {
-  --bg: #E4E7EA;
-  --chrome: #F4F5F6;
-  --face: #FFFFFF;
-  --face-2: #EDF0F2;
-  --ink: #12161B;
-  --muted: #58626D;
-  --line: #CDD3D9;
-  --tick: #232A31;
-  --accent: #D9480F;
-  --accent-ink: #FFFFFF;
-  --accent-soft: rgba(217, 72, 15, .11);
-  --ok: #1C7A4B;
-  --ok-soft: rgba(28, 122, 75, .12);
-  --warn: #9E5C00;
-  --warn-soft: rgba(196, 122, 0, .15);
-  --crit: #C6241A;
-  --crit-ink: #FFFFFF;
-  --crit-soft: rgba(198, 36, 26, .10);
-  --shadow: 0 1px 0 rgba(18, 22, 27, .04), 0 8px 20px -14px rgba(18, 22, 27, .28);
+/* Layout: app de bordo para telemóvel e tablet no carro. Barra de estado em cima, conteúdo ao centro,
+   separadores em baixo ao alcance do polegar. Em Painéis, os mostradores enchem o ecrã; no modo carro
+   (tablet na horizontal) desaparecem as barras e só ficam os mostradores.
+   Três estilos escolhidos em Definições → Aparência, cada um com as suas cores, letras e mostradores:
+   Cockpit digital (preto profundo, arcos âmbar com brilho), Clássico (mostradores creme com aro cromado,
+   ponteiro vermelho) e HUD de corrida (verde-ciano, linhas finas, barras em segmentos). */
+:root, [data-estilo="cockpit"] {
+  --bg: #050709; --chrome: #080B0F; --face: #0D1218; --face-2: #151C25; --ink: #ECF3F8; --muted: #7F8D9B;
+  --line: #1D2732; --tick: #AEBBC7; --accent: #FF8A1F; --accent-2: #38C9FF; --accent-ink: #1A0C00;
+  --accent-soft: rgba(255, 138, 31, .14); --ok: #3DDC97; --ok-soft: rgba(61, 220, 151, .13);
+  --warn: #FFC24B; --warn-soft: rgba(255, 194, 75, .14); --crit: #FF4D4D; --crit-ink: #1F0303; --crit-soft: rgba(255, 77, 77, .14);
+  --shadow: 0 1px 0 rgba(255, 255, 255, .03) inset, 0 14px 30px -20px rgba(0, 0, 0, .95);
+  --tile-bg: radial-gradient(130% 95% at 50% 0%, #131B25 0%, #0B1016 68%);
+  --glow: drop-shadow(0 0 5px rgba(255, 138, 31, .6));
+  --radius: 16px; --radius-s: 10px;
+  --dial-face: transparent; --dial-ink: var(--tick); --bezel-1: #3A4552; --bezel-2: #10161D;
   --font-ui: "Barlow", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-display: "Barlow Semi Condensed", "Barlow", "Arial Narrow", system-ui, sans-serif;
-  --font-num: "B612 Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-display: "Saira Condensed", "Barlow Semi Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-num: "Saira Condensed", "Barlow Semi Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-mono: "B612 Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --num-weight: 600; --label-track: .08em;
+  color-scheme: dark;
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0A0F14; --chrome: #0F161D; --face: #131B23; --face-2: #1A242E; --ink: #E5EBF0; --muted: #8B97A3;
-    --line: #24303B; --tick: #CCD5DD; --accent: #FF6B2C; --accent-ink: #1C0B03; --accent-soft: rgba(255, 107, 44, .15);
-    --ok: #3CC282; --ok-soft: rgba(60, 194, 130, .14); --warn: #F0B03A; --warn-soft: rgba(240, 176, 58, .15);
-    --crit: #FF5C50; --crit-ink: #1F0503; --crit-soft: rgba(255, 92, 80, .14);
-    --shadow: 0 1px 0 rgba(0, 0, 0, .35), 0 10px 24px -16px rgba(0, 0, 0, .9);
-    color-scheme: dark;
-  }
+[data-estilo="classico"] {
+  --bg: #120F0C; --chrome: #19140F; --face: #211A14; --face-2: #2B231B; --ink: #F3EADB; --muted: #A99A85;
+  --line: #3A3027; --tick: #1B1611; --accent: #D7262E; --accent-2: #E2B45C; --accent-ink: #FFFFFF;
+  --accent-soft: rgba(215, 38, 46, .16); --ok: #7FC48E; --ok-soft: rgba(127, 196, 142, .14);
+  --warn: #E8B44F; --warn-soft: rgba(232, 180, 79, .15); --crit: #F0545B; --crit-ink: #200304; --crit-soft: rgba(240, 84, 91, .15);
+  --shadow: 0 1px 0 rgba(255, 240, 220, .05) inset, 0 16px 30px -20px rgba(0, 0, 0, .9);
+  --tile-bg: linear-gradient(180deg, #261E17 0%, #1C1611 100%);
+  --glow: none;
+  --radius: 20px; --radius-s: 12px;
+  --dial-face: #F1E9D8; --dial-ink: #1B1611; --bezel-1: #F7F7F5; --bezel-2: #6E6E6C;
+  --font-ui: "Barlow", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Oswald", "Barlow Semi Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-num: "Oswald", "Barlow Semi Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-mono: "B612 Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --num-weight: 500; --label-track: .1em;
+  color-scheme: dark;
 }
-:root[data-theme="dark"] {
-  --bg: #0A0F14; --chrome: #0F161D; --face: #131B23; --face-2: #1A242E; --ink: #E5EBF0; --muted: #8B97A3;
-  --line: #24303B; --tick: #CCD5DD; --accent: #FF6B2C; --accent-ink: #1C0B03; --accent-soft: rgba(255, 107, 44, .15);
-  --ok: #3CC282; --ok-soft: rgba(60, 194, 130, .14); --warn: #F0B03A; --warn-soft: rgba(240, 176, 58, .15);
-  --crit: #FF5C50; --crit-ink: #1F0503; --crit-soft: rgba(255, 92, 80, .14);
-  --shadow: 0 1px 0 rgba(0, 0, 0, .35), 0 10px 24px -16px rgba(0, 0, 0, .9);
+[data-estilo="hud"] {
+  --bg: #010403; --chrome: #020806; --face: #04110D; --face-2: #072019; --ink: #D8FFF3; --muted: #5C9384;
+  --line: #0F3329; --tick: #3FF2C9; --accent: #19F2C6; --accent-2: #A5FF3A; --accent-ink: #00140F;
+  --accent-soft: rgba(25, 242, 198, .12); --ok: #A5FF3A; --ok-soft: rgba(165, 255, 58, .12);
+  --warn: #FFD23B; --warn-soft: rgba(255, 210, 59, .13); --crit: #FF3B5C; --crit-ink: #1A0007; --crit-soft: rgba(255, 59, 92, .14);
+  --shadow: none;
+  --tile-bg: linear-gradient(180deg, rgba(25, 242, 198, .045), rgba(25, 242, 198, 0) 40%), #030D0A;
+  --glow: drop-shadow(0 0 4px rgba(25, 242, 198, .7));
+  --radius: 3px; --radius-s: 2px;
+  --dial-face: transparent; --dial-ink: var(--tick); --bezel-1: #0F3329; --bezel-2: #04110D;
+  --font-ui: "Barlow", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "B612 Mono", ui-monospace, Menlo, Consolas, monospace;
+  --font-num: "B612 Mono", ui-monospace, Menlo, Consolas, monospace;
+  --font-mono: "B612 Mono", ui-monospace, Menlo, Consolas, monospace;
+  --num-weight: 700; --label-track: .12em;
   color-scheme: dark;
 }
 
@@ -67,6 +79,12 @@ body {
   background: var(--bg); color: var(--ink);
   font: 400 15px/1.45 var(--font-ui);
   -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent;
+}
+:root[data-estilo="hud"] body {
+  background: repeating-linear-gradient(0deg, rgba(25, 242, 198, .025) 0 1px, transparent 1px 3px), var(--bg);
+}
+:root[data-estilo="classico"] body {
+  background: radial-gradient(120% 70% at 50% -10%, #241C15 0%, var(--bg) 60%);
 }
 h1, h2, h3, p { margin: 0; }
 h2, h3 { text-wrap: balance; }
@@ -84,28 +102,29 @@ button { cursor: pointer; }
 .topbar { background: var(--chrome); border-bottom: 1px solid var(--line); flex: none; }
 .topbar-row { display: flex; align-items: center; gap: 8px; padding-block: 10px 6px; }
 .brand { display: flex; align-items: center; gap: 8px; margin-right: auto; min-width: 0; }
-.brand-mark { width: 26px; height: 26px; flex: none; }
-.brand-mark .bm-face { fill: var(--face); stroke: var(--tick); stroke-width: 1.6; }
-.brand-mark .bm-needle { stroke: var(--accent); stroke-width: 2.2; stroke-linecap: round; }
-.brand-mark .bm-tick { stroke: var(--tick); stroke-width: 1.4; stroke-linecap: round; }
-.brand-name { font: 700 19px/1 var(--font-display); letter-spacing: .07em; text-transform: uppercase; }
-.status { display: flex; align-items: center; gap: 10px; padding-block: 0 10px; min-width: 0; }
-.facts {
-  font-size: 12.5px; color: var(--muted); min-width: 0;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+.brand-mark { width: 26px; height: 26px; flex: none; filter: var(--glow); }
+.brand-mark .bm-face { fill: none; stroke: var(--muted); stroke-width: 1.6; }
+.brand-mark .bm-needle { stroke: var(--accent); stroke-width: 2.4; stroke-linecap: round; }
+.brand-mark .bm-tick { stroke: var(--ink); stroke-width: 1.4; stroke-linecap: round; }
+.brand-name { font: 700 19px/1 var(--font-display); letter-spacing: var(--label-track); text-transform: uppercase; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ver-chip {
+  flex: none; border: 1px solid var(--line); background: var(--face); color: var(--muted);
+  border-radius: 999px; padding: 3px 8px; font: 400 11px/1.3 var(--font-mono); white-space: nowrap;
 }
+.status { display: flex; align-items: center; gap: 10px; padding-block: 0 10px; min-width: 0; }
+.facts { font-size: 12.5px; color: var(--muted); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .facts.err { color: var(--crit); white-space: normal; }
 .pill {
   display: inline-flex; align-items: center; gap: 6px; flex: none;
   padding: 3px 10px 3px 8px; border-radius: 999px;
   font: 600 12.5px/1.3 var(--font-ui); background: var(--face-2); color: var(--muted);
 }
-.pill .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+:root[data-estilo="hud"] .pill { border-radius: 2px; text-transform: uppercase; letter-spacing: .06em; font-size: 11.5px; }
+.pill .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; box-shadow: 0 0 8px currentColor; }
 .pill[data-state="on"] { background: var(--ok-soft); color: var(--ok); }
 .pill[data-state="demo"] { background: var(--accent-soft); color: var(--accent); }
-.pill[data-state="connecting"] { background: var(--warn-soft); color: var(--warn); }
+.pill[data-state="connecting"], .pill[data-state="wait"] { background: var(--warn-soft); color: var(--warn); }
 .pill[data-state="lost"] { background: var(--crit-soft); color: var(--crit); }
-.pill[data-state="wait"] { background: var(--warn-soft); color: var(--warn); }
 .pill[data-state="connecting"] .dot, .pill[data-state="lost"] .dot { animation: blink 1s steps(2, start) infinite; }
 @keyframes blink { to { visibility: hidden; } }
 
@@ -116,144 +135,275 @@ button { cursor: pointer; }
 /* ---------- Botões ---------- */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  min-height: 44px; padding: 10px 16px; border-radius: 10px;
-  border: 1px solid var(--line); background: var(--face); color: var(--ink);
-  font: 600 15px/1.1 var(--font-ui); text-align: center;
+  min-height: 44px; padding: 10px 16px; border-radius: var(--radius-s);
+  border: 1px solid var(--line); background: var(--face-2); color: var(--ink);
+  font: 600 15px/1.1 var(--font-ui); text-align: center; white-space: nowrap;
 }
+:root[data-estilo="hud"] .btn { text-transform: uppercase; letter-spacing: .06em; font-size: 13.5px; }
 .btn.small { min-height: 38px; padding: 8px 13px; font-size: 14px; }
+:root[data-estilo="hud"] .btn.small { font-size: 12.5px; }
 .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+:root[data-estilo="cockpit"] .btn.primary { box-shadow: 0 0 18px -6px var(--accent); }
+:root[data-estilo="hud"] .btn.primary { background: transparent; color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent), 0 0 14px -6px var(--accent); }
 .btn.ghost { background: transparent; }
 .btn.danger { background: var(--crit); border-color: var(--crit); color: var(--crit-ink); }
 .btn.danger-text { color: var(--crit); border-color: transparent; background: transparent; }
-.btn:disabled { opacity: .5; cursor: default; }
+.btn:disabled { opacity: .45; cursor: default; }
 .btn.armed { background: var(--crit-soft); border-color: var(--crit); color: var(--crit); }
 .icon-btn {
   width: 40px; height: 40px; flex: none; display: inline-grid; place-items: center;
-  border-radius: 10px; border: 1px solid var(--line); background: var(--face); color: var(--ink);
+  border-radius: var(--radius-s); border: 1px solid var(--line); background: var(--face-2); color: var(--ink);
 }
 .icon { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.btn .icon { width: 18px; height: 18px; }
 .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 
 /* ---------- Área principal ---------- */
 main { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; }
-.view-band { padding-block: 14px 28px; max-width: 1180px; margin: 0 auto; }
+.view-band { padding-block: 14px 28px; max-width: 1400px; margin: 0 auto; }
 .toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
 .profile-chip {
   margin-right: auto; display: inline-flex; align-items: center; gap: 6px; min-width: 0;
-  font: 600 14px/1.2 var(--font-display); letter-spacing: .05em; text-transform: uppercase; color: var(--muted);
+  font: 600 14px/1.2 var(--font-display); letter-spacing: var(--label-track); text-transform: uppercase; color: var(--muted);
 }
 .profile-chip b { color: var(--ink); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sec-h {
+  font: 700 13px/1.2 var(--font-display); letter-spacing: var(--label-track); text-transform: uppercase; color: var(--muted);
+  margin: 6px 2px -2px;
+}
 
-.hero { display: grid; gap: 12px; margin-bottom: 14px; }
-.hero h2 { font: 700 22px/1.15 var(--font-display); letter-spacing: .02em; }
+.hero { display: grid; gap: 12px; }
+.hero h2 { font: 700 24px/1.1 var(--font-display); letter-spacing: .03em; text-transform: uppercase; }
 .hero p { color: var(--muted); max-width: 60ch; }
+.home { display: grid; gap: 12px; }
+.home-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 600px) { .home-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.home-grid .tile { min-height: 0; }
+.home-grid .n-value { font-size: 34px; }
+.home-grid .n-bar, .home-grid .tile-foot .t-peak { display: none; }
+.go-panels { justify-content: space-between; width: 100%; min-height: 54px; font-size: 16px; }
+
+/* ---------- Painéis: páginas ---------- */
+.pagebar { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; min-width: 0; }
+.pages { display: flex; gap: 6px; overflow-x: auto; min-width: 0; flex: 1; scrollbar-width: none; padding: 2px; }
+.pages::-webkit-scrollbar { display: none; }
+.page-chip {
+  flex: none; border: 1px solid var(--line); background: var(--face); color: var(--muted);
+  border-radius: 999px; padding: 7px 12px; min-height: 38px;
+  font: 600 13.5px/1.2 var(--font-display); letter-spacing: var(--label-track); text-transform: uppercase; white-space: nowrap;
+}
+:root[data-estilo="hud"] .page-chip { border-radius: 2px; }
+.page-chip[aria-pressed="true"] { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+:root[data-estilo="hud"] .page-chip[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
+.page-dots { display: flex; justify-content: center; gap: 7px; margin-top: 12px; }
+.page-dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--line); }
+.page-dots i.on { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+.grid.slide-l { animation: slideL .22s ease-out; }
+.grid.slide-r { animation: slideR .22s ease-out; }
+@keyframes slideL { from { transform: translateX(28px); opacity: .3; } }
+@keyframes slideR { from { transform: translateX(-28px); opacity: .3; } }
 
 /* ---------- Grelha de mostradores ---------- */
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 158px), 1fr)); gap: 10px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 160px), 1fr)); grid-auto-flow: row dense; gap: 10px; touch-action: pan-y; }
+@media (min-width: 900px) { .grid { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; } }
 .tile {
   position: relative; min-width: 0; display: flex; flex-direction: column;
-  background: var(--face); border: 1px solid var(--line); border-radius: 14px;
+  background: var(--tile-bg); border: 1px solid var(--line); border-radius: var(--radius);
   padding: 10px 12px 10px; box-shadow: var(--shadow);
 }
+:root[data-estilo="hud"] .tile {
+  background:
+    linear-gradient(var(--accent), var(--accent)) top left / 12px 1px no-repeat,
+    linear-gradient(var(--accent), var(--accent)) top left / 1px 12px no-repeat,
+    linear-gradient(var(--accent), var(--accent)) bottom right / 12px 1px no-repeat,
+    linear-gradient(var(--accent), var(--accent)) bottom right / 1px 12px no-repeat,
+    var(--tile-bg);
+}
 .tile.wide { grid-column: span 2; }
-@media (max-width: 347px) { .tile.wide { grid-column: auto; } }
-.tile.alarm { border-color: var(--crit); box-shadow: 0 0 0 1px var(--crit), var(--shadow); background: linear-gradient(var(--crit-soft), var(--crit-soft)), var(--face); }
+.tile.big { grid-column: span 2; grid-row: span 2; }
+@media (max-width: 347px) { .tile.wide, .tile.big { grid-column: auto; } }
+.tile.alarm { border-color: var(--crit); box-shadow: 0 0 0 1px var(--crit), 0 0 26px -8px var(--crit); }
 .tile-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
 .tile-name {
-  font: 600 13px/1.2 var(--font-display); letter-spacing: .06em; text-transform: uppercase;
+  font: 600 13px/1.2 var(--font-display); letter-spacing: var(--label-track); text-transform: uppercase;
   color: var(--muted); min-width: 0;
 }
-.tile-pid { font: 400 10.5px/1.5 var(--font-num); color: var(--muted); flex: none; white-space: nowrap; }
+.tile-pid { font: 400 10px/1.5 var(--font-mono); color: var(--muted); opacity: .7; flex: none; white-space: nowrap; }
 .tile-body { flex: 1; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
 .tile-foot {
   display: flex; justify-content: space-between; gap: 8px; margin-top: 4px;
-  font: 400 11.5px/1.3 var(--font-num); color: var(--muted);
+  font: 400 11px/1.3 var(--font-mono); color: var(--muted);
 }
-.tile-foot .t-note { text-align: right; font-family: var(--font-ui); }
+.tile-foot .t-note { text-align: right; font-family: var(--font-ui); font-size: 11.5px; }
 
-/* mostrador de ponteiro */
-.dial { display: block; width: 100%; height: auto; max-height: 250px; margin: 2px auto 0; overflow: visible; }
-.d-track { fill: none; stroke: var(--line); stroke-width: 1.6; }
-.d-zone { fill: none; stroke: var(--crit); stroke-width: 5; opacity: .9; }
-.d-major { stroke: var(--tick); stroke-width: 2.4; stroke-linecap: round; }
-.d-minor { stroke: var(--tick); stroke-width: 1.1; opacity: .55; }
-.d-label { fill: var(--tick); font: 700 11px var(--font-num); text-anchor: middle; dominant-baseline: central; }
+/* --- mostrador Cockpit: arco com brilho --- */
+.dial { display: block; width: 100%; height: auto; margin: 2px auto 0; overflow: visible; }
+.tile:not(.big) .dial { max-height: 240px; }
+.tile.big .dial { max-height: none; }
+.c-track { fill: none; stroke: var(--face-2); stroke-width: 12; stroke-linecap: round; }
+.c-val { fill: none; stroke: var(--accent); stroke-width: 12; stroke-linecap: round; filter: var(--glow); }
+.tile.alarm .c-val { stroke: var(--crit); }
+.c-tick { stroke: var(--muted); stroke-width: 1.4; stroke-linecap: round; }
+.c-tick.mj { stroke: var(--ink); stroke-width: 2; }
+.c-zone { fill: none; stroke: var(--crit); stroke-width: 3; opacity: .85; }
+.c-peak { fill: var(--accent-2); }
+.d-label { fill: var(--muted); font: 600 10.5px var(--font-num); text-anchor: middle; dominant-baseline: central; }
 .d-scale { fill: var(--muted); font: 600 8.5px var(--font-ui); text-anchor: middle; letter-spacing: .08em; }
-.d-needle { fill: var(--accent); }
-.d-hub { fill: var(--face-2); stroke: var(--accent); stroke-width: 2.5; }
-.d-peak { stroke: var(--accent); stroke-width: 2.4; stroke-linecap: round; opacity: .5; }
-.d-value { fill: var(--ink); font: 700 25px var(--font-num); text-anchor: middle; }
-.d-unit { fill: var(--muted); font: 600 10px var(--font-ui); text-anchor: middle; letter-spacing: .05em; }
+.d-value { fill: var(--ink); font: var(--num-weight) 34px var(--font-num); text-anchor: middle; font-variant-numeric: tabular-nums; }
+.d-unit { fill: var(--muted); font: 600 10px var(--font-ui); text-anchor: middle; letter-spacing: .08em; text-transform: uppercase; }
 .tile.alarm .d-value { fill: var(--crit); }
 .tile.stale .d-value, .tile.na .d-value, .tile.idle .d-value { fill: var(--muted); }
-.tile.stale .d-needle-g, .tile.na .d-needle-g { opacity: .35; }
+.tile.stale .c-val, .tile.na .c-val { opacity: .35; }
 .tile.idle .d-peak-g, .tile.na .d-peak-g { display: none; }
+
+/* --- mostrador Clássico: mostrador creme, aro cromado, ponteiro vermelho --- */
+.k-bezel { fill: url(#gBezel); }
+.k-bezel-in { fill: #0B0B0B; }
+.k-face { fill: var(--dial-face); }
+.k-major { stroke: var(--dial-ink); stroke-width: 3; }
+.k-minor { stroke: var(--dial-ink); stroke-width: 1.2; }
+.k-label { fill: var(--dial-ink); font: 500 15px var(--font-num); text-anchor: middle; dominant-baseline: central; }
+.k-zone { fill: none; stroke: var(--accent); stroke-width: 7; }
+.k-scale { fill: #6B6050; font: 500 9px var(--font-num); text-anchor: middle; letter-spacing: .12em; text-transform: uppercase; }
+.k-needle { fill: var(--accent); filter: drop-shadow(1px 2px 1.5px rgba(0, 0, 0, .35)); }
+.k-hub { fill: url(#gBezel); stroke: #222; stroke-width: 1; }
+.k-peak { fill: var(--accent); opacity: .55; }
+.k-win { fill: #1B1611; }
+.dial-classico .d-value { fill: #F3EADB; font-size: 17px; font-weight: 500; }
+.dial-classico .d-unit { fill: #6B6050; font-size: 9px; }
+.tile.alarm .dial-classico .d-value { fill: #FF8C8C; }
+.tile.stale .k-needle-g, .tile.na .k-needle-g { opacity: .4; }
+
+/* --- mostrador HUD: barra em segmentos --- */
+.dial-hud .d-value { font-size: 40px; text-anchor: start; fill: var(--accent); filter: var(--glow); }
+.dial-hud .d-unit { text-anchor: start; fill: var(--muted); font: 700 10px var(--font-mono); }
+.h-seg { fill: var(--face-2); }
+.h-seg.z { fill: rgba(255, 59, 92, .22); }
+.h-seg.on { fill: var(--accent); }
+.h-seg.on.hi { fill: var(--accent-2); }
+.h-seg.on.z { fill: var(--crit); }
+.h-lab { fill: var(--muted); font: 400 9px var(--font-mono); }
+.h-peak { stroke: var(--accent-2); stroke-width: 2; }
+.tile.alarm .dial-hud .d-value { fill: var(--crit); }
+.tile.stale .dial-hud .d-value, .tile.na .dial-hud .d-value, .tile.idle .dial-hud .d-value { fill: var(--muted); filter: none; }
 
 /* mostrador numérico */
 .n-row { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; margin-top: 8px; min-width: 0; }
-.n-value { font: 700 40px/1 var(--font-num); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
-.tile.wide .n-value { font-size: 54px; }
-.n-unit { font: 600 14px/1.2 var(--font-ui); color: var(--muted); }
+.n-value { font: var(--num-weight) 44px/1 var(--font-num); letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+:root[data-estilo="hud"] .n-value { color: var(--accent); text-shadow: 0 0 10px rgba(25, 242, 198, .45); font-size: 38px; }
+.tile.wide .n-value { font-size: 58px; }
+.tile.big .n-value { font-size: 96px; }
+.n-unit { font: 600 13px/1.2 var(--font-ui); color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
 .tile.alarm .n-value { color: var(--crit); }
-.tile.stale .n-value, .tile.na .n-value, .tile.idle .n-value { color: var(--muted); }
+.tile.stale .n-value, .tile.na .n-value, .tile.idle .n-value { color: var(--muted); text-shadow: none; }
 .n-bar { position: relative; height: 6px; border-radius: 3px; background: var(--face-2); margin-top: 14px; overflow: hidden; }
+:root[data-estilo="hud"] .n-bar { border-radius: 0; height: 5px; }
 .n-zone { position: absolute; top: 0; bottom: 0; background: var(--crit); opacity: .35; }
-.n-fill { position: absolute; inset: 0; background: var(--accent); transform-origin: left center; transform: scaleX(0); }
+.n-fill { position: absolute; inset: 0; background: var(--accent); transform-origin: left center; transform: scaleX(0); box-shadow: 0 0 10px var(--accent); }
 .n-peak { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--ink); opacity: .55; left: 0; }
 .tile.idle .n-peak, .tile.na .n-peak { display: none; }
 
 /* computador de bordo */
-.lbl { display: block; font: 600 11.5px/1.3 var(--font-display); letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+.lbl { display: block; font: 600 11.5px/1.3 var(--font-display); letter-spacing: var(--label-track); text-transform: uppercase; color: var(--muted); }
 .trip-main { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 16px; align-items: end; margin-top: 8px; }
 .trip-main .n-row { margin-top: 2px; }
 .trip-now { text-align: right; }
-.trip-now .v { font: 700 24px/1.1 var(--font-num); }
-.trip-now .u { font: 600 12.5px var(--font-ui); color: var(--muted); }
+.trip-now .v { font: var(--num-weight) 28px/1.1 var(--font-num); }
+.trip-now .u { font: 600 12px var(--font-ui); color: var(--muted); }
 .trip-stats {
   display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px;
   margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--line);
 }
-.stat .v { display: block; font: 700 16px/1.3 var(--font-num); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stat .v { display: block; font: var(--num-weight) 18px/1.3 var(--font-num); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .trip-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; font-size: 12.5px; color: var(--muted); }
 .trip-foot .src { min-width: 0; }
 .trip-foot .btn { white-space: nowrap; flex: none; }
-.tile:not(.wide) .trip-main { grid-template-columns: 1fr; }
-.tile:not(.wide) .trip-now { text-align: left; }
-.tile:not(.wide) .trip-stats, .trip-stats.narrow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.tile:not(.wide) .trip-foot { flex-direction: column; align-items: flex-start; }
+.tile:not(.wide):not(.big) .trip-main { grid-template-columns: 1fr; }
+.tile:not(.wide):not(.big) .trip-now { text-align: left; }
+.tile:not(.wide):not(.big) .trip-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.tile:not(.wide):not(.big) .trip-foot { flex-direction: column; align-items: flex-start; }
 @media (max-width: 440px) { .trip-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .chip {
   display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 999px;
   font: 600 11.5px/1.5 var(--font-ui); background: var(--face-2); color: var(--muted); white-space: nowrap;
 }
+:root[data-estilo="hud"] .chip { border-radius: 2px; }
 .chip.ok { background: var(--ok-soft); color: var(--ok); }
 .chip.warn { background: var(--warn-soft); color: var(--warn); }
 .chip.crit { background: var(--crit-soft); color: var(--crit); }
 .chip.accent { background: var(--accent-soft); color: var(--accent); }
 
+/* gráfico */
+.g-wrap { position: relative; margin-top: 8px; }
+.g-canvas { display: block; width: 100%; height: 84px; touch-action: pan-y; cursor: crosshair; }
+.tile.wide .g-canvas { height: 120px; }
+.tile.big .g-canvas { height: 220px; }
+.g-tip {
+  position: absolute; top: -4px; transform: translate(0, -100%); z-index: 2; pointer-events: none;
+  padding: 4px 8px; border-radius: 8px; background: var(--ink); color: var(--bg);
+  font: 500 12px/1.3 var(--font-ui); white-space: nowrap;
+}
+.g-tip.left { transform: translate(-100%, -100%); }
+.g-tip b { font: 700 12px var(--font-mono); }
+
 /* modo de edição */
 .edit-bar { display: none; }
 .editing .tile { border-style: dashed; }
 .editing .tile .tile-body, .editing .tile .tile-foot, .editing .tile .trip-foot { opacity: .3; pointer-events: none; }
-.editing .edit-bar { display: flex; position: absolute; left: 4px; right: 4px; bottom: 4px; gap: 6px; padding: 4px; border-radius: 12px; background: var(--face); }
+.editing .edit-bar { display: flex; position: absolute; left: 4px; right: 4px; bottom: 4px; gap: 6px; padding: 4px; border-radius: var(--radius-s); background: var(--face); }
 .edit-bar button {
-  flex: 1; min-height: 42px; border-radius: 10px; border: 1px solid var(--line);
-  background: var(--face); color: var(--ink); font: 600 14px var(--font-ui);
-  display: inline-grid; place-items: center; box-shadow: var(--shadow);
+  flex: 1; min-height: 42px; border-radius: var(--radius-s); border: 1px solid var(--line);
+  background: var(--face-2); color: var(--ink); font: 600 14px var(--font-ui);
+  display: inline-grid; place-items: center;
 }
 .edit-bar button.move { flex: 0 0 44px; }
 .edit-bar button:disabled { color: var(--line); cursor: default; }
 .add-tile {
-  min-height: 150px; border-radius: 14px; border: 2px dashed var(--line); background: transparent;
+  min-height: 150px; border-radius: var(--radius); border: 2px dashed var(--line); background: transparent;
   color: var(--muted); font: 600 15px var(--font-ui); display: grid; place-items: center; gap: 4px;
+}
+
+/* ---------- Modo carro (tablet no carro) ---------- */
+.car-exit { display: none; }
+body.carmode .topbar, body.carmode .notice, body.carmode .updbar, body.carmode .tabbar,
+body.carmode .pagebar, body.carmode #editTools { display: none !important; }
+body.carmode .view-band { max-width: none; }
+/* Os mostradores enchem o ecrã todo: a grelha ocupa a altura e cada mostrador cresce até caber */
+body.carmode #view-paineis > .view-band {
+  display: flex; flex-direction: column; height: 100vh; height: 100dvh;
+  padding-block: calc(10px + env(safe-area-inset-top, 0px)) calc(34px + env(safe-area-inset-bottom, 0px));
+}
+body.carmode .grid { flex: 1; min-height: 0; grid-auto-rows: minmax(150px, 1fr); }
+body.carmode .page-dots { display: none; }
+body.carmode .tile-body { min-height: 0; }
+body.carmode .tile .dial { flex: 1 1 0; min-height: 0; height: 100%; max-height: none; }
+body.carmode .n-value { font-size: clamp(44px, 4.6vw, 84px); }
+body.carmode .tile.wide .n-value { font-size: clamp(56px, 6vw, 110px); }
+body.carmode .tile.big .n-value { font-size: clamp(80px, 9vw, 160px); }
+body.carmode .g-canvas { height: clamp(84px, 14vh, 220px); }
+body.carmode .car-exit {
+  display: grid; place-items: center; position: fixed; z-index: 30;
+  bottom: calc(2px + env(safe-area-inset-bottom, 0px)); right: calc(10px + env(safe-area-inset-right, 0px));
+  width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line);
+  background: var(--face); color: var(--muted);
+}
+body.carmode .car-exit .icon { width: 16px; height: 16px; }
+body.carmode .car-page {
+  display: block; position: fixed; z-index: 30; left: 50%; transform: translateX(-50%);
+  bottom: calc(4px + env(safe-area-inset-bottom, 0px)); padding: 6px 14px;
+  font: 600 12px/1 var(--font-display); letter-spacing: var(--label-track); text-transform: uppercase; color: var(--muted); cursor: pointer;
+}
+.car-page { display: none; }
+@media (orientation: landscape) and (min-width: 700px) {
+  body.carmode .grid { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
 }
 
 /* ---------- Cartões e formulários ---------- */
 .stack { display: grid; gap: 12px; }
 .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); gap: 12px; align-items: start; }
 .cols .span-all { grid-column: 1 / -1; }
-.card { background: var(--face); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px 16px; box-shadow: var(--shadow); min-width: 0; }
-.card h2 { font: 700 14px/1.2 var(--font-display); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 10px; }
+.card { background: var(--tile-bg); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px 16px; box-shadow: var(--shadow); min-width: 0; }
+.card h2 { font: 700 15px/1.2 var(--font-display); letter-spacing: var(--label-track); text-transform: uppercase; margin-bottom: 10px; }
 .card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
 .card-head h2 { margin: 0; }
 .card > * + * { margin-top: 12px; }
@@ -262,11 +412,11 @@ main { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; overscroll-
 .kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 7px 14px; margin: 0; }
 .kv dt { color: var(--muted); font-size: 13.5px; }
 .kv dd { margin: 0; text-align: right; font-weight: 500; overflow-wrap: anywhere; }
-.kv dd.mono { font: 400 13px/1.45 var(--font-num); }
+.kv dd.mono { font: 400 13px/1.45 var(--font-mono); }
 .card > * + .kv { margin-top: 12px; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chips .chip { font-weight: 500; }
-.chips .chip b { font: 700 11px var(--font-num); color: var(--ink); }
+.chips .chip b { font: 700 11px var(--font-mono); color: var(--ink); }
 .help ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; max-width: 70ch; }
 
 .field { display: grid; gap: 6px; min-width: 0; align-content: start; }
@@ -277,121 +427,68 @@ main { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; overscroll-
 @media (max-width: 380px) { .form-grid { grid-template-columns: 1fr; } }
 @media (max-width: 369px) { .brand-name { display: none; } }
 input[type="text"], select {
-  width: 100%; min-height: 44px; padding: 9px 12px; border-radius: 10px;
+  width: 100%; min-height: 44px; padding: 9px 12px; border-radius: var(--radius-s);
   border: 1px solid var(--line); background: var(--face-2); color: var(--ink); font: 500 15px var(--font-ui);
 }
 input::placeholder { color: var(--muted); opacity: .8; }
 .check { display: flex; gap: 10px; align-items: center; font-weight: 500; }
 .check input { width: 20px; height: 20px; accent-color: var(--accent); flex: none; }
-.seg { display: inline-flex; flex-wrap: wrap; gap: 3px; padding: 3px; background: var(--face-2); border: 1px solid var(--line); border-radius: 11px; }
-.seg button { border: 0; background: transparent; padding: 8px 14px; min-height: 38px; border-radius: 8px; font: 600 14px var(--font-ui); color: var(--muted); }
-.seg button[aria-pressed="true"] { background: var(--face); color: var(--ink); box-shadow: var(--shadow); }
+.seg { display: inline-flex; flex-wrap: wrap; gap: 3px; padding: 3px; background: var(--face-2); border: 1px solid var(--line); border-radius: calc(var(--radius-s) + 1px); }
+.seg button { border: 0; background: transparent; padding: 8px 14px; min-height: 38px; border-radius: calc(var(--radius-s) - 2px); font: 600 14px var(--font-ui); color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+:root[data-estilo="hud"] .seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
 .confirm { border-color: var(--crit); }
-.confirm-inline { padding: 12px; border-radius: 10px; background: var(--crit-soft); display: grid; gap: 10px; }
+.confirm-inline { padding: 12px; border-radius: var(--radius-s); background: var(--crit-soft); display: grid; gap: 10px; }
 
-/* ---------- Erros ---------- */
+/* ---------- Definições ---------- */
+.settings { display: grid; gap: 12px; }
+.settings .cols { gap: 12px; }
+.style-pick { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+@media (max-width: 420px) { .style-pick { gap: 6px; } }
+.style-opt {
+  display: grid; gap: 6px; justify-items: center; padding: 10px 6px 10px; min-width: 0;
+  border: 1px solid var(--line); background: var(--bg); color: var(--ink);
+  border-radius: var(--radius-s); font: 600 13px/1.2 var(--font-ui);
+}
+.style-opt[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.style-opt .sp { width: 100%; max-width: 120px; border-radius: 10px; padding: 6px; background: var(--tile-bg); border: 1px solid var(--line); }
+.style-opt .sp .dial { max-height: 96px; }
+.style-opt small { color: var(--muted); font-weight: 500; font-size: 11.5px; }
+details.adv { border-top: 1px solid var(--line); }
+details.adv:first-of-type { border-top: 0; }
+details.adv > summary {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 48px;
+  cursor: pointer; list-style: none; font-weight: 600;
+}
+details.adv > summary::-webkit-details-marker { display: none; }
+details.adv > summary::after {
+  content: ""; width: 8px; height: 8px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg); transition: transform .15s; margin-right: 4px;
+}
+details.adv[open] > summary::after { transform: rotate(-135deg); }
+details.adv > .adv-body { display: grid; gap: 12px; padding-bottom: 14px; }
+.about { display: flex; align-items: center; gap: 14px; }
+.about .brand-mark { width: 44px; height: 44px; }
+.about b { display: block; font: 700 20px/1.1 var(--font-display); letter-spacing: var(--label-track); text-transform: uppercase; }
+.about span { font: 400 12.5px/1.4 var(--font-mono); color: var(--muted); }
+
+/* ---------- Avarias ---------- */
 .mil { display: flex; gap: 14px; align-items: center; }
 .mil h2 { margin-bottom: 2px; }
-.mil-icon { width: 52px; height: 52px; flex: none; border-radius: 12px; display: grid; place-items: center; background: var(--face-2); color: var(--muted); }
+.mil-icon { width: 52px; height: 52px; flex: none; border-radius: var(--radius-s); display: grid; place-items: center; background: var(--face-2); color: var(--muted); }
 .mil-icon .icon { width: 30px; height: 30px; }
-.mil[data-state="on"] .mil-icon { background: var(--warn-soft); color: var(--warn); }
+.mil[data-state="on"] .mil-icon { background: var(--warn-soft); color: var(--warn); box-shadow: 0 0 22px -6px var(--warn); }
 .mil[data-state="off"] .mil-icon { background: var(--ok-soft); color: var(--ok); }
 .mil p { color: var(--muted); }
 .mil[data-state="on"] p b { color: var(--warn); }
-.dtc-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-.dtc { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; background: var(--face); border: 1px solid var(--line); border-radius: 12px; }
-.dtc-code { flex: none; font: 700 17px/1 var(--font-num); padding: 9px 10px; border-radius: 8px; background: var(--face-2); border: 1px solid var(--line); }
+.dtc-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.dtc { display: flex; gap: 12px; align-items: flex-start; padding: 14px 0; border-top: 1px solid var(--line); }
+.dtc:first-child { border-top: 0; padding-top: 4px; }
+.dtc-code { flex: none; font: 700 17px/1 var(--font-mono); padding: 9px 10px; border-radius: var(--radius-s); background: var(--face-2); border: 1px solid var(--line); }
 .dtc-body { min-width: 0; flex: 1; display: grid; gap: 6px; }
 .dtc-desc { font-weight: 600; line-height: 1.35; text-wrap: balance; }
 .dtc-meta { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; color: var(--muted); font-size: 13px; }
-.dtc-meta a { color: var(--accent); font-weight: 600; text-decoration: none; }
-.dtc-meta a:hover { text-decoration: underline; }
 .empty { color: var(--muted); padding: 6px 2px; }
-
-/* ---------- Consola ---------- */
-.console {
-  height: 220px; overflow: auto; padding: 10px 12px; border-radius: 10px;
-  background: var(--face-2); border: 1px solid var(--line);
-  font: 400 12px/1.55 var(--font-num); white-space: pre-wrap; overflow-wrap: anywhere;
-}
-.console .tx { color: var(--accent); }
-.console .err { color: var(--crit); }
-.console .info { color: var(--muted); }
-.console time { color: var(--muted); opacity: .75; }
-.cmd-row { display: flex; gap: 8px; }
-.cmd-row input { flex: 1; min-width: 0; font-family: var(--font-num); text-transform: uppercase; }
-
-/* ---------- Separadores ---------- */
-.tabbar { background: var(--chrome); border-top: 1px solid var(--line); flex: none; }
-.tabs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); max-width: 720px; margin: 0 auto; }
-.tab {
-  position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px;
-  min-height: 56px; padding: 8px 4px 9px; border: 0; background: none; color: var(--muted);
-  font: 600 11.5px/1.2 var(--font-ui);
-}
-.tab > span:not(.badge) { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.tab[aria-selected="true"] { color: var(--ink); }
-.tab[aria-selected="true"]::before {
-  content: ""; position: absolute; top: -1px; left: 28%; right: 28%; height: 3px;
-  border-radius: 0 0 3px 3px; background: var(--accent);
-}
-.tab .badge {
-  position: absolute; top: 5px; left: calc(50% + 6px); min-width: 18px; height: 18px; padding: 0 5px;
-  border-radius: 9px; background: var(--warn); color: var(--chrome); font: 700 11px/18px var(--font-num); text-align: center;
-}
-
-/* ---------- Diálogo e avisos ---------- */
-dialog {
-  padding: 0; border: 1px solid var(--line); border-radius: 18px; background: var(--face); color: var(--ink);
-  width: min(540px, calc(100vw - 24px)); max-height: calc(100dvh - 32px); box-shadow: 0 30px 60px -24px rgba(0, 0, 0, .55);
-}
-dialog[open] { display: flex; flex-direction: column; }
-dialog::backdrop { background: rgba(6, 10, 14, .55); }
-@media (max-width: 560px) {
-  dialog { width: 100%; max-width: 100%; margin: auto 0 0; border-radius: 18px 18px 0 0; border-bottom: 0; max-height: 88dvh; }
-}
-.dlg-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--line); flex: none; }
-.dlg-head h2 { font: 700 18px/1.2 var(--font-display); letter-spacing: .03em; }
-.dlg-body { padding: 16px; display: grid; gap: 16px; overflow-y: auto; min-height: 0; }
-.dlg-foot {
-  display: flex; align-items: center; gap: 8px; padding: 12px 16px; flex: none;
-  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--line);
-}
-.dlg-foot .spacer { flex: 1; }
-.sensor-group h3 { font: 700 12px/1.2 var(--font-display); letter-spacing: .09em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
-.sensor-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--line); }
-.sensor-row .nm { flex: 1; min-width: 0; }
-.sensor-row .nm small { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 3px; color: var(--muted); font-size: 12.5px; }
-.sensor-row .on-panel { font-size: 13px; color: var(--muted); font-weight: 600; padding: 0 6px; }
-
-.toast {
-  position: fixed; left: 50%; bottom: calc(80px + env(safe-area-inset-bottom, 0px)); z-index: 50;
-  transform: translate(-50%, 16px); opacity: 0; pointer-events: none;
-  max-width: calc(100vw - 32px); padding: 11px 16px; border-radius: 12px;
-  background: var(--ink); color: var(--face); font-weight: 600; font-size: 14px; line-height: 1.35;
-  box-shadow: 0 12px 30px -12px rgba(0, 0, 0, .5); transition: opacity .2s, transform .2s;
-}
-.toast.show { opacity: 1; transform: translate(-50%, 0); }
-
-/* ---------- Gráfico no painel ---------- */
-.g-wrap { position: relative; margin-top: 8px; }
-.g-canvas { display: block; width: 100%; height: 84px; touch-action: pan-y; cursor: crosshair; }
-.tile.wide .g-canvas { height: 120px; }
-.g-tip {
-  position: absolute; top: -4px; transform: translate(0, -100%); z-index: 2; pointer-events: none;
-  padding: 4px 8px; border-radius: 8px; background: var(--ink); color: var(--face);
-  font: 500 12px/1.3 var(--font-ui); white-space: nowrap;
-}
-.g-tip.left { transform: translate(-100%, -100%); }
-.g-tip b { font: 700 12px var(--font-num); }
-
-/* ---------- Comuns ---------- */
-.sub { font: 700 12px/1.2 var(--font-display); letter-spacing: .09em; text-transform: uppercase; color: var(--muted); margin-top: 18px; }
-.err-text { color: var(--crit); }
-.scan-step { font-weight: 600; color: var(--accent); }
-.table-wrap { overflow-x: auto; }
-
-/* ---------- Diagnóstico ---------- */
 .tips summary {
   display: inline-flex; align-items: center; gap: 6px; min-height: 34px; cursor: pointer; list-style: none;
   color: var(--accent); font-weight: 600; font-size: 13.5px;
@@ -402,65 +499,62 @@ dialog::backdrop { background: rgba(6, 10, 14, .55); }
   transform: rotate(-45deg); transition: transform .15s;
 }
 .tips[open] summary::before { transform: translateY(-2px) rotate(45deg); }
-.card .dtc-list { gap: 0; }
-.card .dtc { border: 0; border-top: 1px solid var(--line); border-radius: 0; padding: 14px 0; background: transparent; }
-.card .dtc:first-child { border-top: 0; padding-top: 4px; }
 .tips ol { margin: 4px 0 8px; padding-left: 20px; display: grid; gap: 5px; font-size: 14px; }
 .tips a { color: var(--accent); font-weight: 600; font-size: 13px; text-decoration: none; }
-.tips a:hover { text-decoration: underline; }
 .rdy { list-style: none; margin: 0; padding: 0; }
 .rdy li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); font-size: 14px; }
 .rdy li:first-child { border-top: 0; }
 .mis { display: grid; gap: 12px; }
-.mis-row {
-  display: grid; grid-template-columns: 54px minmax(0, 1fr) 44px; grid-template-areas: "c t v" ". a a";
-  align-items: center; column-gap: 10px; row-gap: 2px;
-}
+.mis-row { display: grid; grid-template-columns: 54px minmax(0, 1fr) 44px; grid-template-areas: "c t v" ". a a"; align-items: center; column-gap: 10px; row-gap: 2px; }
 .mis-cyl { grid-area: c; font: 600 13px/1 var(--font-display); letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
 .mis-track { grid-area: t; border-left: 1px solid var(--line); padding: 2px 0; }
 .mis-bar { display: block; height: 10px; min-width: 2px; border-radius: 0 4px 4px 0; background: var(--muted); opacity: .4; }
 .mis-row.hot .mis-bar { background: var(--accent); opacity: 1; }
-.mis-v { grid-area: v; text-align: right; font: 700 15px/1 var(--font-num); }
+.mis-v { grid-area: v; text-align: right; font: 700 15px/1 var(--font-mono); }
 .mis-avg { grid-area: a; font-size: 12px; color: var(--muted); }
 .m6 { display: grid; gap: 8px; }
-.m6-mid { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
-.m6-mid summary {
-  display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 12px;
-  cursor: pointer; list-style: none; font-weight: 600; font-size: 14px;
-}
+.m6-mid { border: 1px solid var(--line); border-radius: var(--radius-s); overflow: hidden; }
+.m6-mid summary { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 12px; cursor: pointer; list-style: none; font-weight: 600; font-size: 14px; }
 .m6-mid summary::-webkit-details-marker { display: none; }
+.table-wrap { overflow-x: auto; }
 .m6-mid .table-wrap { border-top: 1px solid var(--line); }
 .m6-mid table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .m6-mid th { text-align: left; padding: 8px 12px; font: 600 11px/1.2 var(--font-display); letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
 .m6-mid td { padding: 8px 12px; border-top: 1px solid var(--line); vertical-align: top; }
-.m6-mid td:nth-child(n+2) { font: 400 12.5px/1.4 var(--font-num); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.m6-mid td:nth-child(n+2) { font: 400 12.5px/1.4 var(--font-mono); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .m6-mid tr.bad td { color: var(--crit); }
 .m6-mid small { color: var(--muted); }
-.report {
-  margin: 0; padding: 12px; max-height: 380px; overflow: auto; border-radius: 10px;
-  background: var(--face-2); border: 1px solid var(--line);
-  font: 400 12px/1.5 var(--font-num); white-space: pre-wrap; overflow-wrap: anywhere;
-}
+.report { margin: 0; padding: 12px; max-height: 380px; overflow: auto; border-radius: var(--radius-s); background: var(--face-2); border: 1px solid var(--line); font: 400 12px/1.5 var(--font-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
+.sub { font: 700 12px/1.2 var(--font-display); letter-spacing: var(--label-track); text-transform: uppercase; color: var(--muted); margin-top: 18px; }
+.err-text { color: var(--crit); }
+.scan-step { font-weight: 600; color: var(--accent); }
+
+/* ---------- Consola ---------- */
+.console { height: 220px; overflow: auto; padding: 10px 12px; border-radius: var(--radius-s); background: var(--bg); border: 1px solid var(--line); font: 400 12px/1.55 var(--font-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
+.console .tx { color: var(--accent); }
+.console .err { color: var(--crit); }
+.console .info { color: var(--muted); }
+.console time { color: var(--muted); opacity: .75; }
+.cmd-row { display: flex; gap: 8px; }
+.cmd-row input { flex: 1; min-width: 0; font-family: var(--font-mono); text-transform: uppercase; }
 
 /* ---------- Testes ---------- */
 .perf .seg { display: flex; width: 100%; }
 .perf .seg button { flex: 1; padding-inline: 4px; }
 .perf-readout { display: flex; align-items: baseline; justify-content: center; gap: 8px; padding: 18px 0 4px; }
-.perf-time { font: 700 64px/1 var(--font-num); letter-spacing: -.03em; }
+.perf-time { font: var(--num-weight) 72px/1 var(--font-num); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+:root[data-estilo="hud"] .perf-time { color: var(--accent); text-shadow: 0 0 14px rgba(25, 242, 198, .5); font-size: 60px; }
 .perf-unit { font: 600 18px var(--font-ui); color: var(--muted); }
 .perf-state { text-align: center; font-weight: 600; min-height: 1.45em; }
 .perf-state[data-state="pronto"] { color: var(--ok); }
 .perf-state[data-state="medir"] { color: var(--accent); }
 .perf-state[data-state="falhou"] { color: var(--crit); }
 .results { list-style: none; margin: 0; padding: 0; }
-.results li {
-  display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 2px 12px; align-items: baseline;
-  padding: 10px 0; border-top: 1px solid var(--line);
-}
+.results li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 2px 12px; align-items: baseline; padding: 10px 0; border-top: 1px solid var(--line); }
 .results li:first-child { border-top: 0; }
 .results .r-name { font-weight: 600; }
-.results .r-v { font: 700 16px var(--font-num); }
-.results .r-d { font: 400 13px var(--font-num); color: var(--muted); }
+.results .r-v { font: var(--num-weight) 18px var(--font-num); }
+.results .r-d { font: 400 13px var(--font-mono); color: var(--muted); }
 .results .r-when { grid-column: 1 / -1; font-size: 12px; color: var(--muted); }
 .results li.best .r-v { color: var(--accent); }
 .results li.empty { display: block; color: var(--muted); }
@@ -469,22 +563,75 @@ dialog::backdrop { background: rgba(6, 10, 14, .55); }
 .step:first-child { border-top: 0; padding-top: 0; }
 .step-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 .step-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.step-v { font: 700 22px/1.2 var(--font-num); min-width: 0; }
+.step-v { font: var(--num-weight) 24px/1.2 var(--font-num); min-width: 0; }
 .step-note { font-size: 13.5px; }
 .step-note:empty { display: none; }
 
 /* ---------- Viagens ---------- */
-.trip-sum, .trip { background: var(--face); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; box-shadow: var(--shadow); }
+.trip-sum, .trip { background: var(--tile-bg); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); }
 .trip-sum:empty { display: none; }
-.sum-h { font: 700 14px/1.2 var(--font-display); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 10px; }
+.sum-h { font: 700 14px/1.2 var(--font-display); letter-spacing: var(--label-track); text-transform: uppercase; margin-bottom: 10px; }
 .trips { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .trip.now { border-color: var(--accent); }
 .trip-h { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; margin-bottom: 10px; }
-.trip-h b { font: 700 15px/1.2 var(--font-display); letter-spacing: .03em; }
-.trip-h > span:not(.chip) { color: var(--muted); font: 400 13px var(--font-num); }
+.trip-h b { font: 700 16px/1.2 var(--font-display); letter-spacing: .03em; }
+.trip-h > span:not(.chip) { color: var(--muted); font: 400 13px var(--font-mono); }
 .trip-g { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 104px), 1fr)); gap: 10px 12px; margin: 0; }
-.trip-g dt { font: 600 11px/1.3 var(--font-display); letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
-.trip-g dd { margin: 2px 0 0; font: 700 15px/1.3 var(--font-num); }
+.trip-g dt { font: 600 11px/1.3 var(--font-display); letter-spacing: var(--label-track); text-transform: uppercase; color: var(--muted); }
+.trip-g dd { margin: 2px 0 0; font: var(--num-weight) 17px/1.3 var(--font-num); }
+
+/* ---------- Separadores ---------- */
+.tabbar { background: var(--chrome); border-top: 1px solid var(--line); flex: none; }
+.tabs { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); max-width: 820px; margin: 0 auto; }
+.tab {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  min-height: 56px; padding: 8px 2px 9px; border: 0; background: none; color: var(--muted);
+  font: 600 11px/1.2 var(--font-ui);
+}
+.tab .icon { width: 21px; height: 21px; }
+.tab > span:not(.badge):not(.dot) { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tab[aria-selected="true"] { color: var(--ink); }
+.tab[aria-selected="true"] .icon { color: var(--accent); filter: var(--glow); }
+.tab[aria-selected="true"]::before {
+  content: ""; position: absolute; top: -1px; left: 26%; right: 26%; height: 3px;
+  border-radius: 0 0 3px 3px; background: var(--accent); box-shadow: 0 0 10px var(--accent);
+}
+.tab .badge {
+  position: absolute; top: 5px; left: calc(50% + 6px); min-width: 18px; height: 18px; padding: 0 5px;
+  border-radius: 9px; background: var(--warn); color: #1A1200; font: 700 11px/18px var(--font-mono); text-align: center;
+}
+.tab .dot { position: absolute; top: 7px; left: calc(50% + 9px); width: 9px; height: 9px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--chrome); }
+
+/* ---------- Diálogo e avisos ---------- */
+dialog {
+  padding: 0; border: 1px solid var(--line); border-radius: calc(var(--radius) + 2px); background: var(--face); color: var(--ink);
+  width: min(540px, calc(100vw - 24px)); max-height: calc(100dvh - 32px); box-shadow: 0 30px 60px -24px rgba(0, 0, 0, .8);
+}
+dialog[open] { display: flex; flex-direction: column; }
+dialog::backdrop { background: rgba(0, 0, 0, .65); }
+@media (max-width: 560px) {
+  dialog { width: 100%; max-width: 100%; margin: auto 0 0; border-radius: calc(var(--radius) + 2px) calc(var(--radius) + 2px) 0 0; border-bottom: 0; max-height: 88dvh; }
+}
+.dlg-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--line); flex: none; }
+.dlg-head h2 { font: 700 19px/1.2 var(--font-display); letter-spacing: .04em; text-transform: uppercase; }
+.dlg-body { padding: 16px; display: grid; gap: 16px; overflow-y: auto; min-height: 0; }
+.dlg-foot { display: flex; align-items: center; gap: 8px; padding: 12px 16px; flex: none; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--line); }
+.dlg-foot .spacer { flex: 1; }
+.sensor-group h3 { font: 700 12px/1.2 var(--font-display); letter-spacing: var(--label-track); text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+.sensor-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--line); }
+.sensor-row .nm { flex: 1; min-width: 0; }
+.sensor-row .nm small { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 3px; color: var(--muted); font-size: 12.5px; }
+.sensor-row .on-panel { font-size: 13px; color: var(--muted); font-weight: 600; padding: 0 6px; }
+
+.toast {
+  position: fixed; left: 50%; bottom: calc(80px + env(safe-area-inset-bottom, 0px)); z-index: 50;
+  transform: translate(-50%, 16px); opacity: 0; pointer-events: none;
+  max-width: calc(100vw - 32px); padding: 11px 16px; border-radius: var(--radius-s);
+  background: var(--ink); color: var(--bg); font-weight: 600; font-size: 14px; line-height: 1.35;
+  box-shadow: 0 12px 30px -12px rgba(0, 0, 0, .7); transition: opacity .2s, transform .2s;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+body.carmode .toast { bottom: calc(36px + env(safe-area-inset-bottom, 0px)); }
 
 /* ---------- Atualizações ---------- */
 .updbar { background: var(--accent-soft); border-bottom: 1px solid var(--line); flex: none; }
@@ -492,9 +639,7 @@ dialog::backdrop { background: rgba(6, 10, 14, .55); }
 .updbar #updBannerText { flex: 1; min-width: 0; }
 .icon-btn.small { width: 36px; height: 36px; }
 .icon-btn.small .icon { width: 18px; height: 18px; }
-.tab .dot { position: absolute; top: 7px; left: calc(50% + 9px); width: 9px; height: 9px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--chrome); }
-.upd-ver { font: 400 13px/1.4 var(--font-num); color: var(--muted); }
-.upd-status { padding: 10px 12px; border-radius: 10px; background: var(--face-2); font-size: 14px; line-height: 1.45; }
+.upd-status { padding: 10px 12px; border-radius: var(--radius-s); background: var(--face-2); font-size: 14px; line-height: 1.45; }
 .upd-status.ok { background: var(--ok-soft); }
 .upd-status.bad { background: var(--crit-soft); }
 .upd-status.new { background: var(--accent-soft); }
@@ -508,8 +653,8 @@ dialog::backdrop { background: rgba(6, 10, 14, .55); }
 .cl { display: grid; gap: 6px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
 .cl:last-child { border-bottom: 0; padding-bottom: 0; }
 .cl-h { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
-.cl-h b { font: 700 16px var(--font-num); }
-.cl-h span { color: var(--muted); font: 400 13px var(--font-num); }
+.cl-h b { font: 700 16px var(--font-mono); }
+.cl-h span { color: var(--muted); font: 400 13px var(--font-mono); }
 .cl-t { font-weight: 600; }
 .cl ul { margin: 0; padding-left: 20px; display: grid; gap: 5px; font-size: 14px; }
 
@@ -522,19 +667,27 @@ dialog::backdrop { background: rgba(6, 10, 14, .55); }
 @media (prefers-reduced-motion: reduce) {
   .toast { transition: none; }
   .pill .dot { animation: none !important; }
+  .grid.slide-l, .grid.slide-r { animation: none; }
 }
 </style>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="gBezel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FAFAF8"/><stop offset=".45" stop-color="#A9A9A6"/><stop offset=".55" stop-color="#6A6A68"/><stop offset="1" stop-color="#D8D8D5"/>
+    </linearGradient>
+  </defs>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11l8-6.5 8 6.5M6 9.5V20h12V9.5M10 20v-5h4v5"/></symbol>
   <symbol id="i-gauge" viewBox="0 0 24 24"><path d="M3.8 16.5a8.4 8.4 0 1 1 16.4 0"/><path d="M12 14.6l4.3-4.8"/><circle cx="12" cy="14.6" r="1.6"/><path d="M6.3 11.1l1.2.7M12 6.4v1.4M17.7 11.1l-1.2.7"/></symbol>
   <symbol id="i-engine" viewBox="0 0 24 24"><path d="M8 5h6M11 5v3M5 11h2l1.5-3H15l2 2.5h2.5V9H21v8h-1.5v-1.5H17L15 19H8.5L7 16.5H5zM3 11.5V16"/></symbol>
   <symbol id="i-watch" viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 13.5V9.5M10 3h4M17.6 7.4l1.4-1.4"/></symbol>
   <symbol id="i-route" viewBox="0 0 24 24"><circle cx="6" cy="18" r="2"/><circle cx="18" cy="6" r="2"/><path d="M8 18h7.5a3 3 0 0 0 0-6h-7a3 3 0 0 1 0-6H16"/></symbol>
-  <symbol id="i-bt" viewBox="0 0 24 24"><path d="M7 7.5l10 9-5 4.5V3l5 4.5-10 9"/></symbol>
   <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 12h3M11 12h9M4 17h11M19 17h1"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="17" r="2"/></symbol>
+  <symbol id="i-car" viewBox="0 0 24 24"><path d="M5 16V12l2-5h10l2 5v4M3.5 12h17M5 16h14v2.5H5zM7.5 14.2h.01M16.5 14.2h.01"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4"/></symbol>
   <symbol id="i-full" viewBox="0 0 24 24"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></symbol>
-  <symbol id="i-left" viewBox="0 0 24 24"><path d="M14.5 6l-6 6 6 6"/></symbol>
+  <symbol id="i-left"viewBox="0 0 24 24"><path d="M14.5 6l-6 6 6 6"/></symbol>
   <symbol id="i-right" viewBox="0 0 24 24"><path d="M9.5 6l6 6-6 6"/></symbol>
   <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
@@ -550,6 +703,7 @@ dialog::backdrop { background: rgba(6, 10, 14, .55); }
           <path class="bm-needle" d="M13 13.6l5.2-4.4"/>
         </svg>
         <span class="brand-name">Mostrador</span>
+        <button class="ver-chip" id="verChip" type="button" title="O que mudou nesta versão">v0.1</button>
       </div>
       <button class="btn ghost small" id="btnDemo" type="button">Demo</button>
       <button class="btn primary small" id="btnConnect" type="button">Ligar</button>
@@ -568,34 +722,47 @@ dialog::backdrop { background: rgba(6, 10, 14, .55); }
   </div></div>
 
   <main id="main">
-    <!-- Painel -->
-    <section class="view" id="view-painel" aria-label="Painel">
-      <div class="band view-band">
+    <!-- Início -->
+    <section class="view" id="view-inicio" aria-label="Início">
+      <div class="band view-band home">
         <div class="card hero" id="hero" hidden>
           <h2>Liga o V011</h2>
-          <p>Encaixa o adaptador na ficha OBD, liga a ignição e toca em Ligar. Na lista, escolhe o aparelho chamado OBDII, V011 ou parecido. Fecha antes a app OBD Home.</p>
+          <p>Encaixa o adaptador na ficha OBD e toca em Ligar. Podes ligar com a ignição desligada: os valores aparecem quando a ligares. Fecha antes a app OBD Home.</p>
           <div class="actions">
             <button class="btn primary" type="button" data-act="connect">Ligar ao adaptador</button>
             <button class="btn ghost" type="button" data-act="demo">Ver demonstração</button>
             <button class="btn ghost" type="button" data-act="install" hidden>Instalar app</button>
           </div>
         </div>
-        <div class="toolbar" id="toolbar">
-          <span class="profile-chip">Perfil <b id="profileName">O meu carro</b></span>
-          <button class="icon-btn" id="btnFull" type="button" aria-label="Ecrã inteiro" hidden><svg class="icon"><use href="#i-full"/></svg></button>
-          <button class="btn small" id="btnEdit" type="button">Editar painel</button>
-        </div>
-        <div class="toolbar" id="editTools" hidden>
-          <span class="profile-chip">A editar <b id="profileName2">O meu carro</b></span>
-          <button class="btn small" id="btnAdd" type="button"><svg class="icon"><use href="#i-plus"/></svg>Adicionar</button>
-          <button class="btn small ghost" id="btnPeaks" type="button">Repor picos</button>
-          <button class="btn small primary" id="btnDone" type="button">Concluir</button>
-        </div>
-        <div class="grid" id="grid"></div>
+        <div class="toolbar"><span class="profile-chip">Perfil <b id="profileName">O meu carro</b></span></div>
+        <div class="home-grid" id="homeGrid"></div>
+        <div id="homeTrip"></div>
+        <button class="btn go-panels" id="btnGoPanels" type="button"><span>Abrir os painéis</span><svg class="icon"><use href="#i-right"/></svg></button>
       </div>
     </section>
 
-    <!-- Diagnóstico -->
+    <!-- Painéis -->
+    <section class="view" id="view-paineis" aria-label="Painéis" hidden>
+      <div class="band view-band">
+        <div class="pagebar" id="pagebar">
+          <div class="pages" id="pages" role="group" aria-label="Páginas"></div>
+          <button class="icon-btn" id="btnEdit" type="button" aria-label="Editar esta página"><svg class="icon"><use href="#i-edit"/></svg></button>
+          <button class="icon-btn" id="btnCar" type="button" aria-label="Modo carro (ecrã inteiro)"><svg class="icon"><use href="#i-full"/></svg></button>
+        </div>
+        <div class="toolbar" id="editTools" hidden>
+          <span class="profile-chip">A editar <b id="pageName2">Estrada</b></span>
+          <button class="btn small" id="btnAdd" type="button"><svg class="icon"><use href="#i-plus"/></svg>Mostrador</button>
+          <button class="btn small ghost" id="btnPageMenu" type="button">Página…</button>
+          <button class="btn small primary" id="btnDone" type="button">Concluir</button>
+        </div>
+        <div class="grid" id="grid"></div>
+        <div class="page-dots" id="pageDots" aria-hidden="true"></div>
+      </div>
+      <button class="car-exit" id="btnCarExit" type="button" aria-label="Sair do modo carro"><svg class="icon"><use href="#i-x"/></svg></button>
+      <div class="car-page" id="carPage"></div>
+    </section>
+
+    <!-- Avarias -->
     <section class="view" id="view-diag" aria-label="Avarias" hidden>
       <div class="band view-band">
         <div class="stack">
@@ -617,14 +784,12 @@ dialog::backdrop { background: rgba(6, 10, 14, .55); }
               <button class="btn ghost" id="btnClearNo" type="button">Cancelar</button>
             </div>
           </div>
-
           <div class="card">
             <div class="card-head"><h2>Códigos de avaria</h2><span class="hint" id="dtcCount"></span></div>
             <ol class="dtc-list" id="dtcList"></ol>
             <p class="empty" id="dtcEmpty">Liga o adaptador e toca em Diagnóstico completo.</p>
             <p class="hint">Os códigos que começam por P1, P3 ou U1 são do fabricante: a descrição exata depende da marca.</p>
           </div>
-
           <div class="cols">
             <div class="card">
               <h2>Dados congelados</h2>
@@ -637,19 +802,16 @@ dialog::backdrop { background: rgba(6, 10, 14, .55); }
               <ul class="rdy" id="rdyList"></ul>
             </div>
           </div>
-
           <div class="card" id="misCard" hidden>
             <h2>Falhas de ignição por cilindro</h2>
             <p class="hint">Contagem do ciclo de condução atual (ou do último) e média dos últimos 10 ciclos.</p>
             <div class="mis" id="misList"></div>
           </div>
-
           <div class="card">
             <h2>Testes da centralina</h2>
             <p class="hint" id="m6Hint">Resultados dos autotestes do motor (modo 06), com os limites que a centralina usa.</p>
             <div class="m6" id="m6List"></div>
           </div>
-
           <div class="card">
             <h2>Relatório</h2>
             <p class="hint" id="repHint">Junta tudo num texto para mandar ao cliente ou guardar.</p>
@@ -734,43 +896,55 @@ dialog::backdrop { background: rgba(6, 10, 14, .55); }
       </div>
     </section>
 
-    <!-- Ajustes (inclui a ligação) -->
-    <section class="view" id="view-ajustes" aria-label="Ajustes" hidden>
-      <div class="band view-band">
+    <!-- Definições -->
+    <section class="view" id="view-definicoes" aria-label="Definições" hidden>
+      <div class="band view-band settings">
+
+        <h2 class="sec-h">Aplicação</h2>
         <div class="cols">
-          <div class="card span-all upd-card" id="updCard">
-            <div class="card-head"><h2>Atualizações</h2><button class="btn small ghost" id="btnChangelog" type="button">O que mudou</button></div>
-            <p class="upd-ver" id="updVer"></p>
+          <div class="card upd-card" id="updCard">
+            <div class="about">
+              <svg class="brand-mark" viewBox="0 0 26 26" aria-hidden="true">
+                <circle class="bm-face" cx="13" cy="13" r="11.2"/>
+                <path class="bm-tick" d="M6.2 17.6l1.5-.8M5.2 11.2l1.6.4M8.6 6.2l.9 1.4M13 4.6v1.7M17.4 6.2l-.9 1.4M20.8 11.2l-1.6.4"/>
+                <path class="bm-needle" d="M13 13.6l5.2-4.4"/>
+              </svg>
+              <div><b>Mostrador OBD</b><span id="updVer"></span></div>
+            </div>
             <div class="upd-status" id="updStatus" aria-live="polite"></div>
             <div class="upd-notes" id="updNotes" hidden></div>
             <div class="pbar" id="updBar" hidden><i id="updBarFill"></i></div>
             <div class="actions">
               <button class="btn primary" id="btnUpdCheck" type="button">Verificar atualizações</button>
               <button class="btn primary" id="btnUpdInstall" type="button" hidden>Descarregar e instalar</button>
+              <button class="btn ghost" id="btnChangelog" type="button">O que mudou</button>
             </div>
             <label class="check" id="updAutoRow"><input type="checkbox" id="oUpdAuto"> Verificar ao abrir a app</label>
             <p class="hint" id="updHint"></p>
-          </div>
-          <div class="card">
-            <h2>Adaptador</h2>
-            <dl class="kv" id="kvAdapter"></dl>
-            <div class="actions only-app"><button class="btn small ghost" id="btnPickOther" type="button">Ligar a outro adaptador</button></div>
-          </div>
-          <div class="card">
-            <h2>Veículo</h2>
-            <dl class="kv" id="kvCar"></dl>
-            <div class="actions" id="vinActions" hidden></div>
-          </div>
-          <div class="card span-all">
-            <h2>O que este carro envia</h2>
-            <p class="hint" id="pidCount">Liga ao carro para ver a lista.</p>
-            <div class="chips" id="pidChips"></div>
           </div>
           <div class="card" id="installCard">
             <h2>App no telemóvel</h2>
             <p class="hint" id="installText"></p>
             <div class="actions"><button class="btn small primary" type="button" data-act="install" hidden>Instalar app</button></div>
           </div>
+        </div>
+
+        <h2 class="sec-h">Aparência</h2>
+        <div class="card">
+          <h2>Estilo dos mostradores</h2>
+          <div class="style-pick" id="stylePick" role="group" aria-label="Estilo dos mostradores"></div>
+          <label class="check"><input type="checkbox" id="oEcra"> Manter o ecrã ligado enquanto estiver ligado ao carro</label>
+          <div class="field"><label for="oAbrir">Ao ligar ao carro, mostrar</label>
+            <select id="oAbrir">
+              <option value="inicio">Início</option>
+              <option value="paineis">Painéis</option>
+              <option value="carro">Painéis em modo carro (ecrã inteiro)</option>
+            </select>
+            <span class="hint">Para o tablet no carro, escolhe o modo carro: ao ligar, os mostradores enchem o ecrã.</span></div>
+        </div>
+
+        <h2 class="sec-h">Veículo</h2>
+        <div class="cols">
           <div class="card">
             <h2>Perfil do carro</h2>
             <div class="field">
@@ -801,66 +975,98 @@ dialog::backdrop { background: rgba(6, 10, 14, .55); }
               <div class="field"><label for="pPreco">Preço por litro (€)</label><input id="pPreco" type="text" inputmode="decimal" placeholder="Ex.: 1,72"></div>
               <div class="field"><label for="pFator">Correção do consumo</label><input id="pFator" type="text" inputmode="decimal"></div>
               <p class="hint span-2">Correção: compara com um atesto. Se a app marcar 6,0 L/100 km e o atesto der 6,6, põe 1,10.</p>
-              <div class="field"><label for="pCil">Cilindrada (L)</label><input id="pCil" type="text" inputmode="decimal"></div>
-              <div class="field"><label for="pVe">Eficiência (%)</label><input id="pVe" type="text" inputmode="decimal"></div>
-              <p class="hint span-2">Cilindrada e eficiência volumétrica só contam em carros sem sensor MAF.</p>
-              <div class="field span-2"><label for="pAfr">Relação ar/combustível média (gasóleo)</label><input id="pAfr" type="text" inputmode="decimal">
-                <span class="hint">Só para gasóleo sem caudal de combustível. Típico: 20 a 25. Ajusta com atestos.</span></div>
             </div>
+            <details class="adv">
+              <summary>Motor sem sensor MAF ou a gasóleo</summary>
+              <div class="adv-body form-grid">
+                <div class="field"><label for="pCil">Cilindrada (L)</label><input id="pCil" type="text" inputmode="decimal"></div>
+                <div class="field"><label for="pVe">Eficiência (%)</label><input id="pVe" type="text" inputmode="decimal"></div>
+                <p class="hint span-2">Cilindrada e eficiência volumétrica só contam em carros sem sensor MAF.</p>
+                <div class="field span-2"><label for="pAfr">Relação ar/combustível média (gasóleo)</label><input id="pAfr" type="text" inputmode="decimal">
+                  <span class="hint">Só para gasóleo sem caudal de combustível. Típico: 20 a 25. Ajusta com atestos.</span></div>
+              </div>
+            </details>
             <p class="hint" id="pVinText"></p>
           </div>
           <div class="card">
-            <h2>Ligação Bluetooth</h2>
-            <div class="field"><label for="oUuid">Serviço BLE extra (UUID)</label><input id="oUuid" type="text" placeholder="Ex.: fff0" autocomplete="off" spellcheck="false">
-              <span class="hint">Só se o adaptador usar um serviço que a app não conhece. Encontras o UUID com a app nRF Connect.</span></div>
-            <div class="field"><label for="oEscrita">Modo de escrita</label>
-              <select id="oEscrita">
-                <option value="auto">Automático</option>
-                <option value="resp">Com resposta</option>
-                <option value="noresp">Sem resposta</option>
-              </select>
-            </div>
-            <div class="field"><label for="oPausa">Pausa entre pedidos (ms)</label><input id="oPausa" type="text" inputmode="numeric">
-              <span class="hint">Aumenta para 20 a 50 se o adaptador se baralhar nas respostas.</span></div>
-            <label class="check"><input type="checkbox" id="oEcra"> Manter o ecrã ligado enquanto estiver ligado ao carro</label>
-            <h3 class="sub">Painel</h3>
-            <p class="hint">Volta aos contadores com que a app começa, só neste perfil.</p>
-            <div class="actions"><button class="btn small" id="btnResetLayout" type="button">Repor painel original</button></div>
-            <div class="confirm-inline" id="resetConfirm" hidden>
-              <p>Os contadores deste perfil voltam ao original.</p>
-              <div class="actions">
-                <button class="btn danger small" id="btnResetYes" type="button">Repor</button>
-                <button class="btn ghost small" id="btnResetNo" type="button">Cancelar</button>
-              </div>
+            <h2>Carro ligado</h2>
+            <dl class="kv" id="kvCar"></dl>
+            <div class="actions" id="vinActions" hidden></div>
+          </div>
+        </div>
+
+        <h2 class="sec-h">Adaptador</h2>
+        <div class="card">
+          <dl class="kv" id="kvAdapter"></dl>
+          <div class="actions only-app"><button class="btn small ghost" id="btnPickOther" type="button">Ligar a outro adaptador</button></div>
+        </div>
+
+        <h2 class="sec-h">Painéis</h2>
+        <div class="card">
+          <p class="hint">Volta às páginas e aos mostradores com que a app começa (Estrada, Motor e Consumo), só neste perfil.</p>
+          <div class="actions"><button class="btn small" id="btnResetLayout" type="button">Repor painéis originais</button></div>
+          <div class="confirm-inline" id="resetConfirm" hidden>
+            <p>As páginas deste perfil voltam ao original. As que criaste desaparecem.</p>
+            <div class="actions">
+              <button class="btn danger small" id="btnResetYes" type="button">Repor</button>
+              <button class="btn ghost small" id="btnResetNo" type="button">Cancelar</button>
             </div>
           </div>
-          <div class="card span-all">
-            <div class="card-head">
-              <h2>Consola</h2>
+        </div>
+
+        <h2 class="sec-h">Avançado</h2>
+        <div class="card">
+          <details class="adv">
+            <summary>Ligação Bluetooth</summary>
+            <div class="adv-body">
+              <div class="field"><label for="oUuid">Serviço BLE extra (UUID)</label><input id="oUuid" type="text" placeholder="Ex.: fff0" autocomplete="off" spellcheck="false">
+                <span class="hint">Só se o adaptador usar um serviço que a app não conhece. Encontras o UUID com a app nRF Connect.</span></div>
+              <div class="field"><label for="oEscrita">Modo de escrita</label>
+                <select id="oEscrita">
+                  <option value="auto">Automático</option>
+                  <option value="resp">Com resposta</option>
+                  <option value="noresp">Sem resposta</option>
+                </select>
+              </div>
+              <div class="field"><label for="oPausa">Pausa entre pedidos (ms)</label><input id="oPausa" type="text" inputmode="numeric">
+                <span class="hint">Aumenta para 20 a 50 se o adaptador se baralhar nas respostas.</span></div>
+            </div>
+          </details>
+          <details class="adv">
+            <summary>O que este carro envia</summary>
+            <div class="adv-body">
+              <p class="hint" id="pidCount">Liga ao carro para ver a lista.</p>
+              <div class="chips" id="pidChips"></div>
+            </div>
+          </details>
+          <details class="adv" id="advConsole">
+            <summary>Consola</summary>
+            <div class="adv-body">
               <div class="actions">
-                <button class="btn small ghost" id="btnCopyLog" type="button">Copiar</button>
+                <button class="btn small ghost" id="btnCopyLog" type="button">Copiar registo</button>
                 <button class="btn small ghost" id="btnClearLog" type="button">Limpar</button>
               </div>
+              <div class="console" id="console" tabindex="0" aria-label="Registo de comandos"></div>
+              <form class="cmd-row" id="cmdForm">
+                <input id="cmdInput" type="text" placeholder="Comando, ex.: ATRV ou 010C" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Comando para o adaptador">
+                <button class="btn" type="submit">Enviar</button>
+              </form>
+              <p class="hint">Mostra o arranque, os erros e os comandos que enviares. Só aceita comandos de leitura.</p>
             </div>
-            <div class="console" id="console" tabindex="0" aria-label="Registo de comandos"></div>
-            <form class="cmd-row" id="cmdForm">
-              <input id="cmdInput" type="text" placeholder="Comando, ex.: ATRV ou 010C" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Comando para o adaptador">
-              <button class="btn" type="submit">Enviar</button>
-            </form>
-            <p class="hint">A consola mostra o arranque, os erros e os comandos que enviares. As leituras do painel não aparecem aqui para não a encher.</p>
-          </div>
-          <div class="card span-all help">
-            <h2>Se não ligar</h2>
-            <ul>
-              <li>Fecha a app OBD Home. O V011 só aceita uma ligação de cada vez.</li>
-              <li>Não emparelhes o V011 nas definições de Bluetooth do Android. A ligação é feita aqui, na lista que aparece ao tocar em Ligar.</li>
-              <li class="only-web">Dá ao Chrome autorização para «Dispositivos próximos». Em Android antigo, liga também a Localização.</li>
-              <li class="only-app">Dá à app autorização para «Dispositivos próximos» e liga a Localização: sem ela o Android não mostra os aparelhos Bluetooth.</li>
-              <li>Liga a ignição antes de tocar em Ligar. Há carros que só respondem com o motor a trabalhar.</li>
-              <li>Se o aparelho não aparecer na lista, tira o V011 da ficha, espera 10 segundos e volta a pô-lo.</li>
-              <li>Se ligar mas não responder, experimenta o modo de escrita «Sem resposta» e uma pausa de 30 ms.</li>
-            </ul>
-          </div>
+          </details>
+          <details class="adv help">
+            <summary>Se não ligar</summary>
+            <div class="adv-body">
+              <ul>
+                <li>Fecha a app OBD Home. O V011 só aceita uma ligação de cada vez.</li>
+                <li>Não emparelhes o V011 nas definições de Bluetooth do Android. A ligação é feita aqui.</li>
+                <li class="only-web">Dá ao Chrome autorização para «Dispositivos próximos». Em Android antigo, liga também a Localização.</li>
+                <li class="only-app">Da primeira vez, dá à app autorização para «Dispositivos próximos» e liga a Localização: sem ela o Android não mostra os aparelhos Bluetooth.</li>
+                <li>Se o aparelho não aparecer, tira o V011 da ficha, espera 10 segundos e volta a pô-lo.</li>
+                <li>Se ligar mas não responder, experimenta o modo de escrita «Sem resposta» e uma pausa de 30 ms.</li>
+              </ul>
+            </div>
+          </details>
         </div>
       </div>
     </section>
@@ -868,11 +1074,12 @@ dialog::backdrop { background: rgba(6, 10, 14, .55); }
 
   <nav class="tabbar" aria-label="Secções">
     <div class="band tabs" role="tablist">
-      <button class="tab" role="tab" type="button" aria-selected="true" data-view="painel"><svg class="icon"><use href="#i-gauge"/></svg><span>Painel</span></button>
+      <button class="tab" role="tab" type="button" aria-selected="true" data-view="inicio"><svg class="icon"><use href="#i-home"/></svg><span>Início</span></button>
+      <button class="tab" role="tab" type="button" aria-selected="false" data-view="paineis"><svg class="icon"><use href="#i-gauge"/></svg><span>Painéis</span></button>
       <button class="tab" role="tab" type="button" aria-selected="false" data-view="diag"><svg class="icon"><use href="#i-engine"/></svg><span>Avarias</span><span class="badge" id="dtcBadge" hidden></span></button>
       <button class="tab" role="tab" type="button" aria-selected="false" data-view="testes"><svg class="icon"><use href="#i-watch"/></svg><span>Testes</span></button>
       <button class="tab" role="tab" type="button" aria-selected="false" data-view="viagens"><svg class="icon"><use href="#i-route"/></svg><span>Viagens</span></button>
-      <button class="tab" role="tab" type="button" aria-selected="false" data-view="ajustes"><svg class="icon"><use href="#i-sliders"/></svg><span>Ajustes</span><span class="dot" id="updDot" hidden></span></button>
+      <button class="tab" role="tab" type="button" aria-selected="false" data-view="definicoes"><svg class="icon"><use href="#i-sliders"/></svg><span>Definições</span><span class="dot" id="updDot" hidden></span></button>
     </div>
   </nav>
 </div>
@@ -2259,7 +2466,7 @@ const OBD = (() => {
 </script>
 <script>
 /* ==========================================================================
-   INTERFACE — painel, diagnóstico, testes, viagens e ajustes
+   INTERFACE — início, painéis, avarias, testes, viagens e definições
    ========================================================================== */
 (() => {
   'use strict';
@@ -2273,34 +2480,22 @@ const OBD = (() => {
 
   /* ---------- Versão (o GitHub lê daqui o número e as novidades de cada atualização) ---------- */
   // Regra: todas as alterações do mesmo dia = uma versão; cada novo dia com alterações = +0.1
-  const APP_VER='0.3';
+  const APP_VER='0.1';
   const CHANGELOG=[
-    {v:'0.3',d:'2026-10-24',t:'Ligação mais segura',items:[
-      'Correção: depois de desligar e voltar a ligar a ignição, a app deixava de reconhecer o adaptador até ser fechada. As respostas perdidas já não baralham os comandos seguintes',
-      'Com a ignição desligada, a ligação ao adaptador mantém-se em «À espera do carro» e as leituras voltam sozinhas quando ligas a ignição. A bateria continua a ser lida',
-      'Podes ligar ao adaptador antes de ligar a ignição',
-      'Ligar vai direto ao último V011, sem lista nem Localização. Para usar outro: Ajustes, Ligar a outro adaptador',
-      'Se a ligação cair, a app tenta voltar a ligar durante cerca de 2 minutos e nunca deixa uma ligação presa a meio',
-      'Segurança: a consola só aceita comandos de leitura; os que gravam no adaptador ou mexem na centralina ficam bloqueados',
-      'Segurança: não deixa apagar erros com o motor a trabalhar',
-      'Correções: tocar duas vezes em Ligar já não abre duas ligações; o diagnóstico para com uma mensagem clara se a ligação cair a meio; a app abre logo mesmo com rede fraca'
-    ]},
-    {v:'0.2',d:'2026-10-23',t:'App Android com atualizações',items:[
-      'Passa a ser uma app instalada, como a 7Chaves e a Receitas, com atualizações pelo GitHub',
-      'Bluetooth do próprio Android: liga ao V011 sem passar pelo Chrome',
-      'Ajustes, Atualizações: verifica, descarrega e instala as versões novas dentro da app',
-      'O ecrã fica ligado enquanto estás ligado ao carro, e o botão de ecrã inteiro esconde as barras do Android',
-      'O botão Voltar do Android fecha primeiro as janelas e volta ao Painel antes de sair da app',
-      'Relatório de diagnóstico: botão Partilhar para o mandar por WhatsApp ou e-mail'
-    ]},
-    {v:'0.1',d:'2026-10-22',t:'Primeira versão',items:[
-      'Ligação ao adaptador V011 por Bluetooth, com os comandos ELM327',
-      'Painel com contadores à tua maneira: ponteiro, número ou gráfico, escala, alertas, tamanho e ordem',
-      'Computador de bordo: consumo instantâneo e médio, litros gastos e custo da viagem',
-      'Avarias: códigos com gravidade e o que verificar, dados congelados, prontidão das emissões, falhas por cilindro, testes da centralina e relatório',
+    {v:'0.1',d:'2026-10-24',t:'Primeira versão',items:[
+      'App Android instalada, com atualizações pelo GitHub dentro da app (Definições, Aplicação)',
+      'Ligação ao adaptador V011 pelo Bluetooth do próprio Android, com os comandos ELM327. Ligar vai direto ao último adaptador usado',
+      'Novo design com três estilos à escolha em Definições, Aparência: Cockpit digital, Clássico com ponteiros e HUD de corrida',
+      'Separador Painéis: várias páginas de mostradores (Estrada, Motor e Consumo), que mudas a deslizar o dedo. Crias, renomeias e apagas páginas, e escolhes o estilo, o tamanho (normal, largo ou grande), a escala e os alertas de cada mostrador',
+      'Modo carro para o tablet: os mostradores enchem o ecrã, sem barras. Pode abrir sozinho ao ligar ao carro',
+      'Início com os contadores principais e o computador de bordo: consumo instantâneo e médio, litros gastos, distância e custo da viagem',
+      'Avarias: códigos com gravidade e o que verificar, dados congelados, prontidão das emissões, falhas por cilindro, testes da centralina e relatório para partilhar',
       'Testes: 0–100, 60–100, travagem 100–0, 0–400 m e bateria em três passos',
       'Viagens guardadas com consumo, velocidade máxima, travagens e acelerações bruscas',
-      'Perfis por carro, escolhidos pelo VIN, e modo de demonstração'
+      'Perfis por carro, escolhidos pelo VIN, e modo de demonstração',
+      'Com a ignição desligada, a ligação fica «À espera do carro» e as leituras voltam sozinhas quando a ligas. Se a ligação cair, a app volta a ligar durante cerca de 2 minutos',
+      'Segurança: a consola só aceita comandos de leitura e não deixa apagar erros com o motor a trabalhar',
+      'Versão e compilação sempre à vista no topo: toca nelas para ver o que mudou'
     ]}
   ];
 
@@ -2342,16 +2537,26 @@ const OBD = (() => {
 
   /* ---------- Dados guardados no telemóvel ---------- */
   const KEY = 'mostrador-obd.v1';
-  const DEFAULT_LAYOUT = () => [
-    { id: 'viagem', size: 'wide' },
-    { id: 'rpm', style: 'dial' }, { id: 'vel', style: 'dial' },
-    { id: 'tmotor', style: 'dial' }, { id: 'bat', style: 'num' },
-    { id: 'carga', style: 'graf' }, { id: 'maf', style: 'num' }
-  ];
-  const newId = () => 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-  const newProfile = (nome, layout) => ({
+  // Páginas de mostradores com que a app começa (cada perfil tem as suas)
+  const DEFAULT_PAGES = () => [
+    { nome: 'Estrada', layout: [
+      { id: 'vel', style: 'dial', size: 'big' }, { id: 'rpm', style: 'dial' }, { id: 'tmotor', style: 'dial' },
+      { id: 'cons', style: 'num' }, { id: 'nivel', style: 'num' }, { id: 'odo', style: 'num' }, { id: 'bat', style: 'num' }] },
+    { nome: 'Motor', layout: [
+      { id: 'rpm', style: 'dial' }, { id: 'carga', style: 'graf' }, { id: 'tmotor', style: 'dial' }, { id: 'toleo', style: 'dial' },
+      { id: 'turbo', style: 'dial' }, { id: 'maf', style: 'num' }, { id: 'borb', style: 'num' }, { id: 'avanco', style: 'num' }] },
+    { nome: 'Consumo', layout: [
+      { id: 'viagem', size: 'wide' }, { id: 'cons', style: 'graf', size: 'wide' }, { id: 'caudal', style: 'dial' },
+      { id: 'nivel', style: 'dial' }, { id: 'stft', style: 'num' }, { id: 'ltft', style: 'num' }] }
+  ].map(pg => ({ id: newId(), ...pg }));
+  const HOME_DEFAULT = ['vel', 'rpm', 'tmotor', 'bat'];
+  const MAX_PAGES = 8;
+  function newId() { return 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+  const clonePages = pages => pages.map(pg => ({ id: newId(), nome: pg.nome, layout: pg.layout.map(t => ({ ...t })) }));
+  const newProfile = (nome, paginas) => ({
     id: newId(), nome, comb: 'auto', cil: 1.6, ve: 85, fator: 1, preco: null, afrDiesel: 22, vin: '',
-    layout: layout || DEFAULT_LAYOUT(), viagem: { L: 0, km: 0, s: 0 }, viagens: [], testes: []
+    paginas: paginas ? clonePages(paginas) : DEFAULT_PAGES(), pagina: 0, inicio: HOME_DEFAULT.slice(),
+    viagem: { L: 0, km: 0, s: 0 }, viagens: [], testes: []
   });
 
   function loadStore() {
@@ -2361,9 +2566,23 @@ const OBD = (() => {
       const p = newProfile('O meu carro');
       s = { v: 1, perfis: [p], ativo: p.id };
     }
-    s.opts = Object.assign({ uuidExtra: '', pausaMs: 0, ecraLigado: true, escrita: 'auto' }, s.opts || {});
+    s.opts = Object.assign({ uuidExtra: '', pausaMs: 0, ecraLigado: true, escrita: 'auto', estilo: 'cockpit', abrir: 'inicio' }, s.opts || {});
     for (const p of s.perfis) {
-      p.layout = (Array.isArray(p.layout) ? p.layout : DEFAULT_LAYOUT()).filter(t => t && S[t.id]);
+      // Versões antigas tinham um só painel: passa a ser a página «Principal», com as páginas novas a seguir
+      if (!Array.isArray(p.paginas) || !p.paginas.length) {
+        const pages = DEFAULT_PAGES();
+        p.paginas = Array.isArray(p.layout) && p.layout.length ? [{ id: newId(), nome: 'Principal', layout: p.layout }, ...pages.slice(1)] : pages;
+      }
+      delete p.layout;
+      p.paginas = p.paginas.filter(pg => pg && Array.isArray(pg.layout)).slice(0, MAX_PAGES);
+      if (!p.paginas.length) p.paginas = DEFAULT_PAGES();
+      for (const pg of p.paginas) {
+        pg.id = pg.id || newId();
+        pg.nome = String(pg.nome || 'Página').slice(0, 24);
+        pg.layout = pg.layout.filter(t => t && S[t.id]);
+      }
+      if (!(p.pagina >= 0 && p.pagina < p.paginas.length)) p.pagina = 0;
+      if (!Array.isArray(p.inicio) || p.inicio.length !== 4 || !p.inicio.every(id => S[id] && !S[id].special)) p.inicio = HOME_DEFAULT.slice();
       p.viagem = Object.assign({ L: 0, km: 0, s: 0 }, p.viagem || {});
       if (!Array.isArray(p.viagens)) p.viagens = [];
       if (!Array.isArray(p.testes)) p.testes = [];
@@ -2374,10 +2593,20 @@ const OBD = (() => {
   const store = loadStore();
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) { /* sem armazenamento */ } };
   const prof = () => store.perfis.find(p => p.id === store.ativo) || store.perfis[0];
+  save();   // guarda já o formato novo (páginas), para as ids das páginas não mudarem
+  const curPage = () => { const p = prof(); return p.paginas[p.pagina] || p.paginas[0]; };
+  const curLayout = () => curPage().layout;
+  const ESTILOS = {
+    cockpit: { nome: 'Cockpit', sub: 'Digital, arcos com brilho' },
+    classico: { nome: 'Clássico', sub: 'Ponteiros e aro cromado' },
+    hud: { nome: 'HUD', sub: 'Corrida, barras em segmentos' }
+  };
+  const estilo = () => (ESTILOS[store.opts.estilo] ? store.opts.estilo : 'cockpit');
+  document.documentElement.dataset.estilo = estilo();
 
   /* ---------- Estado ---------- */
   const st = {
-    mode: 'off', step: '', lastError: '', view: 'painel', editing: false,
+    mode: 'off', step: '', lastError: '', view: 'inicio', editing: false, carMode: false, homeTiles: [],
     transport: null, elm: null, info: null, poller: null, device: null, adapterName: '',
     live: {}, na: new Set(), maxAge: {}, fuelSrc: null, pollOverride: null,
     calc: { lph: null, cons: null }, demoTrip: null, peaks: {}, shown: {}, hist: {},
@@ -2431,7 +2660,7 @@ const OBD = (() => {
     st.logDirty = true;
   }
   function renderConsole(force) {
-    if (!force && (!st.logDirty || st.view !== 'ajustes')) return;
+    if (!force && (!st.logDirty || st.view !== 'definicoes')) return;
     const box = $('#console');
     const atEnd = box.scrollHeight - box.scrollTop - box.clientHeight < 30;
     const pre = { tx: '→ ', rx: '← ', err: '✕ ', info: '· ' };
@@ -2457,7 +2686,7 @@ const OBD = (() => {
     'CAN ERROR': 'Erro no barramento CAN. Confirma que o adaptador está bem encaixado na ficha.',
     'BUS ERROR': 'Erro no barramento do carro. Confirma que o adaptador está bem encaixado na ficha.',
     'NO_ELM': 'O aparelho ligou, mas não responde a comandos ELM327. Fecha a app OBD Home e tenta de novo.',
-    'NO_SERVICE': 'Esse aparelho não tem um serviço OBD conhecido. Escolhe o que se chama OBDII ou V011, ou indica o UUID em Ajustes.',
+    'NO_SERVICE': 'Esse aparelho não tem um serviço OBD conhecido. Escolhe o que se chama OBDII ou V011, ou indica o UUID em Definições, Avançado.',
     'TIMEOUT': 'O adaptador deixou de responder.',
     'NetworkError': 'Não consegui ligar ao adaptador. Confirma que está encaixado e que a app OBD Home está fechada.'
   };
@@ -2587,6 +2816,7 @@ const OBD = (() => {
       const t = await makeTransport();
       st.transport = t;
       await openSession(t, mode, name);
+      if (mode === 'on') applyAbrir();
       return true;
     } catch (e) {
       logLine('err', errorText(e));
@@ -2757,8 +2987,10 @@ const OBD = (() => {
       if (!st.fuelSrc) return;
       for (const p of st.fuelSrc.pids) add(p, p === '0F' ? 'slow' : p === '44' ? 'medium' : 'fast');
     };
-    for (const tile of prof().layout) {
-      const d = S[tile.id];
+    // A página aberta em Painéis, mais os contadores do Início
+    const ids = new Set([...curLayout().map(t => t.id), ...prof().inicio, 'viagem']);
+    for (const id of ids) {
+      const d = S[id];
       if (!d) continue;
       if (d.pid) add(d.pid, d.rate || 'fast');
       else if (d.at) items.set('bat', { key: 'bat', kind: 'at', cmd: 'ATRV', rate: 'slow' });
@@ -2833,7 +3065,7 @@ const OBD = (() => {
     bc.textContent = st.mode === 'on' || st.mode === 'lost' ? 'Desligar' : st.mode === 'connecting' ? 'A ligar…' : 'Ligar';
     bc.disabled = st.mode === 'connecting' || connecting;
     bc.classList.toggle('primary', !(st.mode === 'on' || st.mode === 'lost'));
-    bd.textContent = st.mode === 'demo' ? 'Parar demo' : 'Demo';
+    bd.textContent = st.mode === 'demo' ? 'Parar' : 'Demo';
     bd.disabled = st.mode === 'connecting' || st.mode === 'on' || st.mode === 'lost';
     $('#hero').hidden = !(st.mode === 'off' && btState() === 'ok');
   }
@@ -2844,72 +3076,147 @@ const OBD = (() => {
     n.hidden = false;
   }
 
-  /* ---------- Mostradores ---------- */
-  const CX = 100, CY = 96, A0 = -120, A1 = 120;
+  /* ---------- Mostradores: três estilos (Cockpit, Clássico, HUD) ---------- */
   const r1 = n => Math.round(n * 10) / 10;
-  const polar = (r, deg) => { const a = deg * Math.PI / 180; return [r1(CX + r * Math.sin(a)), r1(CY - r * Math.cos(a))]; };
-  const arc = (r, d0, d1) => {
-    const [x0, y0] = polar(r, d0), [x1, y1] = polar(r, d1);
+  const polarAt = (cx, cy) => (r, deg) => { const a = deg * Math.PI / 180; return [r1(cx + r * Math.sin(a)), r1(cy - r * Math.cos(a))]; };
+  const arcAt = P => (r, d0, d1) => {
+    const [x0, y0] = P(r, d0), [x1, y1] = P(r, d1);
     return `M${x0} ${y0}A${r} ${r} 0 ${d1 - d0 > 180 ? 1 : 0} 1 ${x1} ${y1}`;
   };
-  const toDeg = (v, min, max) => A0 + Math.min(1, Math.max(0, (v - min) / (max - min))) * (A1 - A0);
+  const frac = (v, min, max) => Math.min(1, Math.max(0, (v - min) / (max - min)));
   const niceStep = (range, target = 6) => {
     const raw = range / target, p = Math.pow(10, Math.floor(Math.log10(raw))), n = raw / p;
     return (n < 1.5 ? 1 : n < 3 ? 2 : n < 7 ? 5 : 10) * p;
   };
   const pick = (cfgV, defV) => (cfgV === undefined ? (defV ?? null) : cfgV);
-
-  function dialSvg(T) {
-    const { min, max, hi, lo, def } = T;
-    const step = niceStep(max - min);
+  // Marcas da escala: as grandes com número, as pequenas entre elas
+  function marks(min, max, target) {
+    const step = niceStep(max - min, target);
     const big = Math.max(Math.abs(min), Math.abs(max)) >= 2000 ? 1000 : 1;
     const lead = Math.round(step / Math.pow(10, Math.floor(Math.log10(step))));
     const sub = lead === 2 ? 4 : 5;
     const ldec = Math.max(0, -Math.floor(Math.log10(step / big) + 1e-9));
     const eps = step / 1000;
-    let ticks = '', labels = '';
-    const firstMajor = Math.ceil((min - eps) / step) * step;
-    for (let v = firstMajor - step; v <= max + eps; v += step) {
-      if (v >= min - eps) {
-        const d = toDeg(v, min, max);
-        const [x0, y0] = polar(80, d), [x1, y1] = polar(69, d), [lx, ly] = polar(57, d);
-        ticks += `<line class="d-major" x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}"/>`;
-        const lv = v / big, isInt = Math.abs(lv - Math.round(lv)) < 1e-6;
-        labels += `<text class="d-label" x="${lx}" y="${ly}">${fmtN(lv, isInt ? 0 : ldec)}</text>`;
-      }
-      for (let k = 1; k < sub; k++) {
-        const mv = v + (k * step) / sub;
-        if (mv < min - eps || mv > max + eps) continue;
-        const md = toDeg(mv, min, max);
-        const [a, b] = polar(80, md), [c, e] = polar(74, md);
-        ticks += `<line class="d-minor" x1="${a}" y1="${b}" x2="${c}" y2="${e}"/>`;
-      }
+    const majors = [], minors = [];
+    const first = Math.ceil((min - eps) / step) * step;
+    for (let v = first - step; v <= max + eps; v += step) {
+      if (v >= min - eps) { const lv = v / big, isInt = Math.abs(lv - Math.round(lv)) < 1e-6; majors.push({ v, txt: fmtN(lv, isInt ? 0 : ldec) }); }
+      for (let k = 1; k < sub; k++) { const mv = v + (k * step) / sub; if (mv >= min - eps && mv <= max + eps) minors.push(mv); }
     }
-    let zones = '';
-    if (hi != null && hi < max) zones += `<path class="d-zone" d="${arc(85, toDeg(Math.max(hi, min), min, max), A1)}"/>`;
-    if (lo != null && lo > min) zones += `<path class="d-zone" d="${arc(85, A0, toDeg(Math.min(lo, max), min, max))}"/>`;
-    return `<svg class="dial" viewBox="0 0 200 154" role="img" aria-label="${esc(def.nome)}">
-<path class="d-track" d="${arc(80, A0, A1)}"/>${zones}${ticks}${labels}
-${big > 1 ? '<text class="d-scale" x="100" y="68">×1000</text>' : ''}
-<g class="d-peak-g" transform="rotate(${A0} ${CX} ${CY})"><line class="d-peak" x1="100" y1="11" x2="100" y2="22"/></g>
-<g class="d-needle-g" transform="rotate(${A0} ${CX} ${CY})"><path class="d-needle" d="M97.4 108L102.6 108L100.8 24L99.2 24Z"/></g>
-<circle class="d-hub" cx="${CX}" cy="${CY}" r="7"/>
-<text class="d-value" x="100" y="129">—</text>
-<text class="d-unit" x="100" y="146">${esc(def.un)}</text>
+    return { majors, minors, big };
+  }
+  const GEO = {
+    cockpit: { cx: 100, cy: 98, a0: -125, a1: 125 },
+    classico: { cx: 100, cy: 100, a0: -135, a1: 135 },
+    hud: { x0: 6, x1: 194, n: 20 }
+  };
+  const ln = (cls, [x1, y1], [x2, y2]) => `<line class="${cls}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`;
+
+  function cockpitSvg(T) {
+    const G = GEO.cockpit, P = polarAt(G.cx, G.cy), A = arcAt(P);
+    const deg = v => G.a0 + frac(v, T.min, T.max) * (G.a1 - G.a0);
+    const m = marks(T.min, T.max);
+    let s = '';
+    for (const v of m.minors) s += ln('c-tick', P(64, deg(v)), P(60, deg(v)));
+    for (const x of m.majors) {
+      const d = deg(x.v), [lx, ly] = P(47, d);
+      s += ln('c-tick mj', P(65, d), P(57, d)) + `<text class="d-label" x="${lx}" y="${ly}">${x.txt}</text>`;
+    }
+    let z = '';
+    if (T.hi != null && T.hi < T.max) z += `<path class="c-zone" d="${A(89, deg(Math.max(T.hi, T.min)), G.a1)}"/>`;
+    if (T.lo != null && T.lo > T.min) z += `<path class="c-zone" d="${A(89, G.a0, deg(Math.min(T.lo, T.max)))}"/>`;
+    const track = A(78, G.a0, G.a1);
+    return `<svg class="dial dial-cockpit" viewBox="0 0 200 156" role="img" aria-label="${esc(T.def.nome)}">
+<path class="c-track" d="${track}"/><path class="c-val" d="${track}" pathLength="100" stroke-dasharray="100 200" stroke-dashoffset="100" style="opacity:0"/>
+${z}${s}${m.big > 1 ? '<text class="d-scale" x="100" y="72">×1000</text>' : ''}
+<g class="d-peak-g" transform="rotate(${G.a0} ${G.cx} ${G.cy})"><circle class="c-peak" cx="${G.cx}" cy="${G.cy - 78}" r="3.6"/></g>
+<text class="d-value" data-v x="100" y="113">—</text><text class="d-unit" data-u x="100" y="133">${esc(T.def.un)}</text>
 </svg>`;
   }
 
+  function classicoSvg(T) {
+    const G = GEO.classico, P = polarAt(G.cx, G.cy), A = arcAt(P);
+    const deg = v => G.a0 + frac(v, T.min, T.max) * (G.a1 - G.a0);
+    const m = marks(T.min, T.max);
+    let s = '';
+    for (const v of m.minors) s += ln('k-minor', P(83, deg(v)), P(77, deg(v)));
+    for (const x of m.majors) {
+      const d = deg(x.v), [lx, ly] = P(59, d);
+      s += ln('k-major', P(84, d), P(70, d)) + `<text class="k-label" x="${lx}" y="${ly}">${x.txt}</text>`;
+    }
+    let z = '';
+    if (T.hi != null && T.hi < T.max) z += `<path class="k-zone" d="${A(78, deg(Math.max(T.hi, T.min)), G.a1)}"/>`;
+    if (T.lo != null && T.lo > T.min) z += `<path class="k-zone" d="${A(78, G.a0, deg(Math.min(T.lo, T.max)))}"/>`;
+    return `<svg class="dial dial-classico" viewBox="0 0 200 200" role="img" aria-label="${esc(T.def.nome)}">
+<circle class="k-bezel" cx="100" cy="100" r="98"/><circle class="k-bezel-in" cx="100" cy="100" r="91"/><circle class="k-face" cx="100" cy="100" r="88"/>
+${z}${s}
+${m.big > 1 ? '<text class="k-scale" x="100" y="66">×1000</text>' : ''}<text class="k-scale" data-u x="100" y="${m.big > 1 ? 78 : 72}">${esc(T.def.un)}</text>
+<rect class="k-win" x="75" y="131" width="50" height="23" rx="3"/><text class="d-value" data-v x="100" y="148.5">—</text>
+<g class="d-peak-g" transform="rotate(${G.a0} 100 100)"><path class="k-peak" d="M96.5 12L103.5 12L100 20Z"/></g>
+<g class="k-needle-g" transform="rotate(${G.a0} 100 100)"><path class="k-needle" d="M96.6 116L103.4 116L100.9 25L99.1 25Z"/></g>
+<circle class="k-hub" cx="100" cy="100" r="9"/>
+</svg>`;
+  }
+
+  function hudSvg(T) {
+    const G = GEO.hud, gap = 2, w = (G.x1 - G.x0 - gap * (G.n - 1)) / G.n;
+    let segs = '';
+    for (let i = 0; i < G.n; i++) {
+      const v = T.min + (i + 0.5) / G.n * (T.max - T.min);
+      const z = (T.hi != null && v >= T.hi) || (T.lo != null && v <= T.lo);
+      const hi = !z && i >= G.n * 0.75;
+      segs += `<rect class="h-seg${z ? ' z' : ''}${hi ? ' hi' : ''}" x="${r1(G.x0 + i * (w + gap))}" y="80" width="${r1(w)}" height="20"/>`;
+    }
+    const m = marks(T.min, T.max, 2);
+    const mid = m.majors.length > 2 ? m.majors[Math.floor(m.majors.length / 2)] : null;
+    const lab = (x, anchor, t) => `<text class="h-lab" x="${x}" y="116" text-anchor="${anchor}">${t}</text>`;
+    const fx = v => r1(G.x0 + frac(v, T.min, T.max) * (G.x1 - G.x0));
+    return `<svg class="dial dial-hud" viewBox="0 0 200 122" role="img" aria-label="${esc(T.def.nome)}">
+<text class="d-value" data-v x="6" y="48">—</text><text class="d-unit" data-u x="8" y="66">${esc(T.def.un)}</text>
+${m.big > 1 ? '<text class="h-lab" x="194" y="66" text-anchor="end">×1000</text>' : ''}
+${segs}
+<g class="d-peak-g" transform="translate(${G.x0} 0)"><line class="h-peak" x1="0" y1="75" x2="0" y2="105"/></g>
+${lab(G.x0, 'start', fmtN(T.min / m.big, 0))}${mid ? lab(fx(mid.v), 'middle', mid.txt) : ''}${lab(G.x1, 'end', fmtN(T.max / m.big, 0))}
+</svg>`;
+  }
+
+  const dialSvg = (T, ds) => (ds === 'classico' ? classicoSvg(T) : ds === 'hud' ? hudSvg(T) : cockpitSvg(T));
+  function bindDial(T, root) {
+    T.arcEl = root.querySelector('.c-val');
+    T.needle = root.querySelector('.k-needle-g');
+    T.segs = [...root.querySelectorAll('.h-seg')];
+    T.peakG = root.querySelector('.d-peak-g');
+    T.lastF = null; T.lastOn = -1;
+  }
+  function setDial(T, f) {
+    if (T.ds === 'cockpit') {
+      T.arcEl.setAttribute('stroke-dashoffset', (100 - f * 100).toFixed(2));
+      T.arcEl.style.opacity = f < 0.004 ? '0' : '1';
+    } else if (T.ds === 'classico') {
+      const G = GEO.classico;
+      T.needle.setAttribute('transform', `rotate(${(G.a0 + f * (G.a1 - G.a0)).toFixed(2)} 100 100)`);
+    } else {
+      const on = Math.round(f * GEO.hud.n);
+      if (on !== T.lastOn) { T.segs.forEach((el, i) => el.classList.toggle('on', i < on)); T.lastOn = on; }
+    }
+  }
+  function setPeak(T, f) {
+    if (T.ds === 'hud') { const G = GEO.hud; T.peakG.setAttribute('transform', `translate(${r1(G.x0 + f * (G.x1 - G.x0))} 0)`); return; }
+    const G = GEO[T.ds];
+    T.peakG.setAttribute('transform', `rotate(${(G.a0 + f * (G.a1 - G.a0)).toFixed(2)} ${G.cx} ${G.cy})`);
+  }
+
   function numHtml(T) {
-    const pos = v => ((Math.min(T.max, Math.max(T.min, v)) - T.min) / (T.max - T.min) * 100).toFixed(1);
+    const pos = v => (frac(v, T.min, T.max) * 100).toFixed(1);
     let zones = '';
     if (!T.def.plain) {
       if (T.hi != null && T.hi < T.max) zones += `<div class="n-zone" style="left:${pos(T.hi)}%;right:0"></div>`;
       if (T.lo != null && T.lo > T.min) zones += `<div class="n-zone" style="left:0;width:${pos(T.lo)}%"></div>`;
     }
-    return `<div class="n-row"><span class="n-value">--</span><span class="n-unit">${esc(T.def.un)}</span></div>
+    return `<div class="n-row"><span class="n-value" data-v>--</span><span class="n-unit" data-u>${esc(T.def.un)}</span></div>
 ${T.def.plain ? '' : `<div class="n-bar" aria-hidden="true">${zones}<div class="n-fill"></div><div class="n-peak"></div></div>`}`;
   }
-  const grafHtml = T => `<div class="n-row"><span class="n-value">--</span><span class="n-unit">${esc(T.def.un)}</span></div>
+  const grafHtml = T => `<div class="n-row"><span class="n-value" data-v>--</span><span class="n-unit" data-u>${esc(T.def.un)}</span></div>
 <div class="g-wrap"><canvas class="g-canvas"></canvas><div class="g-tip" hidden></div></div>`;
 
   const pidLabel = def => def.pid ? '01 ' + def.pid : def.at ? 'ATRV' : 'calculado';
@@ -2918,11 +3225,12 @@ ${T.def.plain ? '' : `<div class="n-bar" aria-hidden="true">${zones}<div class="
 <button type="button" data-act="adjust">Ajustar</button>
 <button type="button" class="move" data-act="right" aria-label="Mover para a frente"><svg class="icon"><use href="#i-right"/></svg></button>
 </div>`;
+  const SIZES = { wide: ' wide', big: ' big' };
 
-  function buildTile(cfg, idx) {
+  function buildTile(cfg, idx, opt = {}) {
     const def = S[cfg.id];
     const el = document.createElement('article');
-    el.className = 'tile' + (cfg.size === 'wide' ? ' wide' : '');
+    el.className = 'tile' + (SIZES[cfg.size] || '');
     el.dataset.index = idx;
     if (def.special === 'viagem') {
       el.innerHTML = `<header class="tile-head"><h3 class="tile-name">${esc(def.nome)}</h3><span class="tile-pid">viagem</span></header>
@@ -2939,28 +3247,27 @@ ${T.def.plain ? '' : `<div class="n-bar" aria-hidden="true">${zones}<div class="
   </div>
 </div>
 <footer class="trip-foot"><span class="src" data-r="src">Sem ligação</span><button class="btn small ghost" type="button" data-act="trip-reset">Repor viagem</button></footer>
-${editBar()}`;
+${opt.home ? '' : editBar()}`;
       const r = {};
       el.querySelectorAll('[data-r]').forEach(x => { r[x.dataset.r] = x; });
       return { el, def, cfg, kind: 'trip', r, last: {} };
     }
     const kind = def.plain ? 'num' : cfg.style === 'dial' ? 'dial' : cfg.style === 'graf' ? 'graf' : 'num';
     const T = {
-      el, def, cfg, kind,
+      el, def, cfg, kind, ds: estilo(),
       min: pick(cfg.min, def.min), max: pick(cfg.max, def.max),
       hi: pick(cfg.hi, def.hi), lo: pick(cfg.lo, def.lo),
       shown: st.shown[def.id] ?? null, peak: st.peaks[def.id] ?? null,
       lastTxt: null, lastDeg: null, lastPeak: undefined, state: null, hoverX: null
     };
     if (!(T.max > T.min)) { T.min = def.min; T.max = def.max; }
-    el.innerHTML = `<header class="tile-head"><h3 class="tile-name">${esc(def.nome)}</h3><span class="tile-pid">${pidLabel(def)}</span></header>
-<div class="tile-body">${kind === 'dial' ? dialSvg(T) : kind === 'graf' ? grafHtml(T) : numHtml(T)}</div>
+    el.innerHTML = `<header class="tile-head"><h3 class="tile-name">${esc(def.nome)}</h3><span class="tile-pid">${opt.home ? '' : pidLabel(def)}</span></header>
+<div class="tile-body">${kind === 'dial' ? dialSvg(T, T.ds) : kind === 'graf' ? grafHtml(T) : numHtml(T)}</div>
 <footer class="tile-foot"><span class="t-peak">${def.plain ? '' : kind === 'graf' ? 'últimos 60 s' : 'máx —'}</span><span class="t-note"></span></footer>
-${editBar()}`;
-    T.valEl = el.querySelector(kind === 'dial' ? '.d-value' : '.n-value');
-    T.unitEl = el.querySelector(kind === 'dial' ? '.d-unit' : '.n-unit');
-    T.needle = el.querySelector('.d-needle-g');
-    T.peakG = el.querySelector('.d-peak-g');
+${opt.home ? '' : editBar()}`;
+    T.valEl = el.querySelector('[data-v]');
+    T.unitEl = el.querySelector('[data-u]');
+    if (kind === 'dial') bindDial(T, el);
     T.fill = el.querySelector('.n-fill');
     T.peakBar = el.querySelector('.n-peak');
     T.peakTxt = el.querySelector('.t-peak');
@@ -2976,9 +3283,9 @@ ${editBar()}`;
     return T;
   }
 
-  function renderGrid() {
+  function renderGrid(dir) {
     const grid = $('#grid');
-    const layout = prof().layout;
+    const layout = curLayout();
     grid.textContent = '';
     st.tiles = layout.map((cfg, i) => buildTile(cfg, i));
     st.tiles.forEach((T, i) => {
@@ -2986,21 +3293,49 @@ ${editBar()}`;
       T.el.querySelector('[data-act="right"]').disabled = i === layout.length - 1;
       grid.append(T.el);
     });
-    if (st.editing) {
+    if (st.editing || !layout.length) {
       const b = document.createElement('button');
       b.type = 'button'; b.className = 'add-tile'; b.dataset.act = 'add';
-      b.innerHTML = '<svg class="icon"><use href="#i-plus"/></svg><span>Adicionar contador</span>';
+      b.innerHTML = '<svg class="icon"><use href="#i-plus"/></svg><span>Adicionar mostrador</span>';
       grid.append(b);
     }
     grid.classList.toggle('editing', st.editing);
+    grid.classList.remove('slide-l', 'slide-r');
+    if (dir && !reduceMotion) { void grid.offsetWidth; grid.classList.add(dir > 0 ? 'slide-l' : 'slide-r'); }
+    renderPages();
     renderTripComputer(true);
     requestAnimationFrame(() => { for (const T of st.tiles) if (T.kind === 'graf') drawGraph(T, pnow()); });
   }
 
-  // Ao ligar, as agulhas varrem a escala toda e voltam, como num quadrante a sério
+  // Barra das páginas, pontos por baixo e etiqueta do modo carro
+  function renderPages() {
+    const p = prof();
+    $('#pages').innerHTML = p.paginas.map((pg, i) =>
+      `<button type="button" class="page-chip" data-page="${i}" aria-pressed="${i === p.pagina}">${esc(pg.nome)}</button>`).join('');
+    $('#pageDots').innerHTML = p.paginas.length > 1 ? p.paginas.map((pg, i) => `<i class="${i === p.pagina ? 'on' : ''}"></i>`).join('') : '';
+    $('#carPage').textContent = `${curPage().nome}${p.paginas.length > 1 ? ` · ${p.pagina + 1} de ${p.paginas.length}` : ''}`;
+    $('#pageName2').textContent = curPage().nome;
+    const on = $('#pages [aria-pressed="true"]');
+    if (on && on.scrollIntoView) on.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }
+
+  // Início: quatro contadores principais e o computador de bordo
+  function renderHome() {
+    const g = $('#homeGrid');
+    g.textContent = '';
+    st.homeTiles = prof().inicio.map((id, i) => buildTile({ id, style: 'num' }, i, { home: true }));
+    for (const T of st.homeTiles) { T.el.tabIndex = 0; T.el.setAttribute('role', 'button'); T.el.title = 'Toca para escolher outro contador'; g.append(T.el); }
+    const trip = buildTile({ id: 'viagem', size: 'wide' }, -1, { home: true });
+    $('#homeTrip').textContent = '';
+    $('#homeTrip').append(trip.el);
+    st.homeTiles.push(trip);
+    renderTripComputer(true);
+  }
+
+  // Ao ligar, os ponteiros varrem a escala toda e voltam, como num quadrante a sério
   function resetTiles(sweep) {
     st.peaks = {}; st.shown = {}; st.hist = {};
-    for (const T of st.tiles) { T.shown = null; T.peak = null; T.lastTxt = null; T.lastPeak = undefined; }
+    for (const T of [...st.tiles, ...st.homeTiles]) { T.shown = null; T.peak = null; T.lastTxt = null; T.lastPeak = undefined; }
     st.sweepAt = sweep && !reduceMotion ? pnow() : 0;
   }
 
@@ -3069,19 +3404,13 @@ ${editBar()}`;
 
     const shown = T.shown == null ? T.min : T.shown;
     if (T.kind === 'dial') {
-      const deg = toDeg(shown, T.min, T.max);
-      if (T.lastDeg == null || Math.abs(deg - T.lastDeg) > 0.05) {
-        T.needle.setAttribute('transform', `rotate(${deg.toFixed(2)} ${CX} ${CY})`);
-        T.lastDeg = deg;
-      }
-      if (T.peak !== T.lastPeak) T.peakG.setAttribute('transform', `rotate(${toDeg(T.peak ?? T.min, T.min, T.max).toFixed(2)} ${CX} ${CY})`);
+      const f = frac(shown, T.min, T.max);
+      if (T.lastF == null || Math.abs(f - T.lastF) > 0.0004) { setDial(T, f); T.lastF = f; }
+      if (T.peak !== T.lastPeak) setPeak(T, T.peak == null ? 0 : frac(T.peak, T.min, T.max));
     } else if (T.fill) {
-      const f = Math.min(1, Math.max(0, (shown - T.min) / (T.max - T.min)));
+      const f = frac(shown, T.min, T.max);
       if (T.lastDeg == null || Math.abs(f - T.lastDeg) > 0.001) { T.fill.style.transform = `scaleX(${f.toFixed(4)})`; T.lastDeg = f; }
-      if (T.peak !== T.lastPeak) {
-        const p = T.peak == null ? 0 : Math.min(1, Math.max(0, (T.peak - T.min) / (T.max - T.min)));
-        T.peakBar.style.left = (p * 100).toFixed(2) + '%';
-      }
+      if (T.peak !== T.lastPeak) T.peakBar.style.left = ((T.peak == null ? 0 : frac(T.peak, T.min, T.max)) * 100).toFixed(2) + '%';
     }
     if (T.peak !== T.lastPeak) {
       if (!def.plain && T.kind !== 'graf') T.peakTxt.textContent = 'máx ' + (T.peak == null ? '—' : fmtVal(def, T.peak));
@@ -3099,7 +3428,7 @@ ${editBar()}`;
       h.push({ t, v: live() ? sensorValue(S[id]) : null });
       while (h.length && t - h[0].t > SPAN + 1000) h.shift();
     }
-    if (st.view === 'painel') for (const T of st.tiles) if (T.kind === 'graf') drawGraph(T, t);
+    if (st.view === 'paineis') for (const T of st.tiles) if (T.kind === 'graf') drawGraph(T, t);
   }
   function drawGraph(T, tNow) {
     const c = T.canvas, w = c.clientWidth, h = c.clientHeight;
@@ -3166,7 +3495,8 @@ ${editBar()}`;
     const dt = Math.min(120, t - (lastFrame || t));
     lastFrame = t;
     const k = reduceMotion ? 1 : 1 - Math.exp(-dt / 110);
-    if (st.view === 'painel') for (const T of st.tiles) if (T.kind !== 'trip') updateTile(T, k, t);
+    if (st.view === 'paineis') { for (const T of st.tiles) if (T.kind !== 'trip') updateTile(T, k, t); }
+    else if (st.view === 'inicio') { for (const T of st.homeTiles) if (T.kind !== 'trip') updateTile(T, k, t); }
     if (st.view === 'testes' && st.perf) renderPerfTimer();
     requestAnimationFrame(frame);
   }
@@ -3202,7 +3532,7 @@ ${editBar()}`;
     }
     renderTripComputer();
     renderStatus();
-    if (st.view === 'ajustes') { renderAdapterLive(); renderConsole(); }
+    if (st.view === 'definicoes') { renderAdapterLive(); renderConsole(); }
     if (st.view === 'viagens' && st.rec) renderViagens();
   }
 
@@ -3239,7 +3569,7 @@ ${editBar()}`;
   function renderTripComputer(force) {
     const trip = tripObj();
     const p = prof();
-    for (const T of st.tiles) {
+    for (const T of [...st.tiles, ...st.homeTiles]) {
       if (T.kind !== 'trip') continue;
       const avg = trip.km >= 0.2 ? trip.L / trip.km * 100 : null;
       const vals = {
@@ -3262,27 +3592,28 @@ ${editBar()}`;
     return `Fonte: ${st.fuelSrc.nome}${st.fuelSrc.estimativa ? ' (estimativa: calibra com atestos)' : ''}${f && f !== 1 ? ` · correção ${fmtN(f, 2)}` : ''}`;
   }
 
-  /* ---------- Painel: eventos ---------- */
+  /* ---------- Painéis: eventos ---------- */
   let tripArmed = 0;
+  function tripReset(b) {
+    if (Date.now() - tripArmed < 3000) {
+      Object.assign(tripObj(), { L: 0, km: 0, s: 0 });
+      tripArmed = 0;
+      document.querySelectorAll('[data-act="trip-reset"]').forEach(x => { x.textContent = 'Repor viagem'; x.classList.remove('armed'); });
+      save(); renderTripComputer(true); toast('Viagem reposta.');
+    } else {
+      tripArmed = Date.now(); b.textContent = 'Toca de novo para repor'; b.classList.add('armed');
+      setTimeout(() => { if (Date.now() - tripArmed >= 2900) { b.textContent = 'Repor viagem'; b.classList.remove('armed'); } }, 3000);
+    }
+  }
   $('#grid').addEventListener('click', e => {
     const b = e.target.closest('[data-act]');
     if (!b) return;
     const act = b.dataset.act;
     if (act === 'add') return openAddDialog();
+    if (act === 'trip-reset') return tripReset(b);
     const tileEl = b.closest('.tile');
     const i = tileEl ? +tileEl.dataset.index : -1;
-    const layout = prof().layout;
-    if (act === 'trip-reset') {
-      if (Date.now() - tripArmed < 3000) {
-        Object.assign(tripObj(), { L: 0, km: 0, s: 0 });
-        tripArmed = 0; b.textContent = 'Repor viagem'; b.classList.remove('armed');
-        save(); renderTripComputer(true); toast('Viagem reposta.');
-      } else {
-        tripArmed = Date.now(); b.textContent = 'Toca de novo para repor'; b.classList.add('armed');
-        setTimeout(() => { if (Date.now() - tripArmed >= 2900) { b.textContent = 'Repor viagem'; b.classList.remove('armed'); } }, 3000);
-      }
-      return;
-    }
+    const layout = curLayout();
     if (act === 'left' || act === 'right') {
       const j = act === 'left' ? i - 1 : i + 1;
       if (j < 0 || j >= layout.length) return;
@@ -3294,35 +3625,79 @@ ${editBar()}`;
     }
     if (act === 'adjust') openTileDialog(i);
   });
+  $('#homeTrip').addEventListener('click', e => { const b = e.target.closest('[data-act="trip-reset"]'); if (b) tripReset(b); });
+  const homePick = e => { const t = e.target.closest('#homeGrid .tile'); if (t) openHomeDialog(+t.dataset.index); };
+  $('#homeGrid').addEventListener('click', homePick);
+  $('#homeGrid').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); homePick(e); } });
+  $('#btnGoPanels').addEventListener('click', () => showView('paineis'));
 
   function setEditing(on) {
     st.editing = on;
-    $('#toolbar').hidden = on; $('#editTools').hidden = !on;
+    $('#editTools').hidden = !on;
+    $('#btnEdit').setAttribute('aria-pressed', String(on));
     renderGrid();
   }
-  $('#btnEdit').addEventListener('click', () => setEditing(true));
+  $('#btnEdit').addEventListener('click', () => setEditing(!st.editing));
   $('#btnDone').addEventListener('click', () => setEditing(false));
   $('#btnAdd').addEventListener('click', () => openAddDialog());
-  $('#btnPeaks').addEventListener('click', () => { resetTiles(false); toast('Picos repostos.'); });
+  $('#btnPageMenu').addEventListener('click', () => openPageDialog());
 
-  if (NATIVE && plug('Ecra')) {
-    const bf = $('#btnFull');
-    let full = false;
-    bf.hidden = false;
-    bf.addEventListener('click', async () => {
-      full = !full;
-      try { await plug('Ecra').ecraInteiro({ ligado: full }); } catch (e) { full = !full; toast('Este telemóvel não deixa esconder as barras.'); }
-    });
-  } else if (!NATIVE && document.fullscreenEnabled) {
-    const bf = $('#btnFull');
-    bf.hidden = false;
-    bf.addEventListener('click', async () => {
-      try {
-        if (document.fullscreenElement) await document.exitFullscreen();
-        else await document.documentElement.requestFullscreen({ navigationUI: 'hide' });
-      } catch (e) { toast('Este ecrã não deixa usar o ecrã inteiro.'); }
-    });
+  // Mudar de página: toque no nome ou deslizar o dedo para o lado
+  function goPage(i, dir) {
+    const p = prof(), n = p.paginas.length;
+    if (n < 2) return;
+    const next = ((i % n) + n) % n;
+    if (next === p.pagina) return;
+    if (!dir) dir = next > p.pagina ? 1 : -1;
+    p.pagina = next; save();
+    renderGrid(dir); refreshPollList();
   }
+  $('#pages').addEventListener('click', e => { const b = e.target.closest('[data-page]'); if (b) goPage(+b.dataset.page); });
+  $('#carPage').addEventListener('click', () => goPage(prof().pagina + 1, 1));
+  (() => {
+    let sx = 0, sy = 0, st0 = 0, tracking = false;
+    const area = $('#view-paineis');
+    area.addEventListener('touchstart', e => {
+      if (e.touches.length !== 1 || e.target.closest('.pages, dialog, .edit-bar')) { tracking = false; return; }
+      sx = e.touches[0].clientX; sy = e.touches[0].clientY; st0 = Date.now(); tracking = true;
+    }, { passive: true });
+    area.addEventListener('touchend', e => {
+      if (!tracking) return;
+      tracking = false;
+      const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
+      if (Date.now() - st0 < 700 && Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.6) goPage(prof().pagina + (dx < 0 ? 1 : -1), dx < 0 ? 1 : -1);
+    }, { passive: true });
+    document.addEventListener('keydown', e => {
+      if (st.view !== 'paineis' || dlg.open || /INPUT|SELECT|TEXTAREA/.test((e.target && e.target.tagName) || '')) return;
+      if (e.key === 'ArrowRight') goPage(prof().pagina + 1, 1);
+      else if (e.key === 'ArrowLeft') goPage(prof().pagina - 1, -1);
+      else if (e.key === 'Escape' && st.carMode) setCarMode(false);
+    });
+  })();
+
+  /* ---------- Modo carro: tablet ou telemóvel no suporte, só os mostradores ---------- */
+  async function setCarMode(on) {
+    if (on === st.carMode) return;
+    st.carMode = on;
+    if (on && st.view !== 'paineis') showView('paineis');
+    if (on && st.editing) setEditing(false);
+    document.body.classList.toggle('carmode', on);
+    const E = plug('Ecra');
+    if (NATIVE && E) { try { await E.ecraInteiro({ ligado: on }); } catch (e) { /* as barras ficam */ } }
+    else if (document.fullscreenEnabled) {
+      try {
+        if (on && !document.fullscreenElement) await document.documentElement.requestFullscreen({ navigationUI: 'hide' });
+        else if (!on && document.fullscreenElement) await document.exitFullscreen();
+      } catch (e) { /* sem ecrã inteiro: o modo carro funciona na mesma */ }
+    }
+    wakeLock(live());
+    if (on) toast(prof().paginas.length > 1 ? 'Modo carro. Desliza para o lado para mudar de página.' : 'Modo carro.', 3000);
+    requestAnimationFrame(() => { for (const T of st.tiles) if (T.kind === 'graf') drawGraph(T, pnow()); });
+  }
+  $('#btnCar').addEventListener('click', () => setCarMode(true));
+  $('#btnCarExit').addEventListener('click', () => setCarMode(false));
+  document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && st.carMode && !NATIVE) setCarMode(false); });
+  window.addEventListener('resize', () => { if (st.view === 'paineis') requestAnimationFrame(() => { for (const T of st.tiles) if (T.kind === 'graf') drawGraph(T, pnow()); }); });
 
   /* ---------- Diálogos ---------- */
   const dlg = $('#dlg');
@@ -3330,12 +3705,12 @@ ${editBar()}`;
   const openDlg = html => { dlg.innerHTML = html; if (!dlg.open) dlg.showModal(); };
 
   function openTileDialog(i) {
-    const cfg = prof().layout[i];
-    const def = S[cfg.id];
+    const cfg = curLayout()[i];
+    const def = cfg && S[cfg.id];
     if (!def) return;
     const isTrip = def.special === 'viagem';
     const style = def.plain ? 'num' : cfg.style === 'dial' ? 'dial' : cfg.style === 'graf' ? 'graf' : 'num';
-    const size = cfg.size === 'wide' ? 'wide' : 'normal';
+    const size = SIZES[cfg.size] ? cfg.size : 'normal';
     const val = (c, d) => plain(pick(c, d));
     const scale = isTrip ? '' : `
 <div class="form-grid">
@@ -3344,17 +3719,19 @@ ${editBar()}`;
   <div class="field"><label for="fHi">Alerta acima de</label><input id="fHi" type="text" inputmode="decimal" placeholder="Desligado" value="${esc(val(cfg.hi, def.hi))}"></div>
   <div class="field"><label for="fLo">Alerta abaixo de</label><input id="fLo" type="text" inputmode="decimal" placeholder="Desligado" value="${esc(val(cfg.lo, def.lo))}"></div>
 </div>
-<p class="hint">Valores em ${esc(def.un || 'unidades do contador')}. Deixa um alerta vazio para o desligar. Em alerta, o contador fica vermelho.</p>`;
+<p class="hint">Valores em ${esc(def.un || 'unidades do contador')}. Deixa um alerta vazio para o desligar. Em alerta, o mostrador fica vermelho.</p>`;
     openDlg(`<form method="dialog" id="tileForm" novalidate>
 <div class="dlg-head"><h2 id="dlgTitle">${esc(def.nome)}</h2><span class="tile-pid">${isTrip ? 'viagem' : pidLabel(def)}</span></div>
 <div class="dlg-body">
-  ${isTrip || def.plain ? '' : `<div class="field"><span class="label">Estilo</span><div class="seg" role="group" aria-label="Estilo">
-    <button type="button" data-style="dial" aria-pressed="${style === 'dial'}">Ponteiro</button>
+  ${isTrip || def.plain ? '' : `<div class="field"><span class="label">Tipo</span><div class="seg" role="group" aria-label="Tipo">
+    <button type="button" data-style="dial" aria-pressed="${style === 'dial'}">Mostrador</button>
     <button type="button" data-style="num" aria-pressed="${style === 'num'}">Número</button>
-    <button type="button" data-style="graf" aria-pressed="${style === 'graf'}">Gráfico</button></div></div>`}
+    <button type="button" data-style="graf" aria-pressed="${style === 'graf'}">Gráfico</button></div>
+    <span class="hint">O desenho do mostrador segue o estilo escolhido em Definições, Aparência (agora: ${ESTILOS[estilo()].nome}).</span></div>`}
   <div class="field"><span class="label">Tamanho</span><div class="seg" role="group" aria-label="Tamanho">
     <button type="button" data-size="normal" aria-pressed="${size === 'normal'}">Normal</button>
-    <button type="button" data-size="wide" aria-pressed="${size === 'wide'}">Largo</button></div></div>
+    <button type="button" data-size="wide" aria-pressed="${size === 'wide'}">Largo</button>
+    <button type="button" data-size="big" aria-pressed="${size === 'big'}">Grande</button></div></div>
   ${scale}
   <p class="hint err-text" id="fErr" hidden></p>
 </div>
@@ -3373,9 +3750,9 @@ ${editBar()}`;
         b.parentElement.querySelectorAll(`[${attr}]`).forEach(x => x.setAttribute('aria-pressed', String(x === b)));
       } else if (b.dataset.act === 'cancel') dlg.close();
       else if (b.dataset.act === 'remove') {
-        prof().layout.splice(i, 1);
+        curLayout().splice(i, 1);
         save(); dlg.close(); renderGrid(); refreshPollList();
-        toast(`${def.nome}: removido do painel.`);
+        toast(`${def.nome}: removido da página.`);
       }
     });
     form.addEventListener('submit', e => {
@@ -3384,7 +3761,8 @@ ${editBar()}`;
       const next = { ...cfg };
       const sStyle = form.querySelector('[data-style][aria-pressed="true"]');
       if (sStyle) next.style = sStyle.dataset.style;
-      next.size = form.querySelector('[data-size][aria-pressed="true"]').dataset.size;
+      const sz = form.querySelector('[data-size][aria-pressed="true"]').dataset.size;
+      if (sz === 'normal') delete next.size; else next.size = sz;
       if (!isTrip) {
         const nums = {};
         for (const [id, key] of [['fMin', 'min'], ['fMax', 'max'], ['fHi', 'hi'], ['fLo', 'lo']]) {
@@ -3396,37 +3774,117 @@ ${editBar()}`;
         if (!(nums.max > nums.min)) return err('O fim da escala tem de ser maior do que o início.');
         Object.assign(next, nums);
       }
-      prof().layout[i] = next;
+      curLayout()[i] = next;
       save(); dlg.close(); renderGrid();
     });
   }
 
-  function openAddDialog() {
-    const onPanel = new Set(prof().layout.map(t => t.id));
+  const sensorGroups = filter => {
     const groups = {};
-    for (const d of OBD.SENSORS) (groups[d.grupo] = groups[d.grupo] || []).push(d);
-    const chip = d => {
-      const a = sensorAvailable(d);
-      if (a === true) return '<span class="chip ok">o carro envia</span>';
-      if (a === false) return '<span class="chip">não disponível neste carro</span>';
-      return '';
-    };
-    const body = Object.entries(groups).map(([g, list]) => `<div class="sensor-group"><h3>${esc(g)}</h3>
-${list.map(d => `<div class="sensor-row"><div class="nm">${esc(d.nome)}<small>${d.un ? esc(d.un) + ' · ' : ''}${pidLabel(d)} ${chip(d)}</small></div>
-${onPanel.has(d.id) ? '<span class="on-panel">No painel</span>' : `<button type="button" class="btn small" data-add="${d.id}">Adicionar</button>`}</div>`).join('')}
+    for (const d of OBD.SENSORS) if (filter(d)) (groups[d.grupo] = groups[d.grupo] || []).push(d);
+    return groups;
+  };
+  const availChip = d => {
+    const a = sensorAvailable(d);
+    if (a === true) return '<span class="chip ok">o carro envia</span>';
+    if (a === false) return '<span class="chip">não disponível neste carro</span>';
+    return '';
+  };
+  function openAddDialog() {
+    const onPage = new Set(curLayout().map(t => t.id));
+    const body = Object.entries(sensorGroups(() => true)).map(([g, list]) => `<div class="sensor-group"><h3>${esc(g)}</h3>
+${list.map(d => `<div class="sensor-row"><div class="nm">${esc(d.nome)}<small>${d.un ? esc(d.un) + ' · ' : ''}${pidLabel(d)} ${availChip(d)}</small></div>
+${onPage.has(d.id) ? '<span class="on-panel">Nesta página</span>' : `<button type="button" class="btn small" data-add="${d.id}">Adicionar</button>`}</div>`).join('')}
 </div>`).join('');
-    openDlg(`<div class="dlg-head"><h2 id="dlgTitle">Adicionar contador</h2><button type="button" class="btn small ghost" data-act="close">Fechar</button></div>
+    openDlg(`<div class="dlg-head"><h2 id="dlgTitle">Adicionar a «${esc(curPage().nome)}»</h2><button type="button" class="btn small ghost" data-act="close">Fechar</button></div>
 <div class="dlg-body">${st.info ? '' : '<p class="hint">Liga ao carro para ver quais valores ele envia.</p>'}${body}</div>`);
     dlg.querySelector('.dlg-body').addEventListener('click', e => {
       const b = e.target.closest('[data-add]');
       if (!b) return;
       const d = S[b.dataset.add];
-      prof().layout.push(d.special ? { id: d.id, size: 'wide' } : { id: d.id, style: d.plain ? 'num' : 'dial' });
+      curLayout().push(d.special ? { id: d.id, size: 'wide' } : { id: d.id, style: d.plain ? 'num' : 'dial' });
       save(); renderGrid(); refreshPollList();
-      b.replaceWith(Object.assign(document.createElement('span'), { className: 'on-panel', textContent: 'No painel' }));
-      toast(`${d.nome}: adicionado ao painel.`);
+      b.replaceWith(Object.assign(document.createElement('span'), { className: 'on-panel', textContent: 'Nesta página' }));
+      toast(`${d.nome}: adicionado.`);
     });
     dlg.querySelector('[data-act="close"]').addEventListener('click', () => dlg.close());
+  }
+
+  // Início: trocar um dos quatro contadores
+  function openHomeDialog(slot) {
+    const p = prof();
+    if (!(slot >= 0 && slot < p.inicio.length)) return;
+    const cur = p.inicio[slot];
+    const body = Object.entries(sensorGroups(d => !d.special)).map(([g, list]) => `<div class="sensor-group"><h3>${esc(g)}</h3>
+${list.map(d => `<div class="sensor-row"><div class="nm">${esc(d.nome)}<small>${d.un ? esc(d.un) + ' · ' : ''}${availChip(d)}</small></div>
+${d.id === cur ? '<span class="on-panel">Atual</span>' : `<button type="button" class="btn small" data-pick="${d.id}">Escolher</button>`}</div>`).join('')}
+</div>`).join('');
+    openDlg(`<div class="dlg-head"><h2 id="dlgTitle">Contador ${slot + 1} do Início</h2><button type="button" class="btn small ghost" data-act="close">Fechar</button></div>
+<div class="dlg-body">${body}</div>`);
+    dlg.querySelector('.dlg-body').addEventListener('click', e => {
+      const b = e.target.closest('[data-pick]');
+      if (!b) return;
+      p.inicio[slot] = b.dataset.pick;
+      save(); dlg.close(); renderHome(); refreshPollList();
+    });
+    dlg.querySelector('[data-act="close"]').addEventListener('click', () => dlg.close());
+  }
+
+  // Página: mudar o nome, criar, apagar, mudar de lugar e repor os máximos
+  function openPageDialog() {
+    const p = prof(), pg = curPage(), n = p.paginas.length;
+    openDlg(`<form method="dialog" id="pageForm" novalidate>
+<div class="dlg-head"><h2 id="dlgTitle">Página «${esc(pg.nome)}»</h2><span class="tile-pid">${p.pagina + 1} de ${n}</span></div>
+<div class="dlg-body">
+  <div class="field"><label for="pgNome">Nome da página</label><input id="pgNome" type="text" maxlength="24" autocomplete="off" value="${esc(pg.nome)}"></div>
+  <div class="field"><span class="label">Lugar</span><div class="actions">
+    <button type="button" class="btn small" data-act="pg-left"${p.pagina === 0 ? ' disabled' : ''}><svg class="icon"><use href="#i-left"/></svg>Para trás</button>
+    <button type="button" class="btn small" data-act="pg-right"${p.pagina === n - 1 ? ' disabled' : ''}>Para a frente<svg class="icon"><use href="#i-right"/></svg></button></div></div>
+  <div class="actions">
+    <button type="button" class="btn small" data-act="pg-new"${n >= MAX_PAGES ? ' disabled' : ''}><svg class="icon"><use href="#i-plus"/></svg>Nova página</button>
+    <button type="button" class="btn small" data-act="pg-copy"${n >= MAX_PAGES ? ' disabled' : ''}>Duplicar</button>
+    <button type="button" class="btn small ghost" data-act="pg-peaks">Repor máximos</button>
+  </div>
+  <div class="confirm-inline" id="pgDelConfirm" hidden><p>Apagar a página «${esc(pg.nome)}» e os mostradores dela?</p>
+    <div class="actions"><button type="button" class="btn danger small" data-act="pg-del-yes">Apagar</button><button type="button" class="btn ghost small" data-act="pg-del-no">Cancelar</button></div></div>
+  ${n >= MAX_PAGES ? `<p class="hint">Chegaste ao máximo de ${MAX_PAGES} páginas.</p>` : ''}
+</div>
+<div class="dlg-foot">
+  <button type="button" class="btn danger-text" data-act="pg-del"${n < 2 ? ' disabled' : ''}>Apagar página</button>
+  <span class="spacer"></span>
+  <button type="submit" class="btn primary">Guardar</button>
+</div></form>`);
+    const form = $('#pageForm');
+    const saveName = () => { const v = $('#pgNome').value.trim().slice(0, 24); if (v) pg.nome = v; };
+    const add = layout => {
+      saveName();
+      p.paginas.splice(p.pagina + 1, 0, { id: newId(), nome: 'Página ' + (n + 1), layout });
+      p.pagina += 1; save(); renderGrid(1); refreshPollList();
+      openPageDialog();
+      const inp = $('#pgNome'); inp.focus(); inp.select();
+    };
+    form.addEventListener('click', e => {
+      const b = e.target.closest('button[data-act]');
+      if (!b || b.disabled) return;
+      const a = b.dataset.act;
+      if (a === 'pg-left' || a === 'pg-right') {
+        saveName();
+        const j = p.pagina + (a === 'pg-left' ? -1 : 1);
+        [p.paginas[p.pagina], p.paginas[j]] = [p.paginas[j], p.paginas[p.pagina]];
+        p.pagina = j; save(); renderGrid(); openPageDialog();
+      } else if (a === 'pg-new') add([]);
+      else if (a === 'pg-copy') add(pg.layout.map(t => ({ ...t })));
+      else if (a === 'pg-peaks') { resetTiles(false); dlg.close(); toast('Máximos repostos.'); }
+      else if (a === 'pg-del') $('#pgDelConfirm').hidden = false;
+      else if (a === 'pg-del-no') $('#pgDelConfirm').hidden = true;
+      else if (a === 'pg-del-yes') {
+        p.paginas.splice(p.pagina, 1);
+        p.pagina = Math.max(0, Math.min(p.pagina, p.paginas.length - 1));
+        save(); dlg.close(); renderGrid(); refreshPollList();
+        toast(`Página «${pg.nome}» apagada.`);
+      }
+    });
+    form.addEventListener('submit', e => { e.preventDefault(); saveName(); save(); dlg.close(); renderPages(); });
   }
 
   /* ---------- Diagnóstico ---------- */
@@ -3960,10 +4418,10 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
       toast(`VIN associado a «${prof().nome}».`);
     } else {
       closeRec();
-      const n = newProfile('Carro ' + st.info.vin.slice(-6), prof().layout.map(t => ({ ...t })));
+      const n = newProfile('Carro ' + st.info.vin.slice(-6), prof().paginas);
       n.vin = st.info.vin;
       store.perfis.push(n); store.ativo = n.id;
-      toast(`Perfil «${n.nome}» criado. Muda o nome em Ajustes.`);
+      toast(`Perfil «${n.nome}» criado. Muda o nome em Definições.`);
       refreshPollList();
     }
     save(); renderAll();
@@ -4025,14 +4483,15 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
     $('#pVe').value = plain(p.ve);
     $('#pAfr').value = plain(p.afrDiesel);
     $('#pVinText').textContent = p.vin ? `Associado ao VIN ${p.vin}: quando ligares a esse carro, este perfil é escolhido sozinho.`
-      : 'Sem VIN associado. Depois de ligares ao carro, associa-o no cartão Veículo, acima.';
+      : 'Sem VIN associado. Depois de ligares ao carro, associa-o no cartão Carro ligado.';
     $('#oUuid').value = store.opts.uuidExtra || '';
     $('#oEscrita').value = store.opts.escrita || 'auto';
     $('#oPausa').value = String(store.opts.pausaMs || 0);
     $('#oEcra').checked = !!store.opts.ecraLigado;
     $('#btnDelProfile').disabled = store.perfis.length < 2;
     $('#profileName').textContent = p.nome;
-    $('#profileName2').textContent = p.nome;
+    $('#oAbrir').value = store.opts.abrir || 'inicio';
+    renderStylePick();
   }
 
   const numField = (id, key, { min, max, allowEmpty, label }) => {
@@ -4066,7 +4525,7 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
   });
   $('#btnNewProfile').addEventListener('click', () => {
     closeRec();
-    const n = newProfile('Carro ' + (store.perfis.length + 1), prof().layout.map(t => ({ ...t })));
+    const n = newProfile('Carro ' + (store.perfis.length + 1), prof().paginas);
     store.perfis.push(n); store.ativo = n.id; save();
     refreshPollList(); renderAll();
     $('#pNome').focus(); $('#pNome').select();
@@ -4105,26 +4564,61 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
   $('#btnResetLayout').addEventListener('click', () => { $('#resetConfirm').hidden = false; });
   $('#btnResetNo').addEventListener('click', () => { $('#resetConfirm').hidden = true; });
   $('#btnResetYes').addEventListener('click', () => {
-    prof().layout = DEFAULT_LAYOUT(); save();
+    const p = prof();
+    p.paginas = DEFAULT_PAGES(); p.pagina = 0; p.inicio = HOME_DEFAULT.slice(); save();
     $('#resetConfirm').hidden = true;
-    renderGrid(); refreshPollList(); toast('Painel reposto.');
+    renderGrid(); renderHome(); refreshPollList(); toast('Painéis repostos.');
   });
 
+  // Aparência: os três estilos, cada um com uma amostra a sério do mostrador
+  function renderStylePick() {
+    const box = $('#stylePick'), cur = estilo();
+    if (box.dataset.cur === cur && box.childElementCount) return;
+    box.dataset.cur = cur;
+    box.innerHTML = Object.entries(ESTILOS).map(([k, e]) => `<button type="button" class="style-opt" data-estilo-pick="${k}" aria-pressed="${k === cur}">
+<div class="sp" data-estilo="${k}"></div><span>${esc(e.nome)}</span><small>${esc(e.sub)}</small></button>`).join('');
+    box.querySelectorAll('.sp').forEach(sp => {
+      const ds = sp.dataset.estilo, def = S.rpm;
+      const T = { def, ds, min: def.min, max: def.max, hi: def.hi, lo: null };
+      sp.innerHTML = dialSvg(T, ds);
+      bindDial(T, sp);
+      setDial(T, 0.52); setPeak(T, 0.7);
+      sp.querySelector('[data-v]').textContent = fmtN(3650);
+      sp.querySelectorAll('.d-peak-g').forEach(g => g.removeAttribute('class'));
+    });
+  }
+  $('#stylePick').addEventListener('click', e => {
+    const b = e.target.closest('[data-estilo-pick]');
+    if (!b) return;
+    store.opts.estilo = b.dataset.estiloPick; save();
+    document.documentElement.dataset.estilo = estilo();
+    renderStylePick(); renderGrid(); renderHome();
+    toast(`Estilo ${ESTILOS[estilo()].nome}.`);
+  });
+  $('#oAbrir').addEventListener('change', e => { store.opts.abrir = e.target.value; save(); });
+  function applyAbrir() {
+    const a = store.opts.abrir;
+    if (a === 'carro') setCarMode(true);
+    else if (a === 'paineis' && st.view === 'inicio') showView('paineis');
+  }
+
   /* ---------- Separadores e botões do topo ---------- */
-  const VIEWS = ['painel', 'diag', 'testes', 'viagens', 'ajustes'];
+  const VIEWS = ['inicio', 'paineis', 'diag', 'testes', 'viagens', 'definicoes'];
   function renderAllViews() { renderDiag(); renderPerf(); renderBat(); renderViagens(); renderLigacao(); renderStatus(); }
-  function renderAll() { renderAjustes(); renderGrid(); renderAllViews(); }
+  function renderAll() { renderAjustes(); renderGrid(); renderHome(); renderAllViews(); }
   function showView(v) {
     st.view = v;
     document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.view === v)));
     for (const name of VIEWS) $('#view-' + name).hidden = name !== v;
     $('#main').scrollTop = 0;
-    if (v === 'ajustes') { renderAjustes(); renderLigacao(); renderConsole(true); }
+    if (v === 'definicoes') { renderAjustes(); renderLigacao(); renderConsole(true); }
     renderUpdates();
     if (v === 'diag') renderDiag();
     if (v === 'testes') { renderPerf(); renderBat(); }
     if (v === 'viagens') renderViagens();
-    if (v === 'painel') requestAnimationFrame(() => { for (const T of st.tiles) if (T.kind === 'graf') drawGraph(T, pnow()); });
+    if (v === 'paineis') requestAnimationFrame(() => { for (const T of st.tiles) if (T.kind === 'graf') drawGraph(T, pnow()); });
+    else if (st.carMode) setCarMode(false);
+    if (v !== 'paineis' && st.editing) setEditing(false);
   }
   document.querySelector('.tabs').addEventListener('click', e => { const t = e.target.closest('.tab'); if (t) showView(t.dataset.view); });
 
@@ -4243,7 +4737,9 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
   }
   function renderUpdates() {
     const r = UP.rel, stt = UP.st;
-    $('#updVer').textContent = `Mostrador OBD v${APP_VER} · ${APP_BUILD ? 'compilação ' + APP_BUILD : 'versão de desenvolvimento'} · ${NATIVE ? 'app instalada' : 'no browser'}`;
+    $('#updVer').textContent = `Versão ${APP_VER} · ${APP_BUILD ? 'compilação ' + APP_BUILD : 'compilação de teste'} · ${NATIVE ? 'app instalada' : 'no browser'}`;
+    const vc = $('#verChip'), vt = `v${APP_VER} · ${APP_BUILD ? 'b' + APP_BUILD : 'dev'}`;
+    if (vc.textContent !== vt) vc.textContent = vt;
     const status = $('#updStatus'), notes = $('#updNotes');
     let html = '', cls = '';
     if (!NATIVE) {
@@ -4274,7 +4770,7 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
     const avail = stt === 'avail';
     $('#updDot').hidden = !avail;
     const bn = $('#updBanner');
-    bn.hidden = !(avail && !UP.hideBanner && st.view !== 'ajustes');
+    bn.hidden = !(avail && !UP.hideBanner && st.view !== 'definicoes');
     if (avail) $('#updBannerText').textContent = `Nova versão ${r.ver} da app disponível.`;
   }
   function openChangelog() {
@@ -4286,8 +4782,9 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
   $('#btnUpdCheck').addEventListener('click', () => checkUpdates(false));
   $('#btnUpdInstall').addEventListener('click', installUpdate);
   $('#btnChangelog').addEventListener('click', openChangelog);
+  $('#verChip').addEventListener('click', openChangelog);
   $('#oUpdAuto').addEventListener('change', e => { store.opts.updAuto = e.target.checked; save(); });
-  $('#btnUpdBanner').addEventListener('click', () => { UP.hideBanner = true; showView('ajustes'); });
+  $('#btnUpdBanner').addEventListener('click', () => { UP.hideBanner = true; showView('definicoes'); });
   $('#btnUpdBannerX').addEventListener('click', () => { UP.hideBanner = true; renderUpdates(); });
 
   /* ---------- Botão Voltar do Android ---------- */
@@ -4298,9 +4795,10 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
     guard();
     window.addEventListener('popstate', () => {
       if (dlg.open) { dlg.close(); guard(); return; }
+      if (st.carMode) { setCarMode(false); guard(); return; }
       if (st.editing) { setEditing(false); guard(); return; }
-      if (st.view !== 'painel') { showView('painel'); guard(); return; }
-      // No Painel: um segundo toque em Voltar fecha a app
+      if (st.view !== 'inicio') { showView('inicio'); guard(); return; }
+      // No Início: um segundo toque em Voltar fecha a app
       exitArmed = Date.now();
       toast('Toca outra vez em Voltar para sair.', 2500);
       setTimeout(() => { if (Date.now() - exitArmed >= 2400) guard(); }, 2500);
@@ -4309,6 +4807,7 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
 
   /* ---------- Arranque ---------- */
   renderAll();
+  showView('inicio');
   renderInstall();
   renderUpdates();
   document.querySelectorAll(NATIVE ? '.only-web' : '.only-app').forEach(el => { el.hidden = true; });
