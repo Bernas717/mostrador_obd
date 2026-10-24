@@ -1183,7 +1183,7 @@ body.carmode .toast { bottom: calc(36px + env(safe-area-inset-bottom, 0px)); }
               <p class="hint span-2" id="pAutoHint">Ao ligar ao carro, a app preenche o que conseguir pelo VIN. Corrige aqui o que faltar ou estiver errado: o que escreves não é substituído.</p>
               <div class="field span-2"><label for="pComb">Combustível</label>
                 <select id="pComb">
-                  <option value="auto">Automático (do carro)</option>
+                  <option value="auto">Automático (do carro ou adivinhado)</option>
                   <option value="gasolina">Gasolina</option>
                   <option value="gasoleo">Gasóleo</option>
                   <option value="gpl">GPL</option>
@@ -1191,7 +1191,7 @@ body.carmode .toast { bottom: calc(36px + env(safe-area-inset-bottom, 0px)); }
               </div>
               <div class="field"><label for="pPreco">Preço por litro (€)</label><input id="pPreco" type="text" inputmode="decimal" placeholder="Ex.: 1,72"></div>
               <div class="field"><label for="pFator">Correção do consumo</label><input id="pFator" type="text" inputmode="decimal"></div>
-              <p class="hint span-2">Correção: compara com um atesto. Se a app marcar 6,0 L/100 km e o atesto der 6,6, põe 1,10.</p>
+              <p class="hint span-2">Escolhe o combustível à mão se a app mostrar «adivinhado» na fonte do consumo: é o que mais pesa na conta. Correção: compara com um atesto. Se a app marcar 6,0 L/100 km e o atesto der 6,6, põe 1,10.</p>
             </div>
             <details class="adv">
               <summary>Motor sem sensor MAF ou a gasóleo</summary>
@@ -1199,7 +1199,7 @@ body.carmode .toast { bottom: calc(36px + env(safe-area-inset-bottom, 0px)); }
                 <div class="field span-2"><label for="pVe">Eficiência volumétrica (%)</label><input id="pVe" type="text" inputmode="decimal"></div>
                 <p class="hint span-2">A cilindrada (acima) e a eficiência volumétrica só entram no consumo em carros sem sensor MAF.</p>
                 <div class="field span-2"><label for="pAfr">Relação ar/combustível média (gasóleo)</label><input id="pAfr" type="text" inputmode="decimal">
-                  <span class="hint">Só para gasóleo sem caudal de combustível. Típico: 20 a 25. Ajusta com atestos.</span></div>
+                  <span class="hint">Só se usa em gasóleos que não enviam a carga do motor nem a sonda lambda (raro). Típico: 25 a 30. Para acertar o consumo, usa antes a Correção.</span></div>
               </div>
             </details>
             <p class="hint" id="pVinText"></p>
@@ -1691,20 +1691,39 @@ const OBD = (() => {
   function fuelSource(sup, fuel) {
     if (sup.has(0x5E)) return { src: '5E', pids: ['5E'], nome: 'caudal de combustível do carro' };
     if (sup.has(0x9D)) return { src: '9D', pids: ['9D'], nome: 'caudal de combustível do carro' };
-    if (sup.has(0x10)) {
-      const lam = sup.has(0x44) && fuel !== 'gasoleo';
-      return { src: 'MAF', pids: lam ? ['10', '44'] : ['10'], nome: 'sensor MAF' + (lam ? ' e lambda' : ''), estimativa: fuel === 'gasoleo' };
+    const diesel = fuel === 'gasoleo';
+    // Gasóleo: a mistura muda muito com a carga; usa a sonda lambda larga (mistura real) se houver, senão a carga do motor
+    const extra = diesel
+      ? (sup.has(0x34) ? ['34'] : sup.has(0x24) ? ['24'] : sup.has(0x44) ? ['44'] : []).concat(sup.has(0x04) ? ['04'] : [], sup.has(0x0C) ? ['0C'] : [])
+      : (sup.has(0x44) ? ['44'] : []);
+    const comLambda = extra.some(x => x === '34' || x === '24' || x === '44');
+    const desc = diesel ? (comLambda ? ' e sonda lambda' : ' e carga do motor') : (comLambda ? ' e lambda' : '');
+    if (sup.has(0x10)) return { src: 'MAF', pids: ['10', ...extra], nome: 'sensor MAF' + desc, estimativa: diesel && !comLambda };
+    if (sup.has(0x0B) && sup.has(0x0C)) {
+      const pids = ['0B', '0C', '0F', ...extra.filter(x => x !== '0C')];
+      return { src: 'MAP', pids, nome: 'pressão no coletor e rotação' + desc, estimativa: true };
     }
-    if (sup.has(0x0B) && sup.has(0x0C)) return { src: 'MAP', pids: ['0B', '0C', '0F'], nome: 'pressão no coletor e rotação', estimativa: true };
     return null;
+  }
+
+  // Gasóleo sem sonda: relação ar/combustível típica conforme a carga (muito ar ao ralenti, pouco a fundo)
+  const AFR_DIESEL = [[0, 75], [10, 55], [20, 40], [30, 31], [45, 26], [60, 22.5], [75, 20], [90, 18], [100, 17]];
+  function afrDieselPorCarga(load) {
+    const l = Math.max(0, Math.min(100, load));
+    for (let i = 1; i < AFR_DIESEL.length; i++) if (l <= AFR_DIESEL[i][0]) {
+      const [a, fa] = AFR_DIESEL[i - 1], [b, fb] = AFR_DIESEL[i];
+      return fa + (l - a) / (b - a) * (fb - fa);
+    }
+    return AFR_DIESEL[AFR_DIESEL.length - 1][1];
   }
 
   // Litros por hora a partir dos últimos valores lidos (v = {pid: valor}); devolve null sem dados
   function fuelLph(v, fuel, prof) {
     const F = FUELS[fuel] || FUELS.gasolina;
     const fator = prof.fator > 0 ? prof.fator : 1;
-    if (v['5E'] != null) return v['5E'] * fator;
-    if (v['9D'] != null) return v['9D'] * 3600 / F.dens * fator;
+    const lim = x => Math.min(80, Math.max(0, x));            // nenhum carro de passageiros gasta mais de 80 L/h
+    if (v['5E'] != null) return lim(v['5E'] * fator);
+    if (v['9D'] != null) return lim(v['9D'] * 3600 / F.dens * fator);
     let maf = v['10'];
     if (maf == null && v['0B'] != null && v['0C'] != null) {
       const iat = v['0F'] != null ? v['0F'] : 25;
@@ -1713,13 +1732,32 @@ const OBD = (() => {
     }
     if (maf == null) return null;
     let afr = F.afr;
-    if (fuel === 'gasoleo') afr = prof.afrDiesel > 0 ? prof.afrDiesel : 22;
-    else if (v['44'] != null) {
+    if (fuel === 'gasoleo') {
+      const lam = v['34'] ?? v['24'] ?? v['44'];
+      const load = v['04'];
+      if (load != null && load < 3 && (v['0C'] ?? 0) > 1100) return 0;   // a descer sem acelerar: injeção cortada
+      if (lam != null && lam >= 1.05 && lam < 8) afr = F.afr * lam;        // mistura real medida pela sonda
+      else if (lam != null && lam >= 8) return 0;                          // sonda no máximo = corte de injeção
+      else if (load != null) afr = afrDieselPorCarga(load);
+      else afr = prof.afrDiesel > 0 ? prof.afrDiesel : 30;
+    } else if (v['44'] != null) {
       const lam = v['44'];
       if (lam >= 1.9) return 0;                                 // corte de injeção em desaceleração
       if (lam > 0.5 && lam < 1.6) afr *= lam;
     }
-    return maf * 3600 / (afr * F.dens) * fator;
+    return lim(maf * 3600 / (afr * F.dens) * fator);
+  }
+
+  // Sem o carro dizer o combustível: adivinha pelos valores que envia e pelo nome do modelo
+  function adivinhaComb(sup, texto) {
+    const t = String(texto || '');
+    if (/\b(dci|tdi|hdi|bluehdi|cdti|tdci|crdi|jtd|jtdm|multijet|cdi|d-4d|ddis|dtec|i-dtec|tdv6|sdv|ecoblue|duratorq|diesel)\b/i.test(t)) return 'gasoleo';
+    if (/\b(tsi|tfsi|tce|vti|puretech|ecoboost|gdi|mpi|fsi|vvt|gasolina|gasoline)\b/i.test(t)) return 'gasolina';
+    if (!sup) return null;
+    const narrow = [0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B].some(x => sup.has(x));
+    if (sup.has(0x23) && !narrow && !sup.has(0x0E)) return 'gasoleo';   // pressão de rampa diesel, sem sondas estreitas nem avanço
+    if (narrow || sup.has(0x0E)) return 'gasolina';
+    return null;
   }
 
   /* ---------- Códigos de avaria ---------- */
@@ -2829,7 +2867,7 @@ const OBD = (() => {
   return {
     sleep, hex2, compact, splitResponse, parsePid, parse09, readEcuInfo, vinInfo, parseSupported, parseSupportedHead, parseDtcs, parseVin, parseVolt,
     decodeDtc, dtcInfo, dtcAdvice, SEV, readinessOf, initAdapter, initCar, isCarError, FUEL_SYS, readFreezeFrame, parseMode06, readMode06, midName, misfiresOf,
-    PROTOCOLS, FUEL_TYPES, FUEL_NAMES, OBD_STD, FUELS, PIDS, RATES, SENSORS, SENSOR, fuelSource, fuelLph,
+    PROTOCOLS, FUEL_TYPES, FUEL_NAMES, OBD_STD, FUELS, PIDS, RATES, SENSORS, SENSOR, fuelSource, fuelLph, adivinhaComb, afrDieselPorCarga,
     Elm, ElmError, initElm, readDtcs, clearDtcs, Poller, PERF, PerfTest, BleTransport, bleServiceList, NativeBleTransport, pickBleChars, textToHex, hexToText,
     DemoTransport, DEMO_VIN, demoCar
   };
@@ -2879,6 +2917,7 @@ const OBD = (() => {
       'Brilho do ecrã no modo carro, de dia e de noite: em Definições, Aparência, e no botão do sol do próprio modo carro',
       'Telemóvel e tablet ligados pelo GitHub (repositório privado teu): perfis, páginas, opções e histórico ficam iguais nos dois, sozinhos',
       'Histórico de cada carro (Avarias): cada diagnóstico e verificação de carro usado fica guardado com o relatório, para comparar antes e depois',
+      'Consumo corrigido: se o carro não disser o combustível, a app deixa de assumir gasolina e adivinha pelo modelo e pelos valores do carro (avisa para confirmares). No gasóleo, a mistura passa a contar com a carga do motor ou com a sonda lambda, em vez de um valor fixo que exagerava o consumo em estrada. O consumo instantâneo só aparece acima dos 10 km/h',
       'Identificação do carro ao ligar: marca, país e ano pelo VIN; modelo e cilindrada pela base pública vPIC quando a encontra. O perfil ganha marca, modelo, ano e cilindrada, e o que escreves à mão não é substituído. Carro novo: a app pergunta se é o do perfil ou se cria um'
     ]}
   ];
@@ -2938,7 +2977,7 @@ const OBD = (() => {
   function newId() { return 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
   const clonePages = pages => pages.map(pg => ({ id: newId(), nome: pg.nome, layout: pg.layout.map(t => ({ ...t })) }));
   const newProfile = (nome, paginas) => ({
-    id: newId(), nome, comb: 'auto', cil: 1.6, ve: 85, fator: 1, preco: null, afrDiesel: 22, vin: '',
+    id: newId(), nome, comb: 'auto', cil: 1.6, ve: 85, fator: 1, preco: null, afrDiesel: 28, vin: '',
     paginas: paginas ? clonePages(paginas) : DEFAULT_PAGES(), pagina: 0, inicio: HOME_DEFAULT.slice(), mud: {},
     viagem: { L: 0, km: 0, s: 0 }, viagens: [], testes: []
   });
@@ -3100,11 +3139,20 @@ const OBD = (() => {
     if (!x) return null;
     return pnow() - x.t < (st.maxAge[k] || 6000) ? x.v : null;
   }
-  const fuelType = () => {
-    const c = prof().comb;
-    if (c && c !== 'auto') return c;
-    return (st.info && OBD.FUEL_TYPES[st.info.fuelType]) || 'gasolina';
-  };
+  // Combustível: o escolhido no perfil; senão o que o carro diz; senão adivinhado (modelo, base da internet, valores que o carro envia)
+  const COMB_TXT = { 'Gasóleo': 'gasoleo', 'Gasolina': 'gasolina', 'GPL': 'gpl' };
+  function fuelInfo() {
+    const p = prof(), c = p.comb;
+    if (c && c !== 'auto') return { comb: c, como: 'perfil' };
+    const doCarro = st.info && OBD.FUEL_TYPES[st.info.fuelType];
+    if (doCarro) return { comb: doCarro, como: 'carro' };
+    const ci = st.carInfo || {};
+    if (COMB_TXT[ci.comb]) return { comb: COMB_TXT[ci.comb], como: 'internet' };
+    const g = OBD.adivinhaComb(st.info && st.info.carReady ? st.info.supported : null, [p.marca, p.modelo, p.nome, ci.modelo].join(' '));
+    if (g) return { comb: g, como: 'adivinhado' };
+    return { comb: 'gasolina', como: 'desconhecido' };
+  }
+  const fuelType = () => fuelInfo().comb;
 
   /* ---------- Bluetooth disponível? ---------- */
   function btState() {
@@ -4011,7 +4059,7 @@ ${opt.home ? '' : editBar()}`;
       const lph = st.fuelSrc ? OBD.fuelLph(v, fuelType(), prof()) : null;
       st.calc.lph = lph;
       const spd = fresh('0D'), rpm = fresh('0C');
-      st.calc.cons = lph != null && spd != null && spd >= 5 ? lph / spd * 100 : null;
+      st.calc.cons = lph != null && spd != null && spd >= 10 ? lph / spd * 100 : null;   // abaixo de 10 km/h mostra L/h
       const trip = tripObj();
       if (spd != null) trip.km += spd * dt / 3600;
       if (lph != null) trip.L += lph * dt / 3600;
@@ -4091,8 +4139,10 @@ ${opt.home ? '' : editBar()}`;
   function srcText() {
     if (!live()) return 'Sem ligação. A viagem fica guardada até a repores.';
     if (!st.fuelSrc) return 'Este carro não envia dados para calcular o consumo.';
-    const f = prof().fator;
-    return `Fonte: ${st.fuelSrc.nome}${st.fuelSrc.estimativa ? ' (estimativa: calibra com atestos)' : ''}${f && f !== 1 ? ` · correção ${fmtN(f, 2)}` : ''}`;
+    const f = prof().fator, fi = fuelInfo();
+    const nomeComb = { gasoleo: 'gasóleo', gasolina: 'gasolina', gpl: 'GPL' }[fi.comb];
+    const como = { perfil: '', carro: '', internet: ' (pela internet)', adivinhado: ' (adivinhado: confirma no perfil)', desconhecido: ' (não sei: escolhe no perfil!)' }[fi.como];
+    return `Fonte: ${st.fuelSrc.nome} · ${nomeComb}${como}${st.fuelSrc.estimativa ? ' · estimativa, calibra com atestos' : ''}${f && f !== 1 ? ` · correção ${fmtN(f, 2)}` : ''}`;
   }
 
   /* ---------- Painéis: eventos ---------- */
@@ -6013,6 +6063,15 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
     return out;
   }
   // Junta o que se sabe do carro: VIN (sem internet), o que o carro envia e a base pela internet
+  let avisouComb = false;
+  function avisaComb() {
+    if (avisouComb || st.mode !== 'on') return;
+    const fi = fuelInfo();
+    if (fi.como !== 'adivinhado' && fi.como !== 'desconhecido') return;
+    avisouComb = true;
+    toast(fi.como === 'desconhecido' ? 'O carro não diz se é gasóleo ou gasolina. Escolhe no perfil (Definições) para o consumo ficar certo.'
+      : `O carro não diz o combustível: estou a contar como ${fi.comb === 'gasoleo' ? 'gasóleo' : 'gasolina'}. Confirma no perfil (Definições).`, 7000);
+  }
   async function identifyCar() {
     const i = st.info;
     if (!i || !i.carReady) return;
@@ -6030,7 +6089,8 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
     };
     if (cache) junta(cache, cache.quando);
     st.carInfo = ci;
-    applyCarInfo(); renderLigacao();
+    applyCarInfo(); refreshPollList(); renderLigacao();
+    setTimeout(avisaComb, 4000);
     const velho = !cache || (cache.vazio && Date.now() - cache.quando > 30 * 864e5);
     if (!vin || st.mode !== 'on' || !store.opts.vinNet || !velho || navigator.onLine === false) return;
     ci.buscando = true; renderLigacao();
@@ -6049,7 +6109,7 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
       }
     } catch (e) { logLine('info', 'Não consegui procurar o carro pela internet: ' + ((e && e.message) || e)); }
     ci.buscando = false;
-    if (st.carInfo === ci) { renderLigacao(); renderAjustes(); }
+    if (st.carInfo === ci) { refreshPollList(); renderLigacao(); renderAjustes(); avisaComb(); }
   }
   const carNome = vin => {
     const ci = st.carInfo && st.carInfo.vin === vin ? st.carInfo : {};
