@@ -56,7 +56,7 @@ No repositório `mostrador_obd`: **Settings → Secrets and variables → Action
 1. Separador **Actions** → à esquerda **Gerar APK** → **Run workflow** → **Run workflow**.
 2. Espera ~8–12 minutos até ficar com ✅ verde.
    - Se ficar ❌ vermelho: abre-o, carrega no passo que falhou, copia as últimas linhas e manda-mas.
-3. Na página principal do repositório, à direita, aparece **Releases → Mostrador OBD v0.2 (compilação N)**.
+3. Na página principal do repositório, à direita, aparece **Releases → Mostrador OBD v0.1 (compilação N)**.
 
 ## Passo 5 — Instalar no telemóvel
 
@@ -78,7 +78,7 @@ No repositório `mostrador_obd`: **Settings → Secrets and variables → Action
 
 Os perfis, os painéis, as viagens e os testes mantêm-se nas atualizações.
 
-**Versões:** cada envio gera uma compilação nova (o número sobe sempre). A versão (0.2, 0.3…) muda por dia, como na 7Chaves.
+**Versões:** cada envio gera uma compilação nova (o número sobe sempre). A versão começa em 0.1 e sobe 0.1 por cada dia com alterações (todas as correções do mesmo dia ficam na mesma versão).
 
 ## Problemas comuns
 
