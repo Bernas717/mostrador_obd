@@ -114,13 +114,14 @@ jobs:
               @PluginMethod
               public void brilhoAtual(final PluginCall call) {
                   getActivity().runOnUiThread(() -> {
+                      float sis;
+                      try { sis = android.provider.Settings.System.getInt(getContext().getContentResolver(), android.provider.Settings.System.SCREEN_BRIGHTNESS) / 255f; }
+                      catch (Exception e) { sis = -1; }
                       float v = getActivity().getWindow().getAttributes().screenBrightness;
-                      if (v < 0) {
-                          try { v = android.provider.Settings.System.getInt(getContext().getContentResolver(), android.provider.Settings.System.SCREEN_BRIGHTNESS) / 255f; }
-                          catch (Exception e) { v = -1; }
-                      }
+                      if (v < 0) v = sis;
                       com.getcapacitor.JSObject r = new com.getcapacitor.JSObject();
                       r.put("nivel", (double) v);
+                      r.put("sistema", (double) sis);
                       call.resolve(r);
                   });
               }

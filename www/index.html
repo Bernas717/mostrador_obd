@@ -438,7 +438,27 @@ body.carmode.noite .toast { background: #1C150F; color: var(--ink); border: 1px 
 /* Troca suave entre dia e noite */
 body.carmode #view-paineis > .view-band { transition: opacity .45s ease; }
 body.carmode.a-trocar #view-paineis > .view-band { opacity: .08; }
-#brilhoRow input[type=range] { width: 100%; accent-color: var(--accent); }
+.bri { display: grid; grid-template-columns: 48px minmax(0, 1fr) 48px; align-items: center; gap: 10px; font-size: 14px; }
+.bri input[type=range] { width: 100%; accent-color: var(--accent); }
+.bri b { text-align: right; font: 600 13px var(--font-mono); }
+.bri.off input { opacity: .35; }
+.car-bri, .car-bri-pop { display: none; }
+body.carmode .car-bri {
+  display: grid; place-items: center; position: fixed; z-index: 30;
+  bottom: calc(2px + env(safe-area-inset-bottom, 0px)); left: calc(50px + env(safe-area-inset-left, 0px));
+  width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line); background: var(--face); color: var(--muted);
+}
+body.carmode .car-bri .icon { width: 17px; height: 17px; }
+body.carmode .car-bri[aria-expanded="true"] { color: var(--accent); border-color: var(--accent); }
+body.carmode .car-bri-pop:not([hidden]) {
+  display: grid; grid-template-columns: auto minmax(160px, 1fr) 48px auto; align-items: center; gap: 12px;
+  position: fixed; z-index: 31; left: calc(10px + env(safe-area-inset-left, 0px)); bottom: calc(42px + env(safe-area-inset-bottom, 0px));
+  width: min(560px, calc(100vw - 20px)); padding: 10px 14px; border-radius: var(--radius); border: 1px solid var(--line);
+  background: var(--face); box-shadow: 0 16px 30px -16px #000; font-size: 14px;
+}
+.car-bri-pop input { width: 100%; accent-color: var(--accent); height: 32px; }
+.car-bri-pop span { font: 600 13px var(--font-mono); text-align: right; }
+@media (max-width: 520px) { body.carmode .car-bri-pop:not([hidden]) { grid-template-columns: 1fr 48px; } body.carmode .car-bri-pop b { grid-column: 1 / -1; } }
 
 @media (orientation: landscape) and (min-width: 700px) {
   body.carmode .grid { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
@@ -784,6 +804,7 @@ body.carmode .toast { bottom: calc(36px + env(safe-area-inset-bottom, 0px)); }
   <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 12h3M11 12h9M4 17h11M19 17h1"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="17" r="2"/></symbol>
   <symbol id="i-car" viewBox="0 0 24 24"><path d="M5 16V12l2-5h10l2 5v4M3.5 12h17M5 16h14v2.5H5zM7.5 14.2h.01M16.5 14.2h.01"/></symbol>
   <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></symbol>
   <symbol id="i-moon" viewBox="0 0 24 24"><path d="M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10z"/></symbol>
   <symbol id="i-full" viewBox="0 0 24 24"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></symbol>
   <symbol id="i-left"viewBox="0 0 24 24"><path d="M14.5 6l-6 6 6 6"/></symbol>
@@ -859,6 +880,13 @@ body.carmode .toast { bottom: calc(36px + env(safe-area-inset-bottom, 0px)); }
       </div>
       <button class="car-exit" id="btnCarExit" type="button" aria-label="Sair do modo carro"><svg class="icon"><use href="#i-x"/></svg></button>
       <button class="car-night" id="btnCarNight" type="button" aria-label="Modo noite" aria-pressed="false"><svg class="icon"><use href="#i-moon"/></svg></button>
+      <button class="car-bri" id="btnCarBri" type="button" aria-label="Brilho do ecrã" aria-expanded="false"><svg class="icon"><use href="#i-sun"/></svg></button>
+      <div class="car-bri-pop" id="carBriPop" hidden>
+        <b id="carBriLbl">Brilho de dia</b>
+        <input type="range" id="carBriRange" min="5" max="100" step="5" aria-label="Brilho do ecrã">
+        <span id="carBriVal">80 %</span>
+        <button class="btn small ghost" id="carBriAuto" type="button">Automático</button>
+      </div>
       <div class="car-page" id="carPage"></div>
     </section>
 
@@ -1103,8 +1131,11 @@ body.carmode .toast { bottom: calc(36px + env(safe-area-inset-bottom, 0px)); }
               <option value="off">Nunca</option>
             </select>
             <span class="hint" id="noiteHint">Cores em âmbar suave e brilho do ecrã mais baixo, para não cansar a vista. No modo carro, o botão da lua liga e desliga à mão.</span></div>
-          <div class="field" id="brilhoRow"><label for="oBrilho">Brilho do ecrã à noite: <b id="brilhoTxt">30 %</b></label>
-            <input type="range" id="oBrilho" min="5" max="100" step="5" value="30"></div>
+          <div class="field" id="brilhoRow"><span class="label">Brilho do ecrã no modo carro</span>
+            <div class="bri"><span>Dia</span><input type="range" id="oBrilhoDia" min="5" max="100" step="5" value="80" aria-label="Brilho de dia"><b id="brilhoDiaTxt">auto</b></div>
+            <label class="check"><input type="checkbox" id="oBrilhoDiaAuto"> De dia, usar o brilho do telemóvel (automático)</label>
+            <div class="bri"><span>Noite</span><input type="range" id="oBrilho" min="5" max="100" step="5" value="30" aria-label="Brilho à noite"><b id="brilhoTxt">30 %</b></div>
+            <span class="hint" id="brilhoHint">Também mudas no próprio modo carro, no botão do sol (canto inferior esquerdo).</span></div>
         </div>
 
         <h2 class="sec-h">Avisos</h2>
@@ -1137,6 +1168,11 @@ body.carmode .toast { bottom: calc(36px + env(safe-area-inset-bottom, 0px)); }
             </div>
             <div class="form-grid">
               <div class="field span-2"><label for="pNome">Nome</label><input id="pNome" type="text" autocomplete="off"></div>
+              <div class="field"><label for="pMarca">Marca</label><input id="pMarca" type="text" autocomplete="off" maxlength="40"></div>
+              <div class="field"><label for="pModelo">Modelo</label><input id="pModelo" type="text" autocomplete="off" maxlength="40" placeholder="Ex.: Kangoo 1.5 dCi"></div>
+              <div class="field"><label for="pAno">Ano</label><input id="pAno" type="text" inputmode="numeric" maxlength="4"></div>
+              <div class="field"><label for="pCil">Cilindrada (L)</label><input id="pCil" type="text" inputmode="decimal"></div>
+              <p class="hint span-2" id="pAutoHint">Ao ligar ao carro, a app preenche o que conseguir pelo VIN. Corrige aqui o que faltar ou estiver errado: o que escreves não é substituído.</p>
               <div class="field span-2"><label for="pComb">Combustível</label>
                 <select id="pComb">
                   <option value="auto">Automático (do carro)</option>
@@ -1152,9 +1188,8 @@ body.carmode .toast { bottom: calc(36px + env(safe-area-inset-bottom, 0px)); }
             <details class="adv">
               <summary>Motor sem sensor MAF ou a gasóleo</summary>
               <div class="adv-body form-grid">
-                <div class="field"><label for="pCil">Cilindrada (L)</label><input id="pCil" type="text" inputmode="decimal"></div>
-                <div class="field"><label for="pVe">Eficiência (%)</label><input id="pVe" type="text" inputmode="decimal"></div>
-                <p class="hint span-2">Cilindrada e eficiência volumétrica só contam em carros sem sensor MAF.</p>
+                <div class="field span-2"><label for="pVe">Eficiência volumétrica (%)</label><input id="pVe" type="text" inputmode="decimal"></div>
+                <p class="hint span-2">A cilindrada (acima) e a eficiência volumétrica só entram no consumo em carros sem sensor MAF.</p>
                 <div class="field span-2"><label for="pAfr">Relação ar/combustível média (gasóleo)</label><input id="pAfr" type="text" inputmode="decimal">
                   <span class="hint">Só para gasóleo sem caudal de combustível. Típico: 20 a 25. Ajusta com atestos.</span></div>
               </div>
@@ -1164,6 +1199,8 @@ body.carmode .toast { bottom: calc(36px + env(safe-area-inset-bottom, 0px)); }
           <div class="card">
             <h2>Carro ligado</h2>
             <dl class="kv" id="kvCar"></dl>
+            <label class="check"><input type="checkbox" id="oVinNet"> Procurar o modelo e a cilindrada pela internet</label>
+            <p class="hint">Usa a base pública vPIC (NHTSA, EUA): envia só o VIN. Funciona bem em muitas marcas; nalguns carros europeus só devolve a marca.</p>
             <div class="actions" id="vinActions" hidden></div>
           </div>
         </div>
@@ -1443,6 +1480,57 @@ const OBD = (() => {
     const cvn = await ask('06');
     for (let i = 0; i + 4 <= cvn.length; i += 4) out.cvn.push(cvn.slice(i, i + 4).map(hex2).join(''));
     out.nome = asciiOf(await ask('0A')).replace(/\s*-\s*/, ' · ');
+    return out;
+  }
+
+  /* ---------- VIN: marca, país e ano a partir do próprio número (sem internet) ---------- */
+  const WMI = {
+    VF1: 'Renault', VF2: 'Renault', VF3: 'Peugeot', VF4: 'Talbot', VF6: 'Renault Trucks', VF7: 'Citroën', VF8: 'Matra', VF9: 'Bugatti',
+    VR1: 'DS', VR3: 'Peugeot', VR7: 'Citroën', VXK: 'Opel', VXE: 'Opel', VYF: 'Fiat', VNK: 'Toyota', VNE: 'Renault Trucks',
+    VSS: 'SEAT', VS5: 'Renault', VS6: 'Ford', VS7: 'Citroën', VS9: 'Carrocerías Ayats', VSE: 'Suzuki', VSK: 'Nissan', VSX: 'Opel', VSY: 'Renault',
+    VWV: 'Volkswagen', VWA: 'Nissan', VV9: 'Tauro', VLU: 'Scania',
+    WVW: 'Volkswagen', WV1: 'Volkswagen (comerciais)', WV2: 'Volkswagen (comerciais)', WV3: 'Volkswagen (camiões)', WVG: 'Volkswagen (SUV)',
+    WAU: 'Audi', WA1: 'Audi (SUV)', WUA: 'Audi Sport', WBA: 'BMW', WBS: 'BMW M', WBY: 'BMW i', WBX: 'BMW (SUV)', WMW: 'MINI', WMA: 'MAN',
+    WDB: 'Mercedes-Benz', WDD: 'Mercedes-Benz', WDC: 'Mercedes-Benz (SUV)', WDF: 'Mercedes-Benz (comerciais)', W1K: 'Mercedes-Benz',
+    W1N: 'Mercedes-Benz (SUV)', W1V: 'Mercedes-Benz (comerciais)', W1W: 'Mercedes-Benz (comerciais)', WME: 'smart',
+    W0L: 'Opel', W0V: 'Opel', WP0: 'Porsche', WP1: 'Porsche (SUV)', WF0: 'Ford', WF1: 'Ford', WMZ: 'MINI',
+    ZFA: 'Fiat', ZFC: 'Fiat (comerciais)', ZFF: 'Ferrari', ZAR: 'Alfa Romeo', ZCF: 'Iveco', ZLA: 'Lancia', ZAP: 'Piaggio', ZHW: 'Lamborghini',
+    ZAM: 'Maserati', ZDM: 'Ducati', ZCG: 'Cagiva', ZGU: 'Moto Guzzi', ZD4: 'Aprilia', ZAC: 'Jeep', ZFB: 'Fiat',
+    TMB: 'Škoda', TMA: 'Hyundai', TMK: 'Karosa', TRU: 'Audi', TSM: 'Suzuki', TW1: 'Toyota', U5Y: 'Kia', U6Y: 'Kia', UU1: 'Dacia', UU2: 'Dacia', UU3: 'Dacia',
+    UU6: 'Daewoo', SAL: 'Land Rover', SAJ: 'Jaguar', SAR: 'Rover', SAT: 'Triumph', SCC: 'Lotus', SCF: 'Aston Martin', SCB: 'Bentley', SCA: 'Rolls-Royce',
+    SB1: 'Toyota', SJN: 'Nissan', SHH: 'Honda', SHS: 'Honda', SFD: 'Alexander Dennis', SMT: 'Triumph',
+    YV1: 'Volvo', YV2: 'Volvo (camiões)', YV3: 'Volvo (autocarros)', YV4: 'Volvo (SUV)', YS2: 'Scania', YS3: 'Saab', YK1: 'Saab',
+    NM0: 'Ford', NM4: 'Tofaş (Fiat)', NMT: 'Toyota', NLH: 'Hyundai', NLA: 'Honda', NMA: 'MAN', NLE: 'Mercedes-Benz (camiões)',
+    JHM: 'Honda', JHL: 'Honda', JMZ: 'Mazda', JM1: 'Mazda', JMB: 'Mitsubishi', JMY: 'Mitsubishi', JF1: 'Subaru', JF2: 'Subaru', JN1: 'Nissan', JN8: 'Nissan',
+    JSA: 'Suzuki', JS2: 'Suzuki', JS3: 'Suzuki', JTD: 'Toyota', JTE: 'Toyota', JTH: 'Lexus', JTN: 'Toyota', JT1: 'Toyota', JT2: 'Toyota', JT3: 'Toyota',
+    JA3: 'Mitsubishi', JA4: 'Mitsubishi', JDA: 'Daihatsu', JAA: 'Isuzu', JAL: 'Isuzu', JYA: 'Yamaha',
+    KMH: 'Hyundai', KMF: 'Hyundai (comerciais)', KNA: 'Kia', KND: 'Kia', KNM: 'Renault Samsung', KPT: 'SsangYong', KL1: 'Daewoo/GM', KLA: 'Daewoo',
+    LSV: 'Volkswagen (SAIC)', LFV: 'Volkswagen (FAW)', LVS: 'Ford (Changan)', LRW: 'Tesla', LJ1: 'JAC', LGX: 'BYD', LSJ: 'MG (SAIC)', L6T: 'Geely', LVV: 'Chery',
+    MAL: 'Hyundai', MA3: 'Suzuki (Maruti)', MAT: 'Tata', MEX: 'Volkswagen', MA1: 'Mahindra', MMB: 'Mitsubishi', MR0: 'Toyota', MNT: 'Nissan', MPA: 'Isuzu',
+    '5YJ': 'Tesla', '7SA': 'Tesla', '1FA': 'Ford', '1FT': 'Ford', '1FM': 'Ford', '1G1': 'Chevrolet', '1GC': 'Chevrolet', '1C4': 'Chrysler/Jeep', '1J4': 'Jeep',
+    '2T1': 'Toyota', '3VW': 'Volkswagen', '3FA': 'Ford', '9BW': 'Volkswagen', '9BD': 'Fiat', '93H': 'Honda', '8AP': 'Fiat'
+  };
+  const PAIS = [['VF', 'França'], ['VR', 'França'], ['VS', 'Espanha'], ['VW', 'Espanha'], ['VX', 'França'], ['VN', 'França'], ['VL', 'Espanha'], ['VV', 'Espanha'], ['VY', 'França'],
+    ['W', 'Alemanha'], ['Z', 'Itália'], ['TM', 'República Checa'], ['TR', 'Hungria'], ['TS', 'Hungria'], ['TW', 'Portugal'], ['U5', 'Eslováquia'], ['U6', 'Eslováquia'], ['UU', 'Roménia'],
+    ['S', 'Reino Unido'], ['YV', 'Suécia'], ['YS', 'Suécia'], ['YK', 'Finlândia'], ['NM', 'Turquia'], ['NL', 'Turquia'], ['J', 'Japão'], ['K', 'Coreia do Sul'],
+    ['L', 'China'], ['MA', 'Índia'], ['ME', 'Índia'], ['MM', 'Tailândia'], ['MN', 'Tailândia'], ['MR', 'Tailândia'], ['MP', 'Tailândia'],
+    ['1', 'Estados Unidos'], ['4', 'Estados Unidos'], ['5', 'Estados Unidos'], ['7', 'Estados Unidos'], ['2', 'Canadá'], ['3', 'México'], ['9B', 'Brasil'], ['93', 'Brasil'], ['8A', 'Argentina']];
+  const ANO_COD = 'ABCDEFGHJKLMNPRSTVWXY123456789';
+  // Marcas que põem o ano na 10.ª posição do VIN (grupo VW, Ford, Volvo, japonesas, coreanas e americanas)
+  const ANO_OK = ['WVW', 'WV1', 'WV2', 'WV3', 'WVG', 'WAU', 'WA1', 'WUA', 'TMB', 'VSS', 'VWV', 'TRU', '3VW', 'LSV', 'LFV', '9BW', 'MEX', 'WF0', 'WF1', 'NM0', 'VS6',
+    'YV1', 'YV4', 'SAL', 'SAJ', 'NMT', 'SB1', 'VNK', 'TW1', 'TMA', 'U5Y', 'U6Y', 'NLH', 'MAL', 'J', 'K', '1', '2', '3', '4', '5', '7'];
+  function vinInfo(vin, hoje = new Date()) {
+    if (!vin || !/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)) return null;
+    const out = { vin, marca: WMI[vin.slice(0, 3)] || null, pais: null, ano: null };
+    for (const [p, n] of PAIS) if (vin.startsWith(p)) { out.pais = n; break; }
+    // Ano pela 10.ª letra: fiável nos carros americanos e asiáticos; muitas marcas europeias não o usam
+    const usaAno = ANO_OK.some(p => vin.startsWith(p));
+    const i = usaAno ? ANO_COD.indexOf(vin[9]) : -1;
+    if (i >= 0) {
+      let a = 1980 + i;
+      while (a + 30 <= hoje.getFullYear() + 1) a += 30;
+      out.ano = a;
+    }
     return out;
   }
 
@@ -2703,7 +2791,7 @@ const OBD = (() => {
   }
 
   return {
-    sleep, hex2, compact, splitResponse, parsePid, parse09, readEcuInfo, parseSupported, parseSupportedHead, parseDtcs, parseVin, parseVolt,
+    sleep, hex2, compact, splitResponse, parsePid, parse09, readEcuInfo, vinInfo, parseSupported, parseSupportedHead, parseDtcs, parseVin, parseVolt,
     decodeDtc, dtcInfo, dtcAdvice, SEV, readinessOf, initAdapter, initCar, isCarError, FUEL_SYS, readFreezeFrame, parseMode06, readMode06, midName, misfiresOf,
     PROTOCOLS, FUEL_TYPES, FUEL_NAMES, OBD_STD, FUELS, PIDS, RATES, SENSORS, SENSOR, fuelSource, fuelLph,
     Elm, ElmError, initElm, readDtcs, clearDtcs, Poller, PERF, PerfTest, BleTransport, bleServiceList, NativeBleTransport, pickBleChars, textToHex, hexToText,
@@ -2751,7 +2839,9 @@ const OBD = (() => {
       'Verificação de carro usado (Avarias): há quanto tempo os erros foram apagados, monitores, luz do motor, km com a luz acesa, VIN e software da centralina. Entra no relatório',
       'Avisos: bip e voz quando um mostrador passa o limite, e vigia de avarias que lê os erros de minuto a minuto e avisa logo que aparece um novo',
       'Copiar para outro aparelho (Definições): exporta os perfis, as páginas e as opções num ficheiro ou em texto e importa-os no tablet, a substituir ou a juntar',
-      'Modo noite no modo carro: cores em âmbar suave e legível, sem brilhos, e o brilho do ecrã desce aos poucos. Automático do pôr ao nascer do sol, sempre, ou à mão com o botão da lua'
+      'Modo noite no modo carro: cores em âmbar suave e legível, sem brilhos, e o brilho do ecrã desce aos poucos. Automático do pôr ao nascer do sol, sempre, ou à mão com o botão da lua',
+      'Brilho do ecrã no modo carro, de dia e de noite: em Definições, Aparência, e no botão do sol do próprio modo carro',
+      'Identificação do carro ao ligar: marca, país e ano pelo VIN; modelo e cilindrada pela base pública vPIC quando a encontra. O perfil ganha marca, modelo, ano e cilindrada, e o que escreves à mão não é substituído. Carro novo: a app pergunta se é o do perfil ou se cria um'
     ]}
   ];
 
@@ -2834,6 +2924,11 @@ const OBD = (() => {
     for (const [k, lo, hi] of [['cil', 0.5, 8], ['ve', 40, 120], ['fator', 0.5, 2], ['afrDiesel', 14, 60]]) if (typeof p[k] === 'number' && p[k] >= lo && p[k] <= hi) n[k] = p[k];
     n.preco = typeof p.preco === 'number' && p.preco >= 0 && p.preco <= 10 ? p.preco : null;
     n.vin = typeof p.vin === 'string' && /^[A-HJ-NPR-Z0-9]{17}$/.test(p.vin) ? p.vin : '';
+    n.marca = typeof p.marca === 'string' ? p.marca.trim().slice(0, 40) : '';
+    n.modelo = typeof p.modelo === 'string' ? p.modelo.trim().slice(0, 40) : '';
+    n.ano = Number.isInteger(p.ano) && p.ano >= 1950 && p.ano <= 2100 ? p.ano : null;
+    // Campos que o utilizador escreveu: a identificação automática não os substitui
+    n.manual = Array.isArray(p.manual) ? p.manual.filter(k => ['marca', 'modelo', 'ano', 'cil', 'comb'].includes(k)) : (typeof p.cil === 'number' && p.cil !== 1.6 ? ['cil'] : []);
     // Versões antigas tinham um só painel: passa a ser a página «Principal», com as páginas novas a seguir
     const pages = Array.isArray(p.paginas) && p.paginas.length ? p.paginas
       : Array.isArray(p.layout) && p.layout.length ? [{ nome: 'Principal', layout: p.layout }, ...DEFAULT_PAGES().slice(1)] : null;
@@ -2856,10 +2951,10 @@ const OBD = (() => {
       tipo: r.tipo, nome: String(r.nome || r.tipo).slice(0, 30), tempo: r.tempo, dist: num(r.dist, 0), vfim: num(r.vfim, 0), quando: num(r.quando, Date.now()) }));
     return n;
   }
-  const OPT_DEFAULTS = { uuidExtra: '', pausaMs: 0, ecraLigado: true, escrita: 'auto', estilo: 'cockpit', abrir: 'inicio', somAlerta: true, voz: false, vigia: true, noite: 'auto', brilhoNoite: 30 };
+  const OPT_DEFAULTS = { uuidExtra: '', pausaMs: 0, ecraLigado: true, escrita: 'auto', estilo: 'cockpit', abrir: 'inicio', somAlerta: true, voz: false, vigia: true, noite: 'auto', brilhoNoite: 30, brilhoDia: 80, brilhoDiaAuto: true, vinNet: true };
   // Opções que fazem sentido levar para outro aparelho (o adaptador guardado e as atualizações ficam em cada um)
   const OPT_COPIA = { estilo: ['cockpit', 'classico', 'hud'], abrir: ['inicio', 'paineis', 'carro'], escrita: ['auto', 'resp', 'noresp'], noite: ['auto', 'on', 'off'],
-    ecraLigado: 'bool', somAlerta: 'bool', voz: 'bool', vigia: 'bool', pausaMs: [0, 500], brilhoNoite: [5, 100] };
+    ecraLigado: 'bool', somAlerta: 'bool', voz: 'bool', vigia: 'bool', vinNet: 'bool', brilhoDiaAuto: 'bool', pausaMs: [0, 500], brilhoNoite: [5, 100], brilhoDia: [5, 100] };
   function cleanOpts(o) {
     const out = {};
     if (!o || typeof o !== 'object') return out;
@@ -2880,6 +2975,7 @@ const OBD = (() => {
       s = { v: 1, perfis: [p], ativo: p.id };
     }
     s.opts = Object.assign({}, OPT_DEFAULTS, s.opts || {});
+    if (!s.vinCache || typeof s.vinCache !== 'object') s.vinCache = {};
     s.perfis = s.perfis.map(cleanProfile).filter(Boolean);
     if (!s.perfis.length) s.perfis = [newProfile('O meu carro')];
     if (!s.perfis.some(p => p.id === s.ativo)) s.ativo = s.perfis[0].id;
@@ -3139,6 +3235,7 @@ const OBD = (() => {
     if (mode === 'demo') { st.demoTrip = { L: 0, km: 0, s: 0 }; st.demoRecs = []; st.demoTests = []; }
     if (mode === 'on' && NATIVE && st.nativeId) { store.opts.lastDev = { id: st.nativeId, name }; save(); }
     if (mode === 'on' && !carAbsent) matchProfileByVin();
+    st.carInfo = null;
     st.poller = new OBD.Poller(elm, info, onValue, onPollFail, onCarState);
     if (carAbsent) st.poller.setProbe(true);
     st.mode = mode;
@@ -3148,6 +3245,7 @@ const OBD = (() => {
     setMode(mode);
     wakeLock(true);
     renderAllViews();
+    if (!carAbsent) identifyCar().then(askNewCar);
     if (carAbsent) toast('Adaptador ligado. Liga a ignição: o carro aparece sozinho.', 5000);
   }
 
@@ -3173,6 +3271,7 @@ const OBD = (() => {
       if (st.poller !== p) return;
       if (st.mode === 'on') matchProfileByVin();
       refreshPollList();
+      identifyCar().then(askNewCar);
     }
     st.carAbsent = false;
     logLine('info', `O carro voltou a responder · ${info.protocol}`);
@@ -5338,9 +5437,16 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
   function renderLigacao() {
     renderAdapterLive();
     const i = st.info, p = prof();
+    const ci = st.carInfo || {}, src = k => (ci.fonte && ci.fonte[k] ? ` (${ci.fonte[k]})` : '');
+    const naoSei = i && i.carReady ? 'não identificado' : '—';
     const car = [
       ['VIN', i ? (i.vin ? i.vin + (st.mode === 'demo' ? ' (simulado)' : '') : 'O carro não enviou') : '—'],
-      ['Combustível', i ? (i.fuelType != null ? (OBD.FUEL_NAMES[i.fuelType] || 'Código ' + i.fuelType) : 'O carro não indica') : '—'],
+      ['Marca', ci.marca ? ci.marca + src('marca') : naoSei],
+      ['Modelo', ci.modelo ? ci.modelo + src('modelo') : ci.buscando ? 'a procurar…' : naoSei],
+      ['Ano', ci.ano ? ci.ano + src('ano') : naoSei],
+      ['Cilindrada', ci.cil ? fmtN(ci.cil, 1) + ' L' + (ci.cilindros ? ` · ${ci.cilindros} cilindros` : '') + src('cil') : naoSei],
+      ['Combustível', i ? (i.fuelType != null ? (OBD.FUEL_NAMES[i.fuelType] || 'Código ' + i.fuelType) : ci.comb ? ci.comb + src('comb') : 'O carro não indica') : '—'],
+      ['Fabricado em', ci.pais || naoSei],
       ['Norma', i ? (i.obdStd != null ? (OBD.OBD_STD[i.obdStd] || 'Código ' + i.obdStd) : '—') : '—'],
       ['Perfil', p.nome + (p.vin && i && p.vin === i.vin ? ' (pelo VIN)' : '')]
     ];
@@ -5367,12 +5473,13 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
       toast(`VIN associado a «${prof().nome}».`);
     } else {
       closeRec();
-      const n = newProfile('Carro ' + st.info.vin.slice(-6), prof().paginas);
+      const n = newProfile(carNome(st.info.vin), prof().paginas);
       n.vin = st.info.vin;
       store.perfis.push(n); store.ativo = n.id;
       toast(`Perfil «${n.nome}» criado. Muda o nome em Definições.`);
       refreshPollList();
     }
+    applyCarInfo();
     save(); renderAll();
   });
 
@@ -5425,6 +5532,10 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
     const p = prof();
     $('#selPerfil').innerHTML = store.perfis.map(x => `<option value="${x.id}"${x.id === p.id ? ' selected' : ''}>${esc(x.nome)}</option>`).join('');
     $('#pNome').value = p.nome;
+    $('#pMarca').value = p.marca || '';
+    $('#pModelo').value = p.modelo || '';
+    $('#pAno').value = p.ano || '';
+    $('#oVinNet').checked = store.opts.vinNet !== false;
     $('#pComb').value = p.comb || 'auto';
     $('#pPreco').value = plain(p.preco);
     $('#pFator').value = plain(p.fator);
@@ -5586,28 +5697,29 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
     const { rise, set } = sunTimes(now, SOL.lat, SOL.lng), m = 25 * 60000;   // crepúsculo: 25 min
     return now < new Date(rise.valueOf() - m) || now > new Date(set.valueOf() + m);
   }
-  let nightManual = null, nightOn = null, rampa = 0;
+  let nightManual = null, nightOn = null, rampa = 0, brilhoAlvo = null;
   const isNight = () => (nightManual != null ? nightManual : store.opts.noite === 'on' ? true : store.opts.noite === 'off' ? false : escuroLa());
-  // Muda o brilho do ecrã aos poucos (cerca de 2 s), para a vista se ir habituando
+  const temBrilho = () => !!(NATIVE && plug('Ecra') && plug('Ecra').brilho);
+  // Brilho que o ecrã deve ter agora (-1 = o do telemóvel)
+  const alvoBrilho = () => (!st.carMode ? -1 : isNight() ? (store.opts.brilhoNoite || 30) / 100
+    : store.opts.brilhoDiaAuto !== false ? -1 : (store.opts.brilhoDia || 80) / 100);
+  // Muda o brilho aos poucos (cerca de 2 s), para a vista se ir habituando
   async function rampaBrilho(para) {
-    const E = plug('Ecra');
-    if (!(NATIVE && E && E.brilho)) return;
-    const id = ++rampa;
-    let de = 0.6;
-    try { const r = await E.brilhoAtual(); if (r && r.nivel >= 0) de = r.nivel; } catch (e) { /* sem leitura: parte de 60 % */ }
-    const alvo = para < 0 ? de : para;
-    if (para < 0) {    // volta ao brilho do sistema: sobe da noite até lá e depois larga
-      for (let i = 1; i <= 12 && id === rampa; i++) { await E.brilho({ nivel: (store.opts.brilhoNoite || 30) / 100 + (alvo - (store.opts.brilhoNoite || 30) / 100) * i / 12 }).catch(() => {}); await OBD.sleep(160); }
-      if (id === rampa) await E.brilho({ nivel: -1 }).catch(() => {});
-      return;
-    }
+    if (!temBrilho()) return;
+    const E = plug('Ecra'), id = ++rampa;
+    let de = 0.6, sis = 0.6;
+    try { const r = await E.brilhoAtual(); if (r && r.nivel >= 0) de = r.nivel; if (r && r.sistema >= 0) sis = r.sistema; } catch (e) { /* sem leitura */ }
+    const alvo = para < 0 ? sis : para;
     for (let i = 1; i <= 12 && id === rampa; i++) { await E.brilho({ nivel: de + (alvo - de) * i / 12 }).catch(() => {}); await OBD.sleep(160); }
+    if (para < 0 && id === rampa) await E.brilho({ nivel: -1 }).catch(() => {});
   }
   async function applyNight(force) {
     const on = st.carMode && isNight();
     $('#btnCarNight').setAttribute('aria-pressed', String(on));
-    if (on === nightOn && !force) { document.body.classList.toggle('noite', on); return; }
-    const mudou = nightOn !== null && on !== nightOn && st.carMode && !reduceMotion;
+    const alvo = alvoBrilho();
+    if (alvo !== brilhoAlvo || force) { brilhoAlvo = alvo; rampaBrilho(alvo); }
+    if (on === nightOn) { document.body.classList.toggle('noite', on); renderCarBri(); return; }
+    const mudou = nightOn !== null && st.carMode && !reduceMotion;
     nightOn = on;
     if (mudou) {                                  // escurece, troca as cores e volta a aparecer
       document.body.classList.add('a-trocar');
@@ -5616,17 +5728,56 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
       requestAnimationFrame(() => { for (const T of st.tiles) if (T.kind === 'graf') drawGraph(T, pnow()); });
       document.body.classList.remove('a-trocar');
     } else document.body.classList.toggle('noite', on);
-    rampaBrilho(on ? (store.opts.brilhoNoite || 30) / 100 : -1);
+    renderCarBri();
   }
   $('#btnCarNight').addEventListener('click', () => { nightManual = !isNight(); applyNight(); });
   $('#oNoite').addEventListener('change', e => { store.opts.noite = e.target.value; save(); nightManual = null; applyNight(); renderNoite(); });
-  $('#oBrilho').addEventListener('input', e => { store.opts.brilhoNoite = +e.target.value; $('#brilhoTxt').textContent = e.target.value + ' %'; });
+  // Definições: brilho de dia e de noite
+  $('#oBrilho').addEventListener('input', e => { store.opts.brilhoNoite = +e.target.value; renderNoite(); });
   $('#oBrilho').addEventListener('change', () => { save(); applyNight(true); });
+  $('#oBrilhoDia').addEventListener('input', e => { store.opts.brilhoDia = +e.target.value; store.opts.brilhoDiaAuto = false; renderNoite(); });
+  $('#oBrilhoDia').addEventListener('change', () => { save(); applyNight(true); });
+  $('#oBrilhoDiaAuto').addEventListener('change', e => { store.opts.brilhoDiaAuto = e.target.checked; save(); renderNoite(); applyNight(true); });
+  // Modo carro: botão do sol abre o brilho da altura (dia ou noite) e muda-o logo
+  function renderCarBri() {
+    const night = st.carMode && isNight(), auto = !night && store.opts.brilhoDiaAuto !== false;
+    const v = night ? store.opts.brilhoNoite || 30 : store.opts.brilhoDia || 80;
+    $('#carBriLbl').textContent = night ? 'Brilho à noite' : 'Brilho de dia';
+    $('#carBriRange').value = v;
+    $('#carBriVal').textContent = auto ? 'auto' : v + ' %';
+    $('#carBriAuto').hidden = night;
+    $('#carBriAuto').textContent = auto ? 'Automático ✓' : 'Automático';
+  }
+  $('#btnCarBri').addEventListener('click', () => {
+    if (!temBrilho()) { toast('Mudar o brilho só funciona na app instalada.'); return; }
+    const pop = $('#carBriPop'), open = pop.hidden;
+    pop.hidden = !open; $('#btnCarBri').setAttribute('aria-expanded', String(open)); renderCarBri();
+  });
+  $('#carBriRange').addEventListener('input', e => {
+    const v = +e.target.value, night = isNight();
+    if (night) store.opts.brilhoNoite = v; else { store.opts.brilhoDia = v; store.opts.brilhoDiaAuto = false; }
+    rampa++; brilhoAlvo = v / 100;                       // muda já, sem rampa, para se ver o efeito enquanto mexes
+    plug('Ecra').brilho({ nivel: v / 100 }).catch(() => {});
+    renderCarBri();
+  });
+  $('#carBriRange').addEventListener('change', () => save());
+  $('#carBriAuto').addEventListener('click', () => { store.opts.brilhoDiaAuto = store.opts.brilhoDiaAuto === false; save(); applyNight(true); });
+  document.addEventListener('pointerdown', e => {
+    const pop = $('#carBriPop');
+    if (!pop.hidden && !e.target.closest('#carBriPop, #btnCarBri')) { pop.hidden = true; $('#btnCarBri').setAttribute('aria-expanded', 'false'); }
+  });
   function renderNoite() {
     $('#oNoite').value = store.opts.noite || 'auto';
+    const auto = store.opts.brilhoDiaAuto !== false, nat = temBrilho();
     $('#oBrilho').value = store.opts.brilhoNoite || 30;
     $('#brilhoTxt').textContent = (store.opts.brilhoNoite || 30) + ' %';
-    $('#brilhoRow').hidden = !(NATIVE && plug('Ecra'));
+    $('#oBrilhoDia').value = store.opts.brilhoDia || 80;
+    $('#brilhoDiaTxt').textContent = auto ? 'auto' : (store.opts.brilhoDia || 80) + ' %';
+    $('#oBrilhoDia').closest('.bri').classList.toggle('off', auto);
+    $('#oBrilhoDiaAuto').checked = auto;
+    for (const id of ['#oBrilho', '#oBrilhoDia', '#oBrilhoDiaAuto']) $(id).disabled = !nat;
+    $('#brilhoHint').textContent = nat ? 'Também mudas no próprio modo carro, no botão do sol (canto inferior esquerdo).'
+      : 'Só funciona na app instalada: no browser a página não pode mudar o brilho do ecrã.';
     const { rise, set } = sunTimes(new Date(), SOL.lat, SOL.lng);
     $('#noiteHint').textContent = 'Cores em âmbar suave e brilho do ecrã mais baixo, para não cansar a vista. ' +
       (store.opts.noite === 'auto' ? `Hoje liga às ${fmtHora(set.valueOf() + 25 * 60000)} e desliga às ${fmtHora(rise.valueOf() - 25 * 60000)}. ` : '') +
@@ -5701,6 +5852,131 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
     };
     dlg.querySelector('[data-act="juntar"]').addEventListener('click', () => go('juntar'));
     dlg.querySelector('[data-act="subst"]').addEventListener('click', () => go('subst'));
+  }
+
+  /* ---------- Identificação do carro (VIN, base vPIC pela internet) ---------- */
+  const COMB_EN = { gasoline: 'Gasolina', diesel: 'Gasóleo', electric: 'Elétrico', 'flexible fuel vehicle (ffv)': 'Flex', lpg: 'GPL', 'compressed natural gas (cng)': 'GNC' };
+  const tituloMarca = t => t.toLowerCase().replace(/(^|[\s-])\p{L}/gu, m => m.toUpperCase()).replace(/^Bmw$/, 'BMW').replace(/^Mini$/, 'MINI').replace(/^Ds$/, 'DS');
+  async function lookupVin(vin) {
+    const url = `https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/${vin}?format=json`;
+    let j = null;
+    const H = plug('CapacitorHttp');
+    if (NATIVE && H && H.get) {                // pela parte nativa: não depende das regras de CORS do site
+      const r = await H.get({ url, connectTimeout: 8000, readTimeout: 8000 });
+      j = typeof r.data === 'string' ? JSON.parse(r.data) : r.data;
+    } else {
+      const c = new AbortController(), tm = setTimeout(() => c.abort(), 8000);
+      try { const r = await fetch(url, { signal: c.signal }); j = await r.json(); } finally { clearTimeout(tm); }
+    }
+    const R = j && Array.isArray(j.Results) && j.Results[0];
+    if (!R) return {};
+    const val = k => { const v = String(R[k] ?? '').trim(); return v && !/^(not applicable|null|0)$/i.test(v) ? v : ''; };
+    const out = {};
+    if (val('Make')) out.marca = tituloMarca(val('Make')).slice(0, 40);
+    const modelo = [val('Model'), val('Trim')].filter(Boolean).join(' ').trim();
+    if (modelo) out.modelo = modelo.slice(0, 40);
+    const ano = parseInt(val('ModelYear'), 10);
+    if (ano >= 1980 && ano <= new Date().getFullYear() + 1) out.ano = ano;
+    const cil = parseFloat(val('DisplacementL'));
+    if (cil >= 0.5 && cil <= 8) out.cil = Math.round(cil * 10) / 10;
+    const ncil = parseInt(val('EngineCylinders'), 10);
+    if (ncil >= 1 && ncil <= 16) out.cilindros = ncil;
+    const comb = COMB_EN[val('FuelTypePrimary').toLowerCase()];
+    if (comb) out.comb = comb;
+    return out;
+  }
+  // Junta o que se sabe do carro: VIN (sem internet), o que o carro envia e a base pela internet
+  async function identifyCar() {
+    const i = st.info;
+    if (!i || !i.carReady) return;
+    const vin = i.vin, off = vin ? OBD.vinInfo(vin) : null;
+    const ci = { vin, fonte: {} };
+    if (off) {
+      if (off.marca) { ci.marca = off.marca; ci.fonte.marca = 'pelo VIN'; }
+      if (off.ano) { ci.ano = off.ano; ci.fonte.ano = 'pelo VIN, provável'; }
+      ci.pais = off.pais;
+    }
+    const cache = vin && store.vinCache[vin];
+    const junta = (net, quando) => {
+      for (const k of ['marca', 'modelo', 'ano', 'cil', 'cilindros', 'comb']) if (net[k] != null && net[k] !== '') { ci[k] = net[k]; if (k !== 'cilindros') ci.fonte[k] = 'pela internet'; }
+      ci.netQuando = quando;
+    };
+    if (cache) junta(cache, cache.quando);
+    st.carInfo = ci;
+    applyCarInfo(); renderLigacao();
+    const velho = !cache || (cache.vazio && Date.now() - cache.quando > 30 * 864e5);
+    if (!vin || st.mode !== 'on' || !store.opts.vinNet || !velho || navigator.onLine === false) return;
+    ci.buscando = true; renderLigacao();
+    try {
+      const net = await lookupVin(vin);
+      const vazio = !net.modelo && !net.cil && !net.ano;
+      store.vinCache[vin] = { ...net, vazio, quando: Date.now() };
+      const ks = Object.keys(store.vinCache);
+      if (ks.length > 30) delete store.vinCache[ks[0]];
+      save();
+      if (st.carInfo === ci) {
+        junta(net, Date.now());
+        logLine('info', `Carro identificado pela internet: ${[net.marca, net.modelo, net.ano, net.cil ? net.cil + ' L' : ''].filter(Boolean).join(' · ') || 'sem dados para este VIN'}`);
+        applyCarInfo();
+        if (!vazio) toast(`Carro identificado: ${[ci.marca, ci.modelo, ci.ano].filter(Boolean).join(' ')}${ci.cil ? ' · ' + fmtN(ci.cil, 1) + ' L' : ''}.`, 4500);
+      }
+    } catch (e) { logLine('info', 'Não consegui procurar o carro pela internet: ' + ((e && e.message) || e)); }
+    ci.buscando = false;
+    if (st.carInfo === ci) { renderLigacao(); renderAjustes(); }
+  }
+  const carNome = vin => {
+    const ci = st.carInfo && st.carInfo.vin === vin ? st.carInfo : {};
+    return [ci.marca, ci.modelo].filter(Boolean).join(' ').slice(0, 40) || 'Carro ' + vin.slice(-6);
+  };
+  // Preenche o perfil associado a este VIN, sem mexer no que o utilizador escreveu
+  function applyCarInfo() {
+    const ci = st.carInfo, p = prof();
+    if (!ci || !ci.vin || p.vin !== ci.vin) return;
+    let mudou = false;
+    const set = (k, v) => { if (v != null && v !== '' && !p.manual.includes(k) && p[k] !== v) { p[k] = v; mudou = true; } };
+    set('marca', ci.marca); set('modelo', ci.modelo); set('ano', ci.ano); set('cil', ci.cil);
+    if (mudou) { save(); renderAjustes(); }
+  }
+  const markManual = k => { const p = prof(); if (!p.manual.includes(k)) p.manual.push(k); };
+  $('#pMarca').addEventListener('change', e => { prof().marca = e.target.value.trim().slice(0, 40); markManual('marca'); save(); renderLigacao(); });
+  $('#pModelo').addEventListener('change', e => { prof().modelo = e.target.value.trim().slice(0, 40); markManual('modelo'); save(); renderLigacao(); });
+  $('#pAno').addEventListener('change', e => {
+    const v = e.target.value.trim(), n = parseInt(v, 10);
+    if (v && !(n >= 1950 && n <= new Date().getFullYear() + 1)) { toast('Ano: escreve os 4 algarismos, ex.: 2014.'); e.target.value = prof().ano || ''; return; }
+    prof().ano = v ? n : null; markManual('ano'); save();
+  });
+  $('#pCil').addEventListener('change', () => { markManual('cil'); save(); });
+  $('#oVinNet').addEventListener('change', e => { store.opts.vinNet = e.target.checked; save(); if (e.target.checked) identifyCar(); });
+
+  // Carro com VIN que nenhum perfil conhece: pergunta uma vez por ligação
+  const vinPerguntado = new Set();
+  function askNewCar() {
+    const i = st.info;
+    if (st.mode !== 'on' || !i || !i.vin || vinPerguntado.has(i.vin) || store.perfis.some(p => p.vin === i.vin) || dlg.open) return;
+    vinPerguntado.add(i.vin);
+    const p = prof(), ci = st.carInfo || {};
+    const desc = [ci.marca, ci.modelo, ci.ano].filter(Boolean).join(' ') || 'Carro novo';
+    openDlg(`<div class="dlg-head"><h2 id="dlgTitle">${esc(desc)}</h2></div>
+<div class="dlg-body"><p>Liguei a um carro que ainda não está em nenhum perfil${ci.pais ? ` (fabricado em ${esc(ci.pais)})` : ''}.</p><p class="hint mono">VIN ${esc(i.vin)}</p>
+<p>${p.vin ? 'Queres criar um perfil para ele?' : `É o carro do perfil «${esc(p.nome)}»?`}</p>
+<p class="hint">Com o perfil associado, a app escolhe-o sozinha sempre que ligares a este carro e preenche a marca, o modelo e a cilindrada que conseguir.</p></div>
+<div class="dlg-foot"><button type="button" class="btn ghost" data-a="nao">Agora não</button><span class="spacer"></span>
+${p.vin ? '' : `<button type="button" class="btn" data-a="novo">É outro carro</button>`}
+<button type="button" class="btn primary" data-a="${p.vin ? 'novo' : 'este'}">${p.vin ? 'Criar perfil' : 'Sim, é este'}</button></div>`);
+    dlg.querySelector('.dlg-foot').addEventListener('click', e => {
+      const b = e.target.closest('[data-a]');
+      if (!b) return;
+      dlg.close();
+      if (b.dataset.a === 'nao') return;
+      if (b.dataset.a === 'este') { prof().vin = i.vin; toast(`VIN associado a «${prof().nome}».`); }
+      else {
+        closeRec();
+        const n = newProfile(carNome(i.vin), prof().paginas);
+        n.vin = i.vin; store.perfis.push(n); store.ativo = n.id;
+        toast(`Perfil «${n.nome}» criado.`); refreshPollList();
+      }
+      applyCarInfo(); save(); renderAll();
+    });
   }
 
   /* ---------- Separadores e botões do topo ---------- */
