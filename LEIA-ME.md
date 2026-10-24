@@ -86,3 +86,18 @@ Os perfis, os painéis, as viagens e os testes mantêm-se nas atualizações.
 - **"Ainda não há nenhuma versão publicada"** → a automação ainda não acabou ou falhou (vê em **Actions**).
 - **"O GitHub limitou os pedidos"** → verificaste muitas vezes seguidas; espera uns minutos.
 - **A lista de aparelhos aparece vazia** → liga a Localização e o Bluetooth, confirma que o V011 está na ficha e a ignição ligada, e que a OBD Home está fechada.
+
+## Telemóvel e tablet ligados (sincronização pelo GitHub)
+
+Os dados (perfis, páginas, opções e histórico) ficam num repositório **privado** só para isso — nunca neste, que é público.
+
+1. Em https://github.com/new cria o repositório **mostrador_dados** e marca **Private**.
+2. Em https://github.com/settings/personal-access-tokens/new cria um token:
+   - Nome: `Mostrador OBD` · Expiração: 1 ano
+   - Repository access: **Only select repositories** → `mostrador_dados`
+   - Permissions → Repository permissions → **Contents: Read and write**
+   - Gera e copia o token (começa por `github_pat_`).
+3. Na app do telemóvel: Definições → Geral → Telemóvel e tablet → repositório `Bernas717/mostrador_dados`, cola o token, nome `Telemóvel` → Ligar.
+4. No tablet, o mesmo com o nome `Tablet` → Ligar → **Usar os do GitHub** (ou Juntar, se o tablet já tiver perfis teus).
+
+O token fica só no aparelho (não vai nas cópias de segurança). Se perderes um aparelho, apaga o token no GitHub e cria outro. Podes criar um token para cada aparelho, para os poderes cortar em separado.

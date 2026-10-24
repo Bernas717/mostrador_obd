@@ -941,6 +941,11 @@ body.carmode .toast { bottom: calc(36px + env(safe-area-inset-bottom, 0px)); }
             <p class="hint" id="m6Hint">Resultados dos autotestes do motor (modo 06), com os limites que a centralina usa.</p>
             <div class="m6" id="m6List"></div>
           </div>
+          <div class="card" id="histCard">
+            <div class="card-head"><h2>Histórico deste carro</h2><span class="hint" id="histCount"></span></div>
+            <ol class="grav-list" id="histList"></ol>
+            <p class="empty" id="histEmpty">Cada diagnóstico completo e cada verificação de carro usado fica guardado aqui, no perfil do carro, para comparares antes e depois da reparação.</p>
+          </div>
           <div class="card" id="usadoCard">
             <div class="card-head"><h2>Verificação de carro usado</h2><span class="hint" id="usadoWhen"></span></div>
             <p class="hint">Vê se os erros foram apagados há pouco (truque comum antes de vender), se o carro andou com a luz do motor acesa, o VIN e o software da centralina. Ignição ligada; o motor pode estar parado ou a trabalhar.</p>
@@ -1222,6 +1227,34 @@ body.carmode .toast { bottom: calc(36px + env(safe-area-inset-bottom, 0px)); }
               <button class="btn ghost small" id="btnResetNo" type="button">Cancelar</button>
             </div>
           </div>
+        </div>
+
+        <h2 class="sec-h">Telemóvel e tablet (GitHub)</h2>
+        <div class="card" id="syncCard">
+          <div class="upd-status" id="syncStatus" aria-live="polite"></div>
+          <div class="form-grid" id="syncForm">
+            <div class="field span-2"><label for="syRepo">Repositório privado</label><input id="syRepo" type="text" autocomplete="off" spellcheck="false" placeholder="Bernas717/mostrador_dados"></div>
+            <div class="field span-2"><label for="syToken">Token do GitHub</label><input id="syToken" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…"></div>
+            <div class="field span-2"><label for="syNome">Nome deste aparelho</label><input id="syNome" type="text" autocomplete="off" maxlength="24" placeholder="Telemóvel ou Tablet"></div>
+          </div>
+          <div class="actions">
+            <button class="btn primary" id="btnSyncLigar" type="button">Ligar</button>
+            <button class="btn primary" id="btnSyncAgora" type="button" hidden>Sincronizar agora</button>
+            <button class="btn ghost" id="btnSyncDesligar" type="button" hidden>Desligar</button>
+          </div>
+          <details class="adv">
+            <summary>Como preparar (uma vez)</summary>
+            <div class="adv-body">
+              <ol class="steps-list">
+                <li>No GitHub, cria um repositório <b>privado</b> só para os dados (ex.: <b>mostrador_dados</b>). Não uses o da app, que é público.</li>
+                <li>Cria um token em Settings → Developer settings → Fine-grained tokens: acesso só a esse repositório, permissão <b>Contents: Read and write</b>.</li>
+                <li>Aqui, escreve o repositório (dono/nome), cola o token, dá um nome a este aparelho e toca em Ligar.</li>
+                <li>Faz o mesmo no outro aparelho. Na primeira vez pergunta se juntas os dados ou usas os do GitHub.</li>
+              </ol>
+              <p class="hint">O token fica só neste aparelho: não vai nas cópias de segurança nem para o GitHub da app. Se perderes o aparelho, apaga o token no GitHub. A app recusa repositórios públicos.</p>
+            </div>
+          </details>
+          <p class="hint">Passa os perfis, as páginas, as opções e o histórico (viagens, testes, diagnósticos, carros identificados e gravações). O brilho, «Ao ligar ao carro, mostrar» e o ecrã ligado ficam diferentes em cada aparelho. Sincroniza ao abrir, uns segundos depois de cada mudança e a cada 10 minutos.</p>
         </div>
 
         <h2 class="sec-h">Copiar para outro aparelho</h2>
@@ -2841,6 +2874,8 @@ const OBD = (() => {
       'Copiar para outro aparelho (Definições): exporta os perfis, as páginas e as opções num ficheiro ou em texto e importa-os no tablet, a substituir ou a juntar',
       'Modo noite no modo carro: cores em âmbar suave e legível, sem brilhos, e o brilho do ecrã desce aos poucos. Automático do pôr ao nascer do sol, sempre, ou à mão com o botão da lua',
       'Brilho do ecrã no modo carro, de dia e de noite: em Definições, Aparência, e no botão do sol do próprio modo carro',
+      'Telemóvel e tablet ligados pelo GitHub (repositório privado teu): perfis, páginas, opções e histórico ficam iguais nos dois, sozinhos',
+      'Histórico de cada carro (Avarias): cada diagnóstico e verificação de carro usado fica guardado com o relatório, para comparar antes e depois',
       'Identificação do carro ao ligar: marca, país e ano pelo VIN; modelo e cilindrada pela base pública vPIC quando a encontra. O perfil ganha marca, modelo, ano e cilindrada, e o que escreves à mão não é substituído. Carro novo: a app pergunta se é o do perfil ou se cria um'
     ]}
   ];
@@ -2901,7 +2936,7 @@ const OBD = (() => {
   const clonePages = pages => pages.map(pg => ({ id: newId(), nome: pg.nome, layout: pg.layout.map(t => ({ ...t })) }));
   const newProfile = (nome, paginas) => ({
     id: newId(), nome, comb: 'auto', cil: 1.6, ve: 85, fator: 1, preco: null, afrDiesel: 22, vin: '',
-    paginas: paginas ? clonePages(paginas) : DEFAULT_PAGES(), pagina: 0, inicio: HOME_DEFAULT.slice(),
+    paginas: paginas ? clonePages(paginas) : DEFAULT_PAGES(), pagina: 0, inicio: HOME_DEFAULT.slice(), mud: {},
     viagem: { L: 0, km: 0, s: 0 }, viagens: [], testes: []
   });
 
@@ -2916,6 +2951,8 @@ const OBD = (() => {
     return o;
   }
   const PERF_TIPOS = ['0-100', '60-100', '100-0', '0-400'];
+  // Campos de cada perfil que se sincronizam um a um (o mais recente ganha)
+  const CAMPOS = ['nome', 'comb', 'cil', 've', 'fator', 'preco', 'afrDiesel', 'vin', 'marca', 'modelo', 'ano', 'manual', 'inicio', 'paginas'];
   function cleanProfile(p) {
     if (!p || typeof p !== 'object') return null;
     const n = newProfile(String(p.nome || 'Carro').trim().slice(0, 40) || 'Carro');
@@ -2949,12 +2986,21 @@ const OBD = (() => {
       acel: num(r.acel, 0), trav: num(r.trav, 0), semConsumo: !!r.semConsumo }));
     n.testes = (Array.isArray(p.testes) ? p.testes : []).filter(r => r && PERF_TIPOS.includes(r.tipo) && typeof r.tempo === 'number').slice(0, 40).map(r => ({
       tipo: r.tipo, nome: String(r.nome || r.tipo).slice(0, 30), tempo: r.tempo, dist: num(r.dist, 0), vfim: num(r.vfim, 0), quando: num(r.quando, Date.now()) }));
+    n.diagnosticos = (Array.isArray(p.diagnosticos) ? p.diagnosticos : []).filter(d => d && typeof d.quando === 'number' && typeof d.relatorio === 'string').slice(0, 30).map(d => ({
+      quando: d.quando, tipo: d.tipo === 'usado' ? 'usado' : 'diag', resumo: String(d.resumo || '').slice(0, 200), relatorio: d.relatorio.slice(0, 20000) }));
+    n.alterado = num(p.alterado, 0);
+    n.mud = {};
+    if (p.mud && typeof p.mud === 'object') for (const k of CAMPOS) if (typeof p.mud[k] === 'number' && isFinite(p.mud[k])) n.mud[k] = p.mud[k];
+    n.limpoViagens = num(p.limpoViagens, 0);
     return n;
   }
   const OPT_DEFAULTS = { uuidExtra: '', pausaMs: 0, ecraLigado: true, escrita: 'auto', estilo: 'cockpit', abrir: 'inicio', somAlerta: true, voz: false, vigia: true, noite: 'auto', brilhoNoite: 30, brilhoDia: 80, brilhoDiaAuto: true, vinNet: true };
   // Opções que fazem sentido levar para outro aparelho (o adaptador guardado e as atualizações ficam em cada um)
   const OPT_COPIA = { estilo: ['cockpit', 'classico', 'hud'], abrir: ['inicio', 'paineis', 'carro'], escrita: ['auto', 'resp', 'noresp'], noite: ['auto', 'on', 'off'],
     ecraLigado: 'bool', somAlerta: 'bool', voz: 'bool', vigia: 'bool', vinNet: 'bool', brilhoDiaAuto: 'bool', pausaMs: [0, 500], brilhoNoite: [5, 100], brilhoDia: [5, 100] };
+  // Opções de cada aparelho (o tablet abre em modo carro, o telemóvel não; cada ecrã tem o seu brilho): não se sincronizam
+  const OPT_LOCAL = ['abrir', 'brilhoNoite', 'brilhoDia', 'brilhoDiaAuto', 'ecraLigado'];
+  const syncOpts = o => { const c = cleanOpts(o); for (const k of OPT_LOCAL) delete c[k]; return c; };
   function cleanOpts(o) {
     const out = {};
     if (!o || typeof o !== 'object') return out;
@@ -2976,13 +3022,46 @@ const OBD = (() => {
     }
     s.opts = Object.assign({}, OPT_DEFAULTS, s.opts || {});
     if (!s.vinCache || typeof s.vinCache !== 'object') s.vinCache = {};
+    if (!s.apagados || typeof s.apagados !== 'object') s.apagados = {};
+    s.optsAlterado = num(s.optsAlterado, 0);
     s.perfis = s.perfis.map(cleanProfile).filter(Boolean);
     if (!s.perfis.length) s.perfis = [newProfile('O meu carro')];
     if (!s.perfis.some(p => p.id === s.ativo)) s.ativo = s.perfis[0].id;
     return s;
   }
   const store = loadStore();
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) { /* sem armazenamento */ } };
+  // Carimbo de alteração: cada perfil e as opções guardam quando mudaram (a sincronização usa-o para escolher o mais recente)
+  const hashStr = t => { let h = 2166136261; for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); };
+  const campoTxt = (p, k) => JSON.stringify(k === 'paginas' ? p.paginas.map(pg => [pg.id, pg.nome, pg.layout]) : p[k] ?? null);
+  const syncPart = p => CAMPOS.map(k => campoTxt(p, k)).join('\u0001');
+  const histSig = p => [p.viagens.length, p.viagens[0] && p.viagens[0].inicio, p.testes.length, p.testes[0] && p.testes[0].quando,
+    p.diagnosticos.length, p.diagnosticos[0] && p.diagnosticos[0].quando, p.limpoViagens].join(',');
+  let lastSig = '', syncHook = null;
+  function stamp() {
+    const now = Date.now();
+    for (const p of store.perfis) {
+      const h = hashStr(syncPart(p));
+      if (p._h === h) continue;
+      // cada campo guarda quando mudou: na sincronização, ganha o mais recente campo a campo
+      const hs = p._hc || {};
+      const novo = p._h === undefined && !p.alterado;
+      for (const k of CAMPOS) { const hk = hashStr(campoTxt(p, k)); if (hs[k] !== hk) { if (hs[k] !== undefined || novo) p.mud[k] = now; hs[k] = hk; } }
+      p._hc = hs;
+      if (p._h !== undefined || !p.alterado) p.alterado = now;
+      p._h = h;
+    }
+    const oh = hashStr(JSON.stringify(syncOpts(store.opts)));
+    if (store._oh !== oh) { if (store._oh !== undefined || !store.optsAlterado) store.optsAlterado = now; store._oh = oh; }
+    const sig = hashStr(store.perfis.map(p => p._h + histSig(p)).join('|') + store._oh + JSON.stringify(store.apagados));
+    const mudou = sig !== lastSig;
+    lastSig = sig;
+    return mudou;
+  }
+  const save = () => {
+    const mudou = stamp();
+    try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) { /* sem armazenamento */ }
+    if (mudou && syncHook) syncHook();
+  };
   const prof = () => store.perfis.find(p => p.id === store.ativo) || store.perfis[0];
   save();   // guarda já o formato novo (páginas), para as ids das páginas não mudarem
   const curPage = () => { const p = prof(); return p.paginas[p.pagina] || p.paginas[0]; };
@@ -4454,6 +4533,8 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
       });
       logLine('info', `Diagnóstico: ${st.diag.codes.map(c => c.code).join(', ') || 'sem códigos'}`);
       $('#scanStep').hidden = true;
+      const sx = statusNow();
+      addHistorico('diag', `${sx && sx.mil ? 'Luz do motor acesa · ' : ''}${st.diag.codes.length ? st.diag.codes.map(c => c.code).join(', ') : 'Sem códigos de avaria'}`);
     } catch (e) { step(e.code === 'GONE' ? e.message : errorText(e)); }
     st.scanning = false;
     renderDiag();
@@ -4579,6 +4660,42 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
     a.download = `diagnostico${vin}-${new Date().toISOString().slice(0, 10)}.txt`;
     document.body.append(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  });
+
+  /* ---------- Histórico de diagnósticos de cada carro ---------- */
+  function addHistorico(tipo, resumo) {
+    if (st.mode !== 'on') return;                 // a demonstração não fica no histórico
+    const p = prof();
+    p.diagnosticos.unshift({ quando: Date.now(), tipo, resumo: resumo.slice(0, 200), relatorio: buildReport().slice(0, 20000) });
+    if (p.diagnosticos.length > 30) p.diagnosticos.length = 30;
+    save(); renderHistorico();
+  }
+  function renderHistorico() {
+    const list = prof().diagnosticos;
+    $('#histCount').textContent = list.length ? `${list.length} ${list.length === 1 ? 'registo' : 'registos'}` : '';
+    const html = list.map((d, i) => `<li data-i="${i}"><div class="g-t"><b>${esc(cap(fmtDia(d.quando)))} · ${fmtHora(d.quando)}</b><span>${d.tipo === 'usado' ? '' : 'Diagnóstico · '}${esc(d.resumo)}</span></div>
+<div class="actions"><button type="button" class="btn small" data-h="ver">Ver</button><button type="button" class="btn small ghost" data-h="share">Partilhar</button></div></li>`).join('');
+    const el = $('#histList');
+    if (el.innerHTML !== html) el.innerHTML = html;
+    $('#histEmpty').hidden = list.length > 0;
+  }
+  $('#histList').addEventListener('click', async e => {
+    const b = e.target.closest('[data-h]');
+    if (!b) return;
+    const d = prof().diagnosticos[+b.closest('li').dataset.i];
+    if (!d) return;
+    if (b.dataset.h === 'ver') {
+      openDlg(`<div class="dlg-head"><h2 id="dlgTitle">${esc(cap(fmtDia(d.quando)))} · ${fmtHora(d.quando)}</h2><button type="button" class="btn small ghost" data-act="close">Fechar</button></div>
+<div class="dlg-body"><pre class="report">${esc(d.relatorio)}</pre></div>`);
+      dlg.querySelector('[data-act="close"]').addEventListener('click', () => dlg.close());
+      return;
+    }
+    const Sh = NATIVE && plug('Share');
+    try {
+      if (Sh) await Sh.share({ title: 'Relatório de diagnóstico', text: d.relatorio, dialogTitle: 'Partilhar relatório' });
+      else if (navigator.share) await navigator.share({ title: 'Relatório de diagnóstico', text: d.relatorio });
+      else copyText(d.relatorio, 'Relatório copiado.');
+    } catch (x) { if (x.name !== 'AbortError' && !/cancel/i.test(nativeMsg(x))) copyText(d.relatorio, 'Relatório copiado.'); }
   });
 
   /* ---------- Testes de desempenho ---------- */
@@ -5086,6 +5203,8 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
       if (st.elm !== elm) throw Object.assign(new Error('A ligação terminou a meio da verificação.'), { code: 'GONE' });
       st.usado = { ...r, quando: Date.now(), vin: info.vin, demo: st.mode === 'demo' };
       logLine('info', 'Verificação de carro usado feita');
+      const ck = usadoChecks(st.usado);
+      addHistorico('usado', 'Verificação de carro usado · ' + ck.filter(c => c.cls === 'crit' || c.cls === 'warn').map(c => `${c.t}: ${c.chip}`).join(' · ').slice(0, 150) || 'Verificação de carro usado · sem alertas');
     } catch (e) { toast(e.code === 'GONE' ? e.message : errorText(e), 5000); }
     st.usadoBusy = false;
     renderUsado();
@@ -5209,11 +5328,12 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
       gravs.unshift(rec);
       if (gravs.length > 10) gravs.length = 10;
       saveGravs();
+      if (syncHook) syncHook();
       if (!quiet) toast('Gravação guardada em Viagens.');
     } else if (!quiet) toast('Gravação demasiado curta: não ficou guardada.');
     renderGrav(); renderStatus();
   }
-  const gravDur = g => (g.rows.length ? g.rows[g.rows.length - 1][0] : 0);
+  const gravDur = g => (g.rows && g.rows.length ? g.rows[g.rows.length - 1][0] : g.dur || 0);
   function renderGrav() {
     const g = st.grav;
     $('#gravChip').hidden = !g;
@@ -5222,7 +5342,7 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
     b.textContent = g ? 'Parar e guardar' : 'Começar a gravar';
     b.classList.toggle('danger', !!g); b.classList.toggle('primary', !g);
     const html = gravs.map((r, i) => `<li data-i="${i}"><div class="g-t"><b>${esc(cap(fmtDia(r.inicio)))} · ${fmtHora(r.inicio)}${r.demo ? ' · simulado' : ''}</b>
-<span>${fmtDur(gravDur(r))} · ${r.ch.length} ${r.ch.length === 1 ? 'valor' : 'valores'}: ${esc(r.ch.map(id => (S[id] ? S[id].nome : id)).join(', '))}</span></div>
+<span>${fmtDur(gravDur(r))} · ${r.ch.length} ${r.ch.length === 1 ? 'valor' : 'valores'}: ${esc(r.ch.map(id => (S[id] ? S[id].nome : id)).join(', '))}${r.remoto ? ' · no GitHub (descarrega ao abrir)' : ''}</span></div>
 <div class="actions"><button type="button" class="btn small" data-g="ver">Ver</button><button type="button" class="btn small ghost" data-g="csv">CSV</button><button type="button" class="btn small danger-text" data-g="del">Apagar</button></div></li>`).join('');
     const list = $('#gravList');
     if (list.innerHTML !== html) list.innerHTML = html;
@@ -5234,10 +5354,11 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
     if (!b) return;
     const i = +b.closest('li').dataset.i, r = gravs[i];
     if (!r) return;
-    if (b.dataset.g === 'ver') openGravViewer(r);
-    else if (b.dataset.g === 'csv') exportCsv(r);
+    if (b.dataset.g === 'ver') withRows(r).then(ok => ok && openGravViewer(r));
+    else if (b.dataset.g === 'csv') withRows(r).then(ok => ok && exportCsv(r));
     else if (gravDelArmed.i === i && Date.now() - gravDelArmed.t < 3000) {
       gravs.splice(i, 1); saveGravs(); gravDelArmed = { i: -1, t: 0 }; renderGrav(); toast('Gravação apagada.');
+      if (!r.demo) { store.apagados['g:' + r.id] = Date.now(); save(); }
     } else { gravDelArmed = { i, t: Date.now() }; b.textContent = 'Toca de novo'; setTimeout(() => { if (b.isConnected) b.textContent = 'Apagar'; }, 3000); }
   });
   function gravCsv(r) {
@@ -5401,6 +5522,7 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
   $('#btnTripsNo').addEventListener('click', () => { $('#tripsConfirm').hidden = true; });
   $('#btnTripsYes').addEventListener('click', () => {
     tripsList().length = 0;
+    if (st.mode !== 'demo') prof().limpoViagens = Date.now();
     if (st.mode !== 'demo') save();
     $('#tripsConfirm').hidden = true;
     renderViagens(); toast('Histórico apagado.');
@@ -5553,6 +5675,7 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
     $('#oAbrir').value = store.opts.abrir || 'inicio';
     renderAvisos();
     renderNoite();
+    renderSync();
     renderStylePick();
   }
 
@@ -5601,6 +5724,7 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
   $('#btnDelYes').addEventListener('click', () => {
     const nome = prof().nome;
     st.rec = null;
+    store.apagados[store.ativo] = Date.now();
     store.perfis = store.perfis.filter(p => p.id !== store.ativo);
     store.ativo = store.perfis[0].id; save();
     $('#delProfileConfirm').hidden = true;
@@ -5979,9 +6103,343 @@ ${p.vin ? '' : `<button type="button" class="btn" data-a="novo">É outro carro</
     });
   }
 
+  /* ==========================================================================
+     SINCRONIZAÇÃO ENTRE APARELHOS (telemóvel e tablet) PELO GITHUB
+     Um repositório PRIVADO do utilizador guarda dados.json (perfis, opções, histórico)
+     e uma pasta gravacoes/ com cada gravação. O token fica só neste aparelho.
+     ========================================================================== */
+  const SYNC_KEY = 'mostrador-obd.sync';
+  const SY_BASE = { repo: '', token: '', nome: '', dev: '', ligado: false, ultimo: 0, ultimoPor: '', erro: '', limpos: [] };
+  const SY = (() => { try { return Object.assign({}, SY_BASE, JSON.parse(localStorage.getItem(SYNC_KEY)) || {}); } catch (e) { return { ...SY_BASE }; } })();
+  if (!SY.dev) SY.dev = newId();
+  if (!Array.isArray(SY.limpos)) SY.limpos = [];
+  const saveSY = () => { try { localStorage.setItem(SYNC_KEY, JSON.stringify(SY)); } catch (e) { /* sem armazenamento */ } };
+  const DADOS = 'dados.json';
+  const b64enc = str => {
+    const bytes = new TextEncoder().encode(str);
+    let bin = '';
+    for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    return btoa(bin);
+  };
+  const b64dec = b64 => new TextDecoder().decode(Uint8Array.from(atob(String(b64).replace(/\s/g, '')), c => c.charCodeAt(0)));
+  async function gh(method, path, body, accept) {
+    const url = `https://api.github.com/repos/${SY.repo}${path ? '/' + path : ''}`;
+    return fetch(url, {
+      method, cache: 'no-store',
+      headers: { Authorization: `Bearer ${SY.token}`, Accept: accept || 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', ...(body ? { 'Content-Type': 'application/json' } : {}) },
+      body: body ? JSON.stringify(body) : undefined
+    });
+  }
+  const ghErr = r => new Error(
+    r.status === 401 ? 'O token não é válido ou expirou. Cria um novo no GitHub.'
+      : r.status === 403 ? 'O token não tem autorização para este repositório (precisa de Contents: Read and write), ou o GitHub limitou os pedidos.'
+        : r.status === 404 ? 'Repositório não encontrado, ou o token não tem acesso a ele.'
+          : `Erro do GitHub (${r.status}).`);
+  async function ghGetFile(name) {
+    const r = await gh('GET', `contents/${name}`);
+    if (r.status === 404) return null;
+    if (!r.ok) throw ghErr(r);
+    const j = await r.json();
+    let txt;
+    if (j.encoding === 'base64' && j.content) txt = b64dec(j.content);
+    else {                                         // ficheiros com mais de 1 MB vêm à parte
+      const r2 = await gh('GET', `contents/${name}`, null, 'application/vnd.github.raw+json');
+      if (!r2.ok) throw ghErr(r2);
+      txt = await r2.text();
+    }
+    return { sha: j.sha, txt };
+  }
+  async function ghPutFile(name, txt, sha, msg) {
+    const r = await gh('PUT', `contents/${name}`, { message: msg, content: b64enc(txt), ...(sha ? { sha } : {}) });
+    if (r.status === 409 || r.status === 422) return 'conflito';   // alguém mudou o ficheiro entretanto
+    if (!r.ok) throw ghErr(r);
+    return 'ok';
+  }
+  async function ghDelete(name) {
+    const g = await gh('GET', `contents/${name}`);
+    if (g.status === 404) return;
+    if (!g.ok) throw ghErr(g);
+    const j = await g.json();
+    await gh('DELETE', `contents/${name}`, { message: `Apagar ${name}`, sha: j.sha });
+  }
+
+  /* ---------- Juntar os dados dos dois aparelhos ---------- */
+  const gravMeta = g => ({ id: g.id, inicio: g.inicio, fim: g.fim, ch: g.ch, perfil: g.perfil || '', vin: g.vin || '', dur: gravDur(g) });
+  function localData() {
+    return {
+      perfis: store.perfis.map(p => { const c = JSON.parse(JSON.stringify(p)); delete c._h; delete c._hc; delete c.pagina; delete c.viagem; return c; }),
+      apagados: { ...store.apagados },
+      opts: syncOpts(store.opts), optsAlterado: store.optsAlterado || 0,
+      vinCache: { ...store.vinCache },
+      gravacoes: gravs.filter(g => !g.demo && (g.nuvem || g.remoto)).map(gravMeta)
+    };
+  }
+  const maxObj = (a, b) => {
+    const o = {};
+    for (const src of [a || {}, b || {}]) for (const [k, v] of Object.entries(src)) if (typeof v === 'number' && isFinite(v) && !(o[k] >= v)) o[k] = v;
+    return o;
+  };
+  const unir = (a, b, key, n) => {
+    const m = new Map();
+    for (const x of [...(a || []), ...(b || [])]) { const k = x && key(x); if (typeof k === 'number' && !m.has(k)) m.set(k, x); }
+    return [...m.values()].sort((x, y) => key(y) - key(x)).slice(0, n);
+  };
+  // Perfil: a configuração mais recente ganha; o histórico junta-se
+  function juntaPerfil(a, b) {
+    const o = { ...((b.alterado || 0) > (a.alterado || 0) ? b : a) };
+    const ma = a.mud || {}, mb = b.mud || {};
+    o.mud = {};
+    for (const k of CAMPOS) {
+      const ta = ma[k] || 0, tb = mb[k] || 0;
+      if (ta || tb) { o[k] = tb > ta ? b[k] : a[k]; o.mud[k] = Math.max(ta, tb); }
+    }
+    o.alterado = Math.max(a.alterado || 0, b.alterado || 0);
+    o.limpoViagens = Math.max(a.limpoViagens || 0, b.limpoViagens || 0);
+    o.viagens = unir(a.viagens, b.viagens, r => r.inicio, 60).filter(r => r.inicio > o.limpoViagens);
+    o.testes = unir(a.testes, b.testes, r => r.quando, 40);
+    o.diagnosticos = unir(a.diagnosticos, b.diagnosticos, r => r.quando, 30);
+    return o;
+  }
+  function juntaDados(loc, rem) {
+    if (!rem) return loc;
+    const apagados = maxObj(loc.apagados, rem.apagados);
+    const m = new Map();
+    for (const p of loc.perfis) m.set(p.id, p);
+    for (const p of Array.isArray(rem.perfis) ? rem.perfis : []) if (p && p.id) m.set(p.id, m.has(p.id) ? juntaPerfil(m.get(p.id), p) : p);
+    const perfis = [...m.values()].filter(p => !(apagados[p.id] >= (p.alterado || 0)));
+    const vinCache = { ...(rem.vinCache || {}) };
+    for (const [k, v] of Object.entries(loc.vinCache || {})) if (!vinCache[k] || (v.quando || 0) > (vinCache[k].quando || 0)) vinCache[k] = v;
+    const gm = new Map();
+    for (const g of [...(loc.gravacoes || []), ...(rem.gravacoes || [])]) if (g && g.id && !gm.has(g.id) && !apagados['g:' + g.id]) gm.set(g.id, g);
+    const remOpts = (rem.optsAlterado || 0) > (loc.optsAlterado || 0);
+    return {
+      perfis, apagados, vinCache,
+      opts: remOpts ? rem.opts : loc.opts, optsAlterado: Math.max(loc.optsAlterado || 0, rem.optsAlterado || 0),
+      gravacoes: [...gm.values()].sort((a, b) => (b.inicio || 0) - (a.inicio || 0)).slice(0, 30)
+    };
+  }
+  // Perfil ainda como veio de origem (nunca mexido): não vale a pena juntá-lo aos do outro aparelho
+  const virgem = p => !p.vin && !p.marca && !p.modelo && !p.viagens.length && !p.testes.length && !p.diagnosticos.length && p.nome === 'O meu carro'
+    && JSON.stringify(p.paginas.map(pg => [pg.nome, pg.layout])) === JSON.stringify(DEFAULT_PAGES().map(pg => [pg.nome, pg.layout]));
+
+  let aplicando = false;
+  function aplicaDados(d) {
+    const antes = hashStr(JSON.stringify(localData()) + store.ativo);
+    const loc = new Map(store.perfis.map(p => [p.id, p]));
+    let perfis = (d.perfis || []).slice(0, 20).map(src => {
+      const p = cleanProfile(src);
+      if (!p) return null;
+      const l = loc.get(p.id);
+      if (l) { p.pagina = Math.min(l.pagina, p.paginas.length - 1); p.viagem = l.viagem; }   // página aberta e viagem em curso são de cada aparelho
+      return p;
+    }).filter(Boolean);
+    if (!perfis.length) perfis = [newProfile('O meu carro')];
+    store.perfis = perfis;
+    if (!perfis.some(p => p.id === store.ativo)) store.ativo = perfis[0].id;
+    store.apagados = maxObj(d.apagados, {});
+    Object.assign(store.opts, syncOpts(d.opts));
+    store.optsAlterado = num(d.optsAlterado, 0);
+    const vc = {};
+    for (const [k, v] of Object.entries(d.vinCache || {}).slice(-30)) {
+      if (!/^[A-HJ-NPR-Z0-9]{17}$/.test(k) || !v || typeof v !== 'object') continue;
+      const o = { quando: num(v.quando, 0), vazio: !!v.vazio };
+      for (const f of ['marca', 'modelo', 'comb']) if (typeof v[f] === 'string') o[f] = v[f].slice(0, 40);
+      for (const f of ['ano', 'cil', 'cilindros']) if (typeof v[f] === 'number' && isFinite(v[f])) o[f] = v[f];
+      vc[k] = o;
+    }
+    store.vinCache = vc;
+    // Gravações: as do outro aparelho aparecem na lista e descarregam-se quando as abres
+    const metas = new Map((d.gravacoes || []).filter(g => g && typeof g.id === 'string' && /^[\w-]{1,40}$/.test(g.id)).map(g => [g.id, g]));
+    gravs = gravs.filter(g => !store.apagados['g:' + g.id]);
+    for (const [id, g] of metas) if (!gravs.some(x => x.id === id)) {
+      const ch = Array.isArray(g.ch) ? g.ch.filter(c => S[c]).slice(0, 10) : [];
+      if (!ch.length || typeof g.inicio !== 'number') continue;
+      gravs.push({ id, inicio: g.inicio, fim: num(g.fim, g.inicio), ch, perfil: String(g.perfil || '').slice(0, 40), vin: String(g.vin || '').slice(0, 17), dur: num(g.dur, 0), rows: null, remoto: true, nuvem: true });
+    }
+    gravs.sort((a, b) => b.inicio - a.inicio);
+    aplicando = true;
+    try { save(); saveGravs(); } finally { aplicando = false; }
+    const mudou = antes !== hashStr(JSON.stringify(localData()) + store.ativo);
+    if (mudou) {
+      document.documentElement.dataset.estilo = estilo();
+      $('#stylePick').dataset.cur = '';
+      refreshPollList(); renderAll(); renderGrav();
+    }
+    return mudou;
+  }
+
+  /* ---------- Sincronizar ---------- */
+  let syncing = false, syncTimer = null, syncPend = false;
+  function syncSoon(ms = 15000) {
+    if (!SY.ligado || aplicando) return;
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(() => syncNow(), ms);
+  }
+  syncHook = () => syncSoon();
+  async function sobeGravacoes() {
+    let mudou = false;
+    for (const g of gravs) {
+      if (g.nuvem || g.remoto || g.demo || !g.rows) continue;
+      const txt = JSON.stringify({ id: g.id, inicio: g.inicio, fim: g.fim, ch: g.ch, rows: g.rows, perfil: g.perfil, vin: g.vin });
+      await ghPutFile(`gravacoes/${g.id}.json`, txt, null, `Gravação de ${fmtData(g.inicio)}`);   // «conflito» = já lá está
+      g.nuvem = true; mudou = true;
+    }
+    if (mudou) saveGravs();
+  }
+  async function syncNow(manual) {
+    if (!SY.ligado) return false;
+    if (syncing) { syncPend = true; return false; }
+    if (navigator.onLine === false) { SY.erro = 'Sem internet. Tento outra vez quando voltar.'; renderSync(); return false; }
+    syncing = true; renderSync();
+    let recebeu = false;
+    try {
+      for (let tent = 0; tent < 4; tent++) {
+        const rem = await ghGetFile(DADOS);
+        let remData = null;
+        if (rem) {
+          try { remData = JSON.parse(rem.txt); } catch (e) { throw new Error('O ficheiro dados.json do repositório está estragado.'); }
+          if (!remData || remData.app !== 'mostrador-obd-sync') throw new Error('O repositório tem um dados.json que não é desta app. Usa um repositório só para isto.');
+        }
+        if (aplicaDados(juntaDados(localData(), remData))) recebeu = true;
+        await sobeGravacoes();
+        const final = { app: 'mostrador-obd-sync', formato: 1, ...localData(), atualizado: Date.now(), por: SY.nome || 'aparelho', dev: SY.dev };
+        const semCarimbo = o => JSON.stringify({ ...o, atualizado: 0, por: '', dev: '' });
+        if (remData && semCarimbo(remData) === semCarimbo(final)) { SY.ultimoPor = remData.por || ''; break; }
+        if (await ghPutFile(DADOS, JSON.stringify(final), rem && rem.sha, `Sincronizar (${SY.nome || 'aparelho'})`) === 'conflito') {
+          if (tent === 3) throw new Error('O outro aparelho está a sincronizar ao mesmo tempo. Tenta daqui a pouco.');
+          await OBD.sleep(800 + Math.random() * 800);
+          continue;
+        }
+        SY.ultimoPor = SY.nome;
+        break;
+      }
+      // Gravações apagadas: tira também o ficheiro do repositório
+      for (const k of Object.keys(store.apagados)) {
+        if (!k.startsWith('g:') || SY.limpos.includes(k)) continue;
+        try { await ghDelete(`gravacoes/${k.slice(2)}.json`); SY.limpos.push(k); } catch (e) { /* fica para a próxima */ }
+      }
+      if (SY.limpos.length > 200) SY.limpos = SY.limpos.slice(-200);
+      SY.ultimo = Date.now(); SY.erro = '';
+      if (recebeu && !manual) toast('Dados atualizados com o outro aparelho.', 3000);
+      if (manual) toast(recebeu ? 'Sincronizado: recebi alterações do outro aparelho.' : 'Sincronizado.');
+    } catch (e) {
+      SY.erro = (e && e.message) || String(e);
+      if (/Failed to fetch|NetworkError|Load failed/i.test(SY.erro)) SY.erro = 'Sem ligação ao GitHub. Tento outra vez mais tarde.';
+      logLine('err', 'Sincronização: ' + SY.erro);
+      if (manual) toast(SY.erro, 6000);
+    } finally {
+      syncing = false; saveSY(); renderSync();
+      if (syncPend) { syncPend = false; syncSoon(3000); }
+    }
+    return !SY.erro;
+  }
+
+  // Gravação de outro aparelho: descarrega-a quando a abres
+  async function withRows(g) {
+    if (g.rows) return true;
+    if (!SY.ligado) { toast('Esta gravação está no GitHub. Liga a sincronização para a abrir.'); return false; }
+    try {
+      toast('A descarregar a gravação…', 2500);
+      const f = await ghGetFile(`gravacoes/${g.id}.json`);
+      if (!f) throw new Error('já não está no GitHub');
+      const d = JSON.parse(f.txt);
+      if (!Array.isArray(d.rows)) throw new Error('ficheiro estragado');
+      g.rows = d.rows.filter(r => Array.isArray(r) && r.length === g.ch.length + 1).map(r => r.map(v => (typeof v === 'number' && isFinite(v) ? v : null)));
+      g.remoto = false; g.nuvem = true;
+      saveGravs(); renderGrav();
+      return true;
+    } catch (e) { toast('Não consegui descarregar a gravação: ' + ((e && e.message) || e), 5000); return false; }
+  }
+
+  /* ---------- Ligar, desligar e estado ---------- */
+  async function syncLigar() {
+    const repo = $('#syRepo').value.trim().replace(/^https?:\/\/github\.com\//i, '').replace(/\.git$/i, '').replace(/\/+$/, '');
+    const token = $('#syToken').value.trim();
+    const nome = $('#syNome').value.trim().slice(0, 24) || (Math.min(screen.width, screen.height) >= 600 ? 'Tablet' : 'Telemóvel');
+    if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) { toast('Escreve o repositório como dono/nome, ex.: Bernas717/mostrador_dados.', 5000); return; }
+    if (repoOK() && repo.toLowerCase() === UPDATE_REPO.toLowerCase()) { toast('Esse é o repositório da app, que é público. Cria um repositório privado só para os dados.', 6000); return; }
+    if (!/^(github_pat_|ghp_)\w{20,}$/.test(token)) { toast('O token não parece certo: começa por github_pat_ (ou ghp_).', 5000); return; }
+    Object.assign(SY, { repo, token, nome, erro: '' });
+    syncing = true; renderSync('A verificar o repositório…');
+    let rem = null;
+    try {
+      const r = await gh('GET', '');
+      if (!r.ok) throw ghErr(r);
+      const j = await r.json();
+      if (!j.private) throw new Error('Este repositório é público: qualquer pessoa veria os teus dados. Torna-o privado ou cria outro.');
+      rem = await ghGetFile(DADOS);
+    } catch (e) {
+      syncing = false; SY.token = ''; SY.erro = (e && e.message) || String(e);
+      if (/Failed to fetch|NetworkError|Load failed/i.test(SY.erro)) SY.erro = 'Sem ligação ao GitHub. Confirma a internet.';
+      saveSY(); renderSync(); toast(SY.erro, 6000);
+      return;
+    }
+    syncing = false;
+    if (!rem) {                                   // primeiro aparelho: envia o que tem
+      SY.ligado = true; saveSY();
+      if (await syncNow()) toast(`Ligado ao GitHub. O ${nome} enviou os dados; liga agora o outro aparelho.`, 5000);
+      return;
+    }
+    let remData = null;
+    try { remData = JSON.parse(rem.txt); } catch (e) { remData = null; }
+    if (!remData || remData.app !== 'mostrador-obd-sync') { SY.token = ''; SY.erro = 'O repositório tem um dados.json que não é desta app. Usa um repositório só para isto.'; saveSY(); renderSync(); toast(SY.erro, 6000); return; }
+    const n = (remData.perfis || []).length;
+    openDlg(`<div class="dlg-head"><h2 id="dlgTitle">Já há dados no GitHub</h2></div>
+<div class="dlg-body"><p>${n} ${n === 1 ? 'perfil' : 'perfis'}, enviados por «${esc(String(remData.por || 'outro aparelho').slice(0, 24))}»${remData.atualizado ? ` em ${esc(fmtData(remData.atualizado))}` : ''}.</p>
+<p class="hint"><b>Usar os do GitHub</b>: este aparelho fica igual ao outro (os perfis daqui são substituídos; as gravações daqui ficam). <b>Juntar</b>: fica com os dois. O perfil de origem «O meu carro», se nunca foi mexido, não é juntado.</p></div>
+<div class="dlg-foot"><button type="button" class="btn ghost" data-a="cancel">Cancelar</button><span class="spacer"></span>
+<button type="button" class="btn" data-a="juntar">Juntar</button><button type="button" class="btn primary" data-a="usar">Usar os do GitHub</button></div>`);
+    dlg.querySelector('.dlg-foot').addEventListener('click', async e => {
+      const b = e.target.closest('[data-a]');
+      if (!b) return;
+      dlg.close();
+      if (b.dataset.a === 'cancel') { SY.token = ''; saveSY(); renderSync(); return; }
+      if (b.dataset.a === 'usar') {
+        aplicaDados(juntaDados({ perfis: [], apagados: {}, opts: remData.opts, optsAlterado: 0, vinCache: store.vinCache, gravacoes: [] }, remData));
+      } else {
+        const sobram = store.perfis.filter(p => !virgem(p));
+        if (sobram.length && sobram.length < store.perfis.length) { store.perfis = sobram; if (!sobram.some(p => p.id === store.ativo)) store.ativo = sobram[0].id; }
+        else if (!sobram.length) { store.perfis = []; }
+        if (!store.perfis.length) aplicaDados(juntaDados({ perfis: [], apagados: {}, opts: remData.opts, optsAlterado: 0, vinCache: store.vinCache, gravacoes: [] }, remData));
+      }
+      SY.ligado = true; saveSY();
+      if (await syncNow()) toast(`Ligado ao GitHub como «${nome}».`, 4000);
+    });
+  }
+  function renderSync(msg) {
+    const st0 = $('#syncStatus');
+    let html, cls = '';
+    if (syncing) html = `<b>${esc(msg || 'A sincronizar…')}</b>`;
+    else if (!SY.ligado) { html = SY.erro ? `<b>Não ligado.</b> ${esc(SY.erro)}` : 'Não ligado. Prepara o repositório e o token (vê «Como preparar»), preenche os campos e toca em Ligar.'; cls = SY.erro ? 'bad' : ''; }
+    else if (SY.erro) { html = `<b>Ligado a ${esc(SY.repo)}, mas a última sincronização falhou.</b> ${esc(SY.erro)}`; cls = 'bad'; }
+    else {
+      html = `<b>Ligado como «${esc(SY.nome)}»</b> a ${esc(SY.repo)}.` + (SY.ultimo ? ` Última sincronização: ${fmtDataCurta(new Date(SY.ultimo).toISOString())} às ${fmtHora(SY.ultimo)}.` : '') +
+        (SY.ultimoPor && SY.ultimoPor !== SY.nome ? ` Os dados mais recentes vieram do «${esc(SY.ultimoPor)}».` : '');
+      cls = 'ok';
+    }
+    st0.innerHTML = html; st0.className = 'upd-status ' + cls;
+    $('#syRepo').value = SY.repo || $('#syRepo').value;
+    $('#syNome').value = SY.nome || $('#syNome').value;
+    $('#syRepo').disabled = $('#syNome').disabled = SY.ligado;
+    $('#syToken').closest('.field').hidden = SY.ligado;
+    if (!SY.ligado) $('#syToken').value = '';
+    $('#btnSyncLigar').hidden = SY.ligado; $('#btnSyncLigar').disabled = syncing;
+    $('#btnSyncAgora').hidden = !SY.ligado; $('#btnSyncAgora').disabled = syncing;
+    $('#btnSyncDesligar').hidden = !SY.ligado;
+  }
+  $('#btnSyncLigar').addEventListener('click', syncLigar);
+  $('#btnSyncAgora').addEventListener('click', () => syncNow(true));
+  $('#btnSyncDesligar').addEventListener('click', () => {
+    Object.assign(SY, { ligado: false, token: '', erro: '' });
+    clearTimeout(syncTimer); saveSY(); renderSync();
+    toast('Sincronização desligada. Os dados ficam neste aparelho; o token foi apagado daqui.', 5000);
+  });
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && SY.ligado && Date.now() - SY.ultimo > 60000) syncSoon(1500); });
+  setInterval(() => { if (SY.ligado && document.visibilityState !== 'hidden') syncNow(); }, 10 * 60000);
+
   /* ---------- Separadores e botões do topo ---------- */
   const VIEWS = ['inicio', 'paineis', 'diag', 'testes', 'viagens', 'definicoes'];
-  function renderAllViews() { renderDiag(); renderPerf(); renderBat(); renderMix(); renderO2(); renderUsado(); renderGrav(); renderViagens(); renderLigacao(); renderStatus(); }
+  function renderAllViews() { renderDiag(); renderHistorico(); renderPerf(); renderBat(); renderMix(); renderO2(); renderUsado(); renderGrav(); renderViagens(); renderLigacao(); renderStatus(); }
   function renderAll() { renderAjustes(); renderGrid(); renderHome(); renderAllViews(); }
   function showView(v) {
     st.view = v;
@@ -6200,6 +6658,7 @@ ${p.vin ? '' : `<button type="button" class="btn" data-a="novo">É outro carro</
   renderUpdates();
   document.querySelectorAll(NATIVE ? '.only-web' : '.only-app').forEach(el => { el.hidden = true; });
   if (NATIVE && repoOK() && store.opts.updAuto !== false) setTimeout(() => checkUpdates(true), 1500);
+  if (SY.ligado) setTimeout(() => syncNow(), 2500);
   requestAnimationFrame(frame);
   setInterval(tick, 1000);
   setInterval(sampleGraphs, 250);
