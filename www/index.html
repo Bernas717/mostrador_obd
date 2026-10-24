@@ -9,7 +9,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=B612+Mono:wght@400;700&family=Barlow+Semi+Condensed:wght@600;700&family=Barlow:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=B612+Mono:wght@400;700&family=Barlow+Semi+Condensed:wght@600;700&family=Barlow:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
 <style>
 /* Layout: ecrã único de quadrante — barra de estado em cima, grelha de mostradores que se adapta
    ao telemóvel na vertical e na horizontal, separadores em baixo ao alcance do polegar.
@@ -105,6 +105,7 @@ button { cursor: pointer; }
 .pill[data-state="demo"] { background: var(--accent-soft); color: var(--accent); }
 .pill[data-state="connecting"] { background: var(--warn-soft); color: var(--warn); }
 .pill[data-state="lost"] { background: var(--crit-soft); color: var(--crit); }
+.pill[data-state="wait"] { background: var(--warn-soft); color: var(--warn); }
 .pill[data-state="connecting"] .dot, .pill[data-state="lost"] .dot { animation: blink 1s steps(2, start) infinite; }
 @keyframes blink { to { visibility: hidden; } }
 
@@ -753,6 +754,7 @@ dialog::backdrop { background: rgba(6, 10, 14, .55); }
           <div class="card">
             <h2>Adaptador</h2>
             <dl class="kv" id="kvAdapter"></dl>
+            <div class="actions only-app"><button class="btn small ghost" id="btnPickOther" type="button">Ligar a outro adaptador</button></div>
           </div>
           <div class="card">
             <h2>Veículo</h2>
@@ -1502,9 +1504,17 @@ const OBD = (() => {
       this.lock = Promise.resolve();
       this.gap = opts.gapMs || 0;
       this.log = opts.log || (() => {});
+      this.needSync = false;
+      this.sink = null;
       transport.onData(s => this._onData(s));
     }
     _onData(s) {
+      const k = this.sink;
+      if (k) {                                           // a deitar fora restos de respostas antigas
+        k.buf += s;
+        if (k.buf.indexOf('>') >= 0) { this.sink = null; k.done(); }
+        return;
+      }
       const p = this.pending;
       if (!p) return;                                    // resposta atrasada: ignora
       p.buf += s;
@@ -1515,11 +1525,40 @@ const OBD = (() => {
         p.resolve(p.buf.slice(0, i));
       }
     }
+    // Espera por um ">" (fim de resposta) e deita fora o que vier antes
+    _waitPrompt(ms) {
+      return new Promise(res => {
+        const k = { buf: '', done: () => { clearTimeout(k.t); res(true); } };
+        k.t = setTimeout(() => { if (this.sink === k) this.sink = null; res(false); }, ms);
+        this.sink = k;
+      });
+    }
+    // Volta a acertar o passo com o ELM327. Depois de uma resposta perdida, a resposta atrasada
+    // chegava como se fosse do comando seguinte e tudo ficava trocado até reiniciar a app.
+    // Usa "ATI" (inofensivo): um Enter sozinho repetia o último comando, que podia ser "04" (apagar erros).
+    async sync(firstWait = 1500) {
+      this.needSync = false;
+      if (!(await this._waitPrompt(firstWait))) {
+        try { await this.t.write('ATI\r'); } catch (e) { e.code = e.code || 'WRITE'; throw e; }
+        if (!(await this._waitPrompt(3500))) { this.needSync = true; throw new ElmError('DEAD', 'O adaptador deixou de responder.'); }
+      }
+      while (await this._waitPrompt(350)) { /* podem vir dois ">" (STOPPED e a resposta ao ATI) */ }
+    }
     cmd(command, timeout = 2000, quiet = false) {
-      const run = () => new Promise((resolve, reject) => {
+      const run = async () => {
+        if (this.needSync) await this.sync();
+        return this._send(command, timeout, quiet);
+      };
+      const job = this.lock.then(run, run);
+      this.lock = job.then(() => (this.gap ? sleep(this.gap) : null), () => sleep(Math.max(this.gap, 150)));
+      return job;
+    }
+    _send(command, timeout, quiet) {
+      return new Promise((resolve, reject) => {
         const p = { buf: '', resolve: r => { if (!quiet) this.log('rx', r); resolve(r); } };
         p.timer = setTimeout(() => {
           if (this.pending === p) this.pending = null;
+          this.needSync = true;
           if (!quiet) this.log('err', `${command}: sem resposta (${timeout} ms)`);
           const e = new Error('Sem resposta do adaptador'); e.code = 'TIMEOUT'; reject(e);
         }, timeout);
@@ -1531,9 +1570,6 @@ const OBD = (() => {
           e.code = e.code || 'WRITE'; reject(e);
         });
       });
-      const job = this.lock.then(run, run);
-      this.lock = job.then(() => (this.gap ? sleep(this.gap) : null), () => sleep(Math.max(this.gap, 150)));
-      return job;
     }
   }
 
@@ -1541,12 +1577,20 @@ const OBD = (() => {
     constructor(code, msg) { super(msg || code); this.code = code; }
   }
 
-  // Arranque do adaptador e leitura da informação do carro
-  async function initElm(elm, onStep = () => {}) {
-    const info = { supported: new Set() };
-    const at = async (c, t = 1500) => { try { return await elm.cmd(c, t); } catch (e) { if (e.code !== 'TIMEOUT') throw e; return ''; } };
+  // Erros que querem dizer "o adaptador responde, mas o carro não" (ignição desligada, por exemplo)
+  const CAR_ERRORS = new Set(['NO_CAR', 'NO DATA', 'UNABLE TO CONNECT', 'BUS INIT ERROR', 'CAN ERROR', 'BUS ERROR', 'BUS BUSY',
+    'DATA ERROR', 'RX ERROR', 'FB ERROR', 'STOPPED', 'TIMEOUT']);
+  const isCarError = e => !!(e && CAR_ERRORS.has(e.code));
+  const elmAt = elm => async (c, t = 1500) => { try { return await elm.cmd(c, t); } catch (e) { if (e.code !== 'TIMEOUT') throw e; return ''; } };
 
+  // Arranque do adaptador (não precisa do carro)
+  async function initAdapter(elm, onStep = () => {}) {
+    const info = { supported: new Set(), carReady: false, protocol: null, isCan: false };
+    const at = elmAt(elm);
     onStep('A reiniciar o adaptador');
+    // Limpa restos de uma ligação anterior antes do ATZ
+    try { await elm.sync(400); }
+    catch (e) { if (e.code === 'DEAD') throw new ElmError('NO_ELM', 'O adaptador não responde aos comandos ELM327.'); throw e; }
     const z = await at('ATZ', 4000);
     await at('ATE0');
     const e0 = await at('ATE0');
@@ -1555,8 +1599,14 @@ const OBD = (() => {
     const ati = splitResponse(await at('ATI'), 'ATI').lines.join(' ');
     info.version = ati || (splitResponse(z, 'ATZ').lines.find(l => /ELM/.test(l)) || 'Desconhecido');
     info.volt = parseVolt(await at('ATRV'));
+    return info;
+  }
 
+  // Ligação ao carro: protocolo, PIDs suportados, combustível, VIN
+  async function initCar(elm, info, onStep = () => {}) {
+    const at = elmAt(elm);
     onStep('A falar com o carro');
+    info.supported = new Set();
     let r0 = splitResponse(await at('0100', 15000), '0100');
     if (!r0.lines.length && !r0.error) r0 = splitResponse(await at('0100', 15000), '0100');
     const sup0 = parseSupported(r0.lines, 0);
@@ -1596,7 +1646,13 @@ const OBD = (() => {
 
     onStep('A ler o VIN');
     info.vin = parseVin(splitResponse(await at('0902', 5000), '0902').lines);
+    info.carReady = true;
     return info;
+  }
+
+  async function initElm(elm, onStep = () => {}) {
+    const info = await initAdapter(elm, onStep);
+    return initCar(elm, info, onStep);
   }
 
   async function readDtcs(elm, info) {
@@ -1625,9 +1681,23 @@ const OBD = (() => {
   /* ---------- Leitura contínua ---------- */
 
   class Poller {
-    constructor(elm, info, onValue, onFail) {
-      this.elm = elm; this.info = info; this.onValue = onValue; this.onFail = onFail;
-      this.items = []; this.running = false; this.rr = 0; this.timeouts = 0; this.stamps = [];
+    constructor(elm, info, onValue, onFail, onCar) {
+      this.elm = elm; this.info = info; this.onValue = onValue; this.onFail = onFail; this.onCar = onCar || (() => {});
+      this.items = []; this.running = false; this.rr = 0; this.stamps = [];
+      this.probe = false; this.carFails = 0; this.lastCarOk = now(); this.nextProbe = 0;
+    }
+    // Modo "à espera do carro": só lê a bateria e pergunta ao carro de 3 em 3 s se já responde
+    setProbe(on) {
+      this.probe = !!on; this.carFails = 0; this.nextProbe = 0; this.lastCarOk = now();
+      if (!on) for (const it of this.items) { it.miss = 0; it.last = -1e9; }
+    }
+    _carOk() { this.carFails = 0; this.lastCarOk = now(); }
+    _carMiss() {
+      this.carFails++;
+      if (!this.probe && this.carFails >= 6 && now() - this.lastCarOk > 4000) {
+        this.probe = true; this.nextProbe = now() + 1500;
+        setTimeout(() => this.onCar(false), 0);
+      }
     }
     // items: [{key, kind:'pid'|'at', pid?, rate}]
     setItems(list) {
@@ -1662,10 +1732,32 @@ const OBD = (() => {
       this.active = true;
       try { await this._run(); } finally { this.active = false; }
     }
+    async _probeStep() {
+      const t = now();
+      const at = this.items.find(i => i.kind === 'at');
+      if (at && t - at.last >= 5000) return at;
+      if (t >= this.nextProbe) {
+        this.nextProbe = Infinity;
+        const r = splitResponse(await this.elm.cmd('0100', 12000, true), '0100');
+        if (!this.running) return null;
+        if (parseSupported(r.lines, 0).size) { this.setProbe(false); setTimeout(() => this.onCar(true), 0); }
+        else this.nextProbe = now() + 3000;
+        return null;
+      }
+      await sleep(150);
+      return null;
+    }
     async _run() {
       while (this.running) {
-        const it = this._next();
-        if (!it) { await sleep(100); continue; }
+        let it;
+        try {
+          it = this.probe ? await this._probeStep() : this._next();
+        } catch (e) {
+          if (!this.running) break;
+          if (e.code === 'TIMEOUT') { this.nextProbe = now() + 3000; continue; }
+          this.running = false; this.onFail(e); break;
+        }
+        if (!it) { if (!this.probe) await sleep(100); continue; }
         it.last = now();
         try {
           if (it.kind === 'at') {
@@ -1677,18 +1769,18 @@ const OBD = (() => {
             const b = parsePid(r.lines, 1, it.pid);
             const d = PIDS[it.pid];
             if (b && d && b.length >= d.len) {
-              it.miss = 0; this._stamp();
+              it.miss = 0; this._stamp(); this._carOk();
               this.onValue(it.pid, d.f(b));
             } else {
               it.miss++;
-              if (it.miss === 3) this.onValue(it.pid, undefined);   // marca "sem resposta"
+              if (r.error !== '?') this._carMiss();
+              if (it.miss === 3 && !this.probe) this.onValue(it.pid, undefined);   // marca "sem resposta"
             }
           }
-          this.timeouts = 0;
         } catch (e) {
           if (!this.running) break;                       // parado de propósito
-          if (e.code === 'TIMEOUT' && ++this.timeouts < 6) continue;
-          this.running = false;
+          if (e.code === 'TIMEOUT') { if (it.kind !== 'at') this._carMiss(); continue; }
+          this.running = false;                           // adaptador morto (DEAD) ou Bluetooth em baixo
           this.onFail(e);
         }
       }
@@ -1925,7 +2017,9 @@ const OBD = (() => {
     }
     async _open() {
       const P = this.P, id = this.id;
-      await P.connect({ deviceId: id, timeout: 15000 });
+      // Larga uma ligação antiga que tenha ficado presa (o V011 não aparece enquanto estiver ligado)
+      try { await P.disconnect({ deviceId: id }); } catch (e) { /* não estava ligado */ }
+      await P.connect({ deviceId: id, timeout: this.opts.connectTimeout || 12000 });
       const r = await P.getServices({ deviceId: id });
       const pick = pickBleChars(r && r.services);
       if (!pick) { const e = new Error('Serviço OBD não encontrado'); e.code = 'NO_SERVICE'; throw e; }
@@ -2013,6 +2107,10 @@ const OBD = (() => {
       this.stored = ['0171', '0420']; this.pend = ['0301'];
       this.latency = opts.latency ?? 25;
       this.searchDelay = opts.searchDelay ?? 600;
+      this.carOff = false;                      // ignição desligada: o adaptador responde, o carro não
+      this.offDelay = opts.offDelay ?? 3000;    // tempo que o ELM passa a procurar o carro
+      this.timer = null; this.busy = false;
+      this.last = '';
       this.chunk = opts.chunk ?? 20;
     }
     onData(cb) { this.cb = cb; }
@@ -2034,6 +2132,13 @@ const OBD = (() => {
       return demoCar(t, t).bat;
     }
     async write(text) {
+      // Como o ELM327 real: um carácter que chega a meio de uma resposta interrompe-a ("STOPPED")
+      // e é engolido
+      if (this.busy && text.length) {
+        clearTimeout(this.timer); this.busy = false;
+        this.cb && this.cb('STOPPED\r\r>');
+        text = text.slice(1);
+      }
       this.buf += text;
       let i;
       while ((i = this.buf.indexOf('\r')) >= 0) {
@@ -2042,7 +2147,9 @@ const OBD = (() => {
       }
     }
     _send(text, delay) {
-      setTimeout(async () => {
+      this.busy = true;
+      this.timer = setTimeout(async () => {
+        this.busy = false;
         for (let i = 0; i < text.length; i += this.chunk) {
           if (this.closed) return;
           this.cb && this.cb(text.slice(i, i + this.chunk));
@@ -2065,7 +2172,9 @@ const OBD = (() => {
       return out;
     }
     _handle(cmd) {
-      const c = compact(cmd);
+      let c = compact(cmd);
+      if (!c) c = this.last;                    // Enter sozinho repete o último comando
+      this.last = c;
       let lines, delay = this.latency + Math.random() * 15;
       const t = (now() - this.t0) / 1000;
       if (c.startsWith('AT')) {
@@ -2080,6 +2189,8 @@ const OBD = (() => {
         else if (a === 'DPN') lines = ['A6'];
         else if (a === 'DP') lines = ['AUTO, ISO 15765-4 (CAN 11/500)'];
         else lines = ['OK'];
+      } else if (/^[0-9A-F]+$/.test(c) && this.carOff) {
+        lines = ['SEARCHING...', 'UNABLE TO CONNECT']; delay = this.offDelay;
       } else if (/^[0-9A-F]+$/.test(c)) {
         lines = this._obd(c, t);
         if (c.startsWith('0100') && !this.searched) { this.searched = true; lines = ['SEARCHING...', ...lines]; delay = this.searchDelay; }
@@ -2139,7 +2250,7 @@ const OBD = (() => {
 
   return {
     sleep, hex2, compact, splitResponse, parsePid, parseSupported, parseSupportedHead, parseDtcs, parseVin, parseVolt,
-    decodeDtc, dtcInfo, dtcAdvice, SEV, readinessOf, FUEL_SYS, readFreezeFrame, parseMode06, readMode06, midName, misfiresOf,
+    decodeDtc, dtcInfo, dtcAdvice, SEV, readinessOf, initAdapter, initCar, isCarError, FUEL_SYS, readFreezeFrame, parseMode06, readMode06, midName, misfiresOf,
     PROTOCOLS, FUEL_TYPES, FUEL_NAMES, OBD_STD, FUELS, PIDS, RATES, SENSORS, SENSOR, fuelSource, fuelLph,
     Elm, ElmError, initElm, readDtcs, clearDtcs, Poller, PERF, PerfTest, BleTransport, bleServiceList, NativeBleTransport, pickBleChars, textToHex, hexToText,
     DemoTransport, DEMO_VIN, demoCar
@@ -2162,8 +2273,18 @@ const OBD = (() => {
 
   /* ---------- Versão (o GitHub lê daqui o número e as novidades de cada atualização) ---------- */
   // Regra: todas as alterações do mesmo dia = uma versão; cada novo dia com alterações = +0.1
-  const APP_VER='0.2';
+  const APP_VER='0.3';
   const CHANGELOG=[
+    {v:'0.3',d:'2026-10-24',t:'Ligação mais segura',items:[
+      'Correção: depois de desligar e voltar a ligar a ignição, a app deixava de reconhecer o adaptador até ser fechada. As respostas perdidas já não baralham os comandos seguintes',
+      'Com a ignição desligada, a ligação ao adaptador mantém-se em «À espera do carro» e as leituras voltam sozinhas quando ligas a ignição. A bateria continua a ser lida',
+      'Podes ligar ao adaptador antes de ligar a ignição',
+      'Ligar vai direto ao último V011, sem lista nem Localização. Para usar outro: Ajustes, Ligar a outro adaptador',
+      'Se a ligação cair, a app tenta voltar a ligar durante cerca de 2 minutos e nunca deixa uma ligação presa a meio',
+      'Segurança: a consola só aceita comandos de leitura; os que gravam no adaptador ou mexem na centralina ficam bloqueados',
+      'Segurança: não deixa apagar erros com o motor a trabalhar',
+      'Correções: tocar duas vezes em Ligar já não abre duas ligações; o diagnóstico para com uma mensagem clara se a ligação cair a meio; a app abre logo mesmo com rede fraca'
+    ]},
     {v:'0.2',d:'2026-10-23',t:'App Android com atualizações',items:[
       'Passa a ser uma app instalada, como a 7Chaves e a Receitas, com atualizações pelo GitHub',
       'Bluetooth do próprio Android: liga ao V011 sem passar pelo Chrome',
@@ -2342,6 +2463,11 @@ const OBD = (() => {
   };
   const errorText = e => ERR_TEXT[e && e.code] || ERR_TEXT[e && e.name] || ('Falhou a ligação: ' + ((e && e.message) || e));
   const needLive = () => { if (live() && st.elm) return true; toast('Liga primeiro ao adaptador (ou abre a demonstração).'); return false; };
+  const needCar = () => {
+    if (!needLive()) return false;
+    if (st.carAbsent) { toast('O carro não está a responder. Liga a ignição e espera uns segundos.', 4500); return false; }
+    return true;
+  };
 
   /* ---------- Ligação ---------- */
   async function connectBle() {
@@ -2371,8 +2497,31 @@ const OBD = (() => {
 
   // App Android: autorizações, Bluetooth ligado, Localização e lista de aparelhos do próprio Android
   const nativeMsg = e => String((e && (e.message || e.errorMessage)) || e || '');
-  let nativeSub = null;
-  async function connectNative() {
+  const nativeSubs = new Map();
+  async function watchNativeDisconnect(id) {
+    if (nativeSubs.has(id)) return;
+    try { nativeSubs.set(id, await BLE.addListener('disconnected|' + id, () => { if (st.nativeId === id) onGattLost(); })); }
+    catch (e) { /* sem aviso de perda: as leituras param e a recuperação trata */ }
+  }
+  const nativeTransport = () => new OBD.NativeBleTransport(BLE, { writeMode: store.opts.escrita, connectTimeout: 10000 });
+  async function openNative(dev) {
+    st.nativeId = dev.deviceId;
+    await watchNativeDisconnect(dev.deviceId);
+    return startSession(async () => {
+      const t = nativeTransport();
+      st.transport = t;
+      await t.open(dev.deviceId);
+      logLine('info', 'Serviço BLE ' + t.service + (t.withResp ? ' · escrita com resposta' : ' · escrita sem resposta'));
+      return t;
+    }, 'on', dev.name || 'Adaptador', { quietFail: !!dev.direto });
+  }
+  let connecting = false;
+  async function connectNative(escolher) {
+    if (connecting) return;                                   // toque duplo em Ligar
+    connecting = true;
+    try { await connectNativeInner(escolher); } finally { connecting = false; renderStatus(); }
+  }
+  async function connectNativeInner(escolher) {
     if (!BLE) { toast('Esta versão da app não tem Bluetooth. Atualiza a app.'); return; }
     try { await BLE.initialize({ androidNeverForLocation: false }); }
     catch (e) {
@@ -2386,6 +2535,14 @@ const OBD = (() => {
       const en = await BLE.isEnabled();
       if (!en || !en.value) await BLE.requestEnable();
     } catch (e) { toast('Liga o Bluetooth do telemóvel e toca outra vez em Ligar.', 5000); return; }
+    // O último V011 usado: liga direto, sem procurar. Funciona mesmo quando ele não aparece na lista.
+    const last = store.opts.lastDev;
+    if (!escolher && last && last.id) {
+      logLine('info', `A ligar ao adaptador guardado: ${last.name || last.id}`);
+      if (await openNative({ deviceId: last.id, name: last.name, direto: true })) return;
+      logLine('info', 'O adaptador guardado não respondeu: a procurar aparelhos');
+      toast('Não encontrei o adaptador guardado. Escolhe-o na lista.', 4000);
+    }
     try {
       const loc = await BLE.isLocationEnabled();
       if (loc && loc.value === false) { openPermDialog('loc'); return; }
@@ -2397,18 +2554,8 @@ const OBD = (() => {
       toast(/cancel/i.test(m) ? 'Nenhum aparelho escolhido.' : /no device/i.test(m) ? 'Não encontrei aparelhos. Confirma que o V011 está na ficha e a ignição ligada.' : 'Falhou a procura: ' + m.slice(0, 80), 5000);
       return;
     }
-    if (nativeSub && st.nativeId !== dev.deviceId) { try { nativeSub.remove(); } catch (e) { /* já removido */ } nativeSub = null; }
-    st.nativeId = dev.deviceId;
-    if (!nativeSub) {
-      try { nativeSub = await BLE.addListener('disconnected|' + dev.deviceId, () => onGattLost()); } catch (e) { nativeSub = null; }
-    }
     logLine('info', `Aparelho escolhido: ${dev.name || 'sem nome'} (${dev.deviceId})`);
-    await startSession(async () => {
-      const t = new OBD.NativeBleTransport(BLE, { writeMode: store.opts.escrita });
-      await t.open(dev.deviceId);
-      logLine('info', 'Serviço BLE ' + t.service + (t.withResp ? ' · escrita com resposta' : ' · escrita sem resposta'));
-      return t;
-    }, 'on', dev.name || 'Adaptador');
+    await openNative(dev);
   }
   function openPermDialog(kind) {
     const loc = kind === 'loc';
@@ -2432,7 +2579,7 @@ const OBD = (() => {
 
   const startDemo = () => startSession(async () => new OBD.DemoTransport({ latency: 20, searchDelay: 300 }), 'demo', 'Simulador');
 
-  async function startSession(makeTransport, mode, name) {
+  async function startSession(makeTransport, mode, name, opt = {}) {
     await stopSession(true);
     st.userClosed = false; st.lastError = '';
     setMode('connecting', 'A abrir a ligação');
@@ -2440,25 +2587,34 @@ const OBD = (() => {
       const t = await makeTransport();
       st.transport = t;
       await openSession(t, mode, name);
+      return true;
     } catch (e) {
       logLine('err', errorText(e));
       await stopSession(true);
-      st.lastError = errorText(e);
       setMode('off');
-      toast(st.lastError, 6000);
+      if (!opt.quietFail) { st.lastError = errorText(e); toast(st.lastError, 6000); renderStatus(); }
+      return false;
     }
   }
 
   async function openSession(t, mode, name) {
-    st.elm = new OBD.Elm(t, { gapMs: Math.max(0, +store.opts.pausaMs || 0), log: logLine });
-    const info = await OBD.initElm(st.elm, step => { logLine('info', step); setMode('connecting', step); });
-    st.info = info; st.adapterName = name;
-    logLine('info', `Ligado: ${info.version} · ${info.protocol} · ${info.supported.size} PIDs`);
+    const elm = new OBD.Elm(t, { gapMs: Math.max(0, +store.opts.pausaMs || 0), log: logLine });
+    st.elm = elm;
+    const step = s => { logLine('info', s); setMode('connecting', s); };
+    const info = await OBD.initAdapter(elm, step);
+    // O adaptador responde. Se o carro não responder (ignição desligada), a ligação fica à espera dele.
+    let carAbsent = false;
+    try { await OBD.initCar(elm, info, step); }
+    catch (e) { if (!OBD.isCarError(e)) throw e; carAbsent = true; logLine('info', 'O carro não respondeu: fica à espera da ignição'); }
+    st.info = info; st.adapterName = name; st.carAbsent = carAbsent;
+    logLine('info', carAbsent ? `Adaptador ligado: ${info.version}` : `Ligado: ${info.version} · ${info.protocol} · ${info.supported.size} PIDs`);
     st.live = {}; st.na = new Set(); st.calc = { lph: null, cons: null };
     st.diag = null; st.bat = {}; st.spdHist = [];
     if (mode === 'demo') { st.demoTrip = { L: 0, km: 0, s: 0 }; st.demoRecs = []; st.demoTests = []; }
-    if (mode === 'on') matchProfileByVin();
-    st.poller = new OBD.Poller(st.elm, info, onValue, onPollFail);
+    if (mode === 'on' && NATIVE && st.nativeId) { store.opts.lastDev = { id: st.nativeId, name }; save(); }
+    if (mode === 'on' && !carAbsent) matchProfileByVin();
+    st.poller = new OBD.Poller(elm, info, onValue, onPollFail, onCarState);
+    if (carAbsent) st.poller.setProbe(true);
     st.mode = mode;
     refreshPollList();
     st.poller.start();
@@ -2466,10 +2622,41 @@ const OBD = (() => {
     setMode(mode);
     wakeLock(true);
     renderAllViews();
+    if (carAbsent) toast('Adaptador ligado. Liga a ignição: o carro aparece sozinho.', 5000);
+  }
+
+  // O carro deixou de responder (ignição desligada) ou voltou
+  async function onCarState(present) {
+    if (!live() || !st.poller) return;
+    if (!present) {
+      st.carAbsent = true;
+      logLine('info', 'O carro deixou de responder (ignição desligada?). À espera dele.');
+      toast('O carro deixou de responder. Quando ligares a ignição, volta sozinho.', 5000);
+      renderStatus(); renderAllViews();
+      return;
+    }
+    const p = st.poller, elm = st.elm, info = st.info;
+    if (!info.carReady) {
+      try {
+        await withPaused(() => OBD.initCar(elm, info, s => logLine('info', s)));
+      } catch (e) {
+        if (st.poller === p) p.setProbe(true);
+        if (!OBD.isCarError(e)) onPollFail(e);
+        return;
+      }
+      if (st.poller !== p) return;
+      if (st.mode === 'on') matchProfileByVin();
+      refreshPollList();
+    }
+    st.carAbsent = false;
+    logLine('info', `O carro voltou a responder · ${info.protocol}`);
+    toast('O carro voltou a responder.');
+    renderStatus(); renderAllViews();
   }
 
   async function stopSession(quiet) {
     st.userClosed = true;
+    st.carAbsent = false;
     closeRec();
     if (st.perf) perfStop(true);
     if (st.poller) st.poller.stop();
@@ -2492,42 +2679,59 @@ const OBD = (() => {
   async function onPollFail(e) {
     if (st.userClosed || st.mode === 'lost') return;
     logLine('err', 'Leituras paradas: ' + errorText(e));
-    if (st.mode === 'on' && NATIVE) {                       // espera pelo aviso de ligação perdida do Android
-      await OBD.sleep(900);
-      if (st.userClosed || st.mode !== 'on') return;
-    }
-    if (st.mode === 'on' && !NATIVE && st.device && !st.device.gatt.connected) return;   // o evento de perda trata disto
+    if (st.mode === 'on') return recoverConnection('O adaptador deixou de responder');
     await stopSession(true);
     st.info = null; st.lastError = errorText(e);
     setMode('off'); renderAllViews();
     toast(st.lastError, 6000);
   }
 
-  async function onGattLost() {
-    if (st.userClosed || st.mode !== 'on') return;
-    logLine('err', 'Ligação Bluetooth perdida');
-    if (st.poller) st.poller.stop();
-    if (st.perf) perfStop(true);
-    setMode('lost');
-    for (let i = 1; i <= 3; i++) {
-      await OBD.sleep(1500 * i);
-      if (st.userClosed || st.mode !== 'lost') return;
-      try {
-        const t = NATIVE ? new OBD.NativeBleTransport(BLE, { writeMode: store.opts.escrita }) : new OBD.BleTransport({ writeMode: store.opts.escrita });
-        await t.open(NATIVE ? st.nativeId : st.device);
-        st.transport = t;
-        const diag = st.diag;
-        await openSession(t, 'on', st.adapterName);
-        st.diag = diag;
-        renderDiag();
-        toast('Ligação recuperada.');
-        return;
-      } catch (e) { logLine('err', `Tentativa ${i} falhou: ${errorText(e)}`); }
-    }
-    await stopSession(true);
-    st.info = null; st.lastError = 'Perdi a ligação ao adaptador.';
-    setMode('off'); renderAllViews();
-    toast(st.lastError, 5000);
+  const onGattLost = () => recoverConnection('Ligação Bluetooth perdida');
+
+  // Volta a ligar sozinha durante cerca de 2 minutos (o adaptador pode ter ficado sem corrente com a ignição)
+  const RETRY_S = [2, 3, 4, 5, 5, 8, 8, 10, 10, 10, 10, 10, 10, 10];
+  async function recoverConnection(reason) {
+    if (st.userClosed || st.mode !== 'on' || st.recovering) return;
+    st.recovering = true;
+    try {
+      logLine('err', reason);
+      closeRec();
+      if (st.perf) perfStop(true);
+      const old = st.transport, p = st.poller;
+      st.poller = null; st.elm = null; st.transport = null;
+      if (p) p.stop();
+      if (old) { try { await old.close(); } catch (e) { /* já fechado */ } }   // larga a ligação presa
+      setMode('lost', 'a tentar voltar a ligar…');
+      const diag = st.diag;
+      for (let i = 0; i < RETRY_S.length; i++) {
+        await OBD.sleep(RETRY_S[i] * 1000);
+        if (st.userClosed || st.mode !== 'lost') return;
+        setMode('lost', `a tentar voltar a ligar (tentativa ${i + 1} de ${RETRY_S.length})…`);
+        let t = null;
+        try {
+          t = NATIVE ? nativeTransport() : new OBD.BleTransport({ writeMode: store.opts.escrita });
+          await t.open(NATIVE ? st.nativeId : st.device);
+          if (st.userClosed || st.mode !== 'lost') { await t.close(); return; }
+          st.transport = t;
+          await openSession(t, 'on', st.adapterName);
+          st.diag = diag;
+          renderDiag();
+          toast('Ligação recuperada.');
+          return;
+        } catch (e) {
+          logLine('err', `Tentativa ${i + 1} falhou: ${errorText(e)}`);
+          st.transport = null; st.elm = null;
+          if (st.poller) { st.poller.stop(); st.poller = null; }
+          if (t) { try { await t.close(); } catch (x) { /* já fechado */ } }   // nunca deixar uma ligação a meio
+          if (st.userClosed) return;
+          setMode('lost', `a tentar voltar a ligar (${i + 1} de ${RETRY_S.length})…`);   // o arranque falhado mudou o estado
+        }
+      }
+      await stopSession(true);
+      st.info = null; st.lastError = 'Perdi a ligação ao adaptador. Toca em Ligar quando ele estiver na ficha.';
+      setMode('off'); renderAllViews();
+      toast(st.lastError, 6000);
+    } finally { st.recovering = false; }
   }
 
   // Pausa as leituras do painel enquanto corre uma tarefa que precisa do adaptador só para si
@@ -2604,24 +2808,30 @@ const OBD = (() => {
     renderStatus();
   }
   function renderStatus() {
-    $('#pill').dataset.state = st.mode;
-    $('#pillText').textContent = { off: 'Desligado', connecting: 'A ligar', on: 'Ligado', demo: 'Demonstração', lost: 'Ligação perdida' }[st.mode];
+    const wait = live() && st.carAbsent;
+    $('#pill').dataset.state = wait ? 'wait' : st.mode;
+    $('#pillText').textContent = wait ? 'À espera do carro'
+      : { off: 'Desligado', connecting: 'A ligar', on: 'Ligado', demo: 'Demonstração', lost: 'Ligação perdida' }[st.mode];
     let f = [];
     if (st.mode === 'connecting') f = [st.step + '…'];
-    else if (live()) {
+    else if (wait) {
+      f.push(st.adapterName, 'liga a ignição');
+      const b = fresh('bat') ?? (st.info && st.info.volt);
+      if (b) f.push(fmtN(b, 1) + ' V');
+    } else if (live()) {
       f.push(st.mode === 'demo' ? 'valores simulados' : st.adapterName);
       if (st.info && st.info.protocol) f.push(st.info.protocol);
       if (st.poller) f.push(fmtN(st.poller.rate, 1) + ' leituras/s');
       const b = fresh('bat') ?? (st.info && st.info.volt);
       if (b) f.push(fmtN(b, 1) + ' V');
-    } else if (st.mode === 'lost') f = ['a tentar voltar a ligar…'];
+    } else if (st.mode === 'lost') f = [st.step || 'a tentar voltar a ligar…'];
     else f = [st.lastError || (btState() === 'ok' ? 'Bluetooth pronto' : 'Bluetooth indisponível nesta página')];
     const facts = $('#facts');
     facts.textContent = f.filter(Boolean).join(' · ');
     facts.classList.toggle('err', st.mode === 'off' && !!st.lastError);
     const bc = $('#btnConnect'), bd = $('#btnDemo');
     bc.textContent = st.mode === 'on' || st.mode === 'lost' ? 'Desligar' : st.mode === 'connecting' ? 'A ligar…' : 'Ligar';
-    bc.disabled = st.mode === 'connecting';
+    bc.disabled = st.mode === 'connecting' || connecting;
     bc.classList.toggle('primary', !(st.mode === 'on' || st.mode === 'lost'));
     bd.textContent = st.mode === 'demo' ? 'Parar demo' : 'Demo';
     bd.disabled = st.mode === 'connecting' || st.mode === 'on' || st.mode === 'lost';
@@ -2806,7 +3016,7 @@ ${editBar()}`;
     return null;
   }
   function sensorAvailable(def) {
-    if (!st.info) return null;
+    if (!st.info || !st.info.carReady) return null;
     const sup = st.info.supported;
     if (def.pid) return sup.has(parseInt(def.pid, 16));
     if (def.at) return true;
@@ -2817,11 +3027,13 @@ ${editBar()}`;
   const SWEEP_MS = 1500;
   function updateTile(T, k, t) {
     const def = T.def;
-    const v = live() ? sensorValue(def) : null;
+    const waiting = st.carAbsent && !def.at;                  // à espera do carro: ponteiros a zero
+    const v = live() && !waiting ? sensorValue(def) : null;
     let state = 'idle';
     if (live()) {
       const avail = sensorAvailable(def);
-      if (avail === false || (def.pid && st.na.has(def.pid))) state = 'na';
+      if (st.carAbsent && !def.at) state = 'stale';
+      else if (avail === false || (def.pid && st.na.has(def.pid))) state = 'na';
       else state = v == null ? 'stale' : 'ok';
     }
     let target = v;
@@ -2833,17 +3045,17 @@ ${editBar()}`;
     if (target != null) {
       if (sw >= 0 || T.shown == null) T.shown = target;
       else T.shown += (target - T.shown) * k;
-    } else if (state === 'idle') T.shown = null;
+    } else if (state === 'idle' || waiting) T.shown = null;
     if (v != null && sw < 0 && (T.peak == null || v > T.peak)) T.peak = v;
     st.peaks[def.id] = T.peak; st.shown[def.id] = sw >= 0 ? null : T.shown;
 
     const alarm = v != null && ((T.hi != null && v >= T.hi) || (T.lo != null && v <= T.lo));
-    const cls = state + (alarm ? ' alarm' : '');
+    const cls = state + (alarm ? ' alarm' : '') + (st.carAbsent ? ' w' : '');
     if (cls !== T.state) {
       T.el.classList.remove('idle', 'na', 'stale', 'ok', 'alarm');
       T.el.classList.add(state);
       if (alarm) T.el.classList.add('alarm');
-      T.note.textContent = state === 'na' ? 'o carro não envia' : state === 'stale' ? 'à espera' : '';
+      T.note.textContent = state === 'na' ? 'o carro não envia' : state === 'stale' ? (st.carAbsent ? 'à espera do carro' : 'à espera') : '';
       T.state = cls;
     }
 
@@ -3336,40 +3548,49 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
   }
 
   async function runScan() {
-    if (!needLive() || st.scanning) return;
+    if (st.scanning || !needCar()) return;
+    const elm = st.elm, info = st.info;
     st.scanning = true; renderDiag();
     const step = s => { const el = $('#scanStep'); el.hidden = false; el.textContent = s; };
+    const still = () => { if (st.elm !== elm) { const e = new Error('A ligação terminou a meio do diagnóstico.'); e.code = 'GONE'; throw e; } };
     try {
       await withPaused(async () => {
         step('A ler os códigos de avaria…');
-        const d = await OBD.readDtcs(st.elm, st.info);
-        st.diag = { quando: Date.now(), codes: d.codes, status: d.status || st.info.status, demo: st.mode === 'demo' };
+        const d = await OBD.readDtcs(elm, info);
+        still();
+        const diag = { quando: Date.now(), codes: d.codes, status: d.status || info.status, demo: st.mode === 'demo' };
+        st.diag = diag;
         renderDiag();
         step('A ler os dados congelados…');
-        st.diag.ff = await OBD.readFreezeFrame(st.elm, st.info.supported);
-        renderDiag();
-        if (st.info.isCan) { step('A ler os testes da centralina…'); st.diag.m06 = await OBD.readMode06(st.elm, st.info); }
-        else st.diag.m06 = { suportado: false, mids: [] };
-        try { st.diag.volt = OBD.parseVolt(await st.elm.cmd('ATRV', 1500, true)); } catch (e) { /* sem tensão */ }
+        diag.ff = await OBD.readFreezeFrame(elm, info.supported);
+        still(); renderDiag();
+        if (info.isCan) { step('A ler os testes da centralina…'); diag.m06 = await OBD.readMode06(elm, info); }
+        else diag.m06 = { suportado: false, mids: [] };
+        still();
+        try { diag.volt = OBD.parseVolt(await elm.cmd('ATRV', 1500, true)); } catch (e) { /* sem tensão */ }
       });
       logLine('info', `Diagnóstico: ${st.diag.codes.map(c => c.code).join(', ') || 'sem códigos'}`);
       $('#scanStep').hidden = true;
-    } catch (e) { step(errorText(e)); }
+    } catch (e) { step(e.code === 'GONE' ? e.message : errorText(e)); }
     st.scanning = false;
     renderDiag();
   }
   $('#btnScan').addEventListener('click', runScan);
+  const engineRunning = () => (fresh('0C') ?? 0) > 300 || (fresh('0D') ?? 0) > 0;
   $('#btnClearDtc').addEventListener('click', () => {
-    if (!needLive()) return;
+    if (!needCar()) return;
+    if (engineRunning()) { toast('Desliga o motor primeiro e deixa só a ignição ligada.', 5000); return; }
     $('#clearConfirm').hidden = false;
     $('#btnClearNo').focus();
   });
   $('#btnClearNo').addEventListener('click', () => { $('#clearConfirm').hidden = true; });
   $('#btnClearYes').addEventListener('click', async () => {
     $('#clearConfirm').hidden = true;
-    if (!st.elm) return;
+    const elm = st.elm;
+    if (!elm || st.carAbsent) return;
+    if (engineRunning()) { toast('O motor está a trabalhar. Desliga-o e deixa só a ignição ligada.', 5000); return; }
     try {
-      const ok = await withPaused(() => OBD.clearDtcs(st.elm));
+      const ok = await withPaused(() => OBD.clearDtcs(elm));
       toast(ok ? 'Erros apagados.' : 'A centralina não confirmou. Tenta com o motor parado e a ignição ligada.', 5000);
       logLine('info', ok ? 'Erros apagados (modo 04)' : 'Modo 04 sem confirmação');
     } catch (e) { toast(errorText(e)); }
@@ -3484,7 +3705,7 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
       '60-100': 'Pronto. Acelera a fundo.', '100-0': 'Pronto. Trava a fundo quando quiseres.' }
   };
   function perfStart() {
-    if (!needLive()) return;
+    if (!needCar()) return;
     if (!st.info.supported.has(0x0D)) { toast('Este carro não envia a velocidade.'); return; }
     st.perf = new OBD.PerfTest(st.perfTipo);
     st.perfMsg = '';
@@ -3608,10 +3829,11 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
   async function batMeasure(kind) {
     if (!needLive() || st.batBusy) return;
     st.batBusy = kind; st.batLive = null; renderBat();
-    const rv = async () => { try { return OBD.parseVolt(await st.elm.cmd('ATRV', 1000, true)); } catch (e) { if (e.code === 'TIMEOUT') return null; throw e; } };
+    const elm = st.elm, tr = st.transport;
+    const rv = async () => { try { return OBD.parseVolt(await elm.cmd('ATRV', 1000, true)); } catch (e) { if (e.code === 'TIMEOUT') return null; throw e; } };
     try {
       await withPaused(async () => {
-        if (st.mode === 'demo' && st.transport.demoBateria) st.transport.demoBateria(kind);
+        if (st.mode === 'demo' && tr && tr.demoBateria) tr.demoBateria(kind);
         if (kind === 'rest' || kind === 'run') {
           const vals = [], end = pnow() + (kind === 'run' ? 3000 : 2000);
           while (pnow() < end) { const v = await rv(); if (v != null) vals.push(v); await OBD.sleep(80); }
@@ -3696,10 +3918,11 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
       ['Estado', { off: 'Desligado', connecting: 'A ligar', on: 'Ligado', demo: 'Demonstração', lost: 'Ligação perdida' }[st.mode]],
       ['Aparelho', st.adapterName || '—'],
       ['Chip', i ? i.version : '—'],
-      ['Protocolo', i ? i.protocol : '—'],
+      ['Protocolo', i ? (i.protocol || 'à espera do carro') : '—'],
       ['Bateria', i ? fmtN(fresh('bat') ?? i.volt, 1) + ' V' : '—'],
       ['Resposta rápida', i ? (i.fastSuffix ? 'Sim' : 'Não (clone mais lento)') : '—'],
-      ['Leituras por segundo', st.poller ? fmtN(st.poller.rate, 1) : '—']
+      ['Leituras por segundo', st.poller ? fmtN(st.poller.rate, 1) : '—'],
+      ...(NATIVE ? [['Adaptador guardado', store.opts.lastDev ? (store.opts.lastDev.name || store.opts.lastDev.id) : 'nenhum']] : [])
     ];
     const html = rows.map(([a, b]) => `<dt>${a}</dt><dd${a === 'Chip' || a === 'Protocolo' ? ' class="mono"' : ''}>${esc(b)}</dd>`).join('');
     const kv = $('#kvAdapter');
@@ -3723,6 +3946,7 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
     } else va.hidden = true;
     const chips = $('#pidChips');
     if (!i) { chips.innerHTML = ''; $('#pidCount').textContent = 'Liga ao carro para ver a lista.'; return; }
+    if (!i.carReady) { chips.innerHTML = ''; $('#pidCount').textContent = 'Liga a ignição para ver a lista.'; return; }
     const pids = [...i.supported].filter(x => x % 0x20 !== 0).sort((a, b) => a - b);
     $('#pidCount').textContent = `${pids.length} valores no modo 01. Os que têm nome podem ir para o painel.`;
     chips.innerHTML = pids.map(x => `<span class="chip"><b>${OBD.hex2(x)}</b>${esc(pidName(x) || 'outro')}</span>`).join('');
@@ -3745,14 +3969,38 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
     save(); renderAll();
   });
 
+  // A consola só deixa passar leituras: comandos que gravam no adaptador ou mexem na centralina
+  // (reiniciar, programar, atuadores, apagar erros) podem estragar o adaptador ou ser perigosos com o carro a andar.
+  function consoleBlock(raw) {
+    const c = raw.replace(/\s+/g, '').toUpperCase();
+    if (c.length > 40) return 'Comando demasiado comprido.';
+    if (c.startsWith('AT')) {
+      if (/^AT(PP|SD|@3)/.test(c)) return 'Este comando grava na memória do adaptador e não está disponível na consola.';
+      if (/^AT(BRD|BRT)/.test(c)) return 'Mudar a velocidade do adaptador corta a ligação. Não está disponível na consola.';
+      if (/^AT(MA|MR|MT)/.test(c)) return 'O modo de escuta enche a ligação e não está disponível na consola.';
+      if (/^AT(SH|CRA|CF|CM|CAF0|R0)/.test(c)) return 'Este comando muda a forma como a app fala com o carro e não está disponível na consola.';
+      return '';
+    }
+    if (/^[0-9A-F]+$/.test(c)) {
+      if (c.length % 2) return 'Os comandos OBD têm um número par de algarismos (ex.: 010C).';
+      const m = c.slice(0, 2);
+      if (m === '04' || m === '14') return 'Para apagar erros usa o botão Apagar erros, em Avarias.';
+      if (['01', '02', '03', '05', '06', '07', '09', '0A', '19', '21', '22', '3E'].includes(m)) return '';
+      return 'Este comando pode mexer na centralina (reiniciar, programar ou acionar peças) e não está disponível na consola.';
+    }
+    return '';
+  }
   $('#cmdForm').addEventListener('submit', async e => {
     e.preventDefault();
     const inp = $('#cmdInput');
     const c = inp.value.trim().toUpperCase();
     if (!c) return;
-    if (!st.elm) { toast('Liga primeiro ao adaptador.'); return; }
+    const elm = st.elm;
+    if (!elm) { toast('Liga primeiro ao adaptador.'); return; }
+    const bloq = consoleBlock(c);
+    if (bloq) { logLine('err', `${c}: ${bloq}`); renderConsole(true); toast(bloq, 5000); return; }
     inp.value = '';
-    try { await st.elm.cmd(c, 6000); } catch (err) { /* já registado */ }
+    try { await withPaused(() => elm.cmd(c, 6000)); } catch (err) { /* já registado */ }
     renderConsole(true);
   });
   $('#btnClearLog').addEventListener('click', () => { st.log = []; renderConsole(true); });
@@ -3880,6 +4128,10 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
   }
   document.querySelector('.tabs').addEventListener('click', e => { const t = e.target.closest('.tab'); if (t) showView(t.dataset.view); });
 
+  $('#btnPickOther').addEventListener('click', async () => {
+    if (st.mode === 'on' || st.mode === 'lost') await stopSession(false);
+    connectNative(true);
+  });
   $('#btnConnect').addEventListener('click', async () => {
     if (st.mode === 'on' || st.mode === 'lost') {
       await stopSession(false);
