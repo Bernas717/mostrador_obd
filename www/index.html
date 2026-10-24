@@ -472,6 +472,13 @@ details.adv > .adv-body { display: grid; gap: 12px; padding-bottom: 14px; }
 .about b { display: block; font: 700 20px/1.1 var(--font-display); letter-spacing: var(--label-track); text-transform: uppercase; }
 .about span { font: 400 12.5px/1.4 var(--font-mono); color: var(--muted); }
 
+.subtabs { display: flex; width: 100%; position: sticky; top: 0; z-index: 5; box-shadow: 0 8px 16px -10px var(--bg); }
+.subtabs button { flex: 1; position: relative; padding-inline: 6px; }
+.sub-dot { position: absolute; top: 6px; right: 8px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--face-2); }
+.subtabs button[aria-pressed="true"] .sub-dot { background: var(--accent-ink); box-shadow: none; }
+.cl-list { display: grid; gap: 14px; }
+.cl.now .cl-h b::after { content: " · instalada"; font: 600 12px var(--font-ui); color: var(--ok); }
+
 /* ---------- Avarias ---------- */
 .mil { display: flex; gap: 14px; align-items: center; }
 .mil h2 { margin-bottom: 2px; }
@@ -899,8 +906,13 @@ body.carmode .toast { bottom: calc(36px + env(safe-area-inset-bottom, 0px)); }
     <!-- Definições -->
     <section class="view" id="view-definicoes" aria-label="Definições" hidden>
       <div class="band view-band settings">
+        <div class="seg subtabs" id="defTabs" role="tablist" aria-label="Definições">
+          <button type="button" role="tab" data-sub="geral" aria-pressed="true">Geral</button>
+          <button type="button" role="tab" data-sub="atualizacoes" aria-pressed="false">Atualizações<span class="sub-dot" id="updDot2" hidden></span></button>
+          <button type="button" role="tab" data-sub="novidades" aria-pressed="false">Novidades</button>
+        </div>
 
-        <h2 class="sec-h">Aplicação</h2>
+        <div class="settings" id="sub-atualizacoes" hidden>
         <div class="cols">
           <div class="card upd-card" id="updCard">
             <div class="about">
@@ -917,7 +929,7 @@ body.carmode .toast { bottom: calc(36px + env(safe-area-inset-bottom, 0px)); }
             <div class="actions">
               <button class="btn primary" id="btnUpdCheck" type="button">Verificar atualizações</button>
               <button class="btn primary" id="btnUpdInstall" type="button" hidden>Descarregar e instalar</button>
-              <button class="btn ghost" id="btnChangelog" type="button">O que mudou</button>
+              <button class="btn ghost" id="btnChangelog" type="button">Ver novidades</button>
             </div>
             <label class="check" id="updAutoRow"><input type="checkbox" id="oUpdAuto"> Verificar ao abrir a app</label>
             <p class="hint" id="updHint"></p>
@@ -928,6 +940,17 @@ body.carmode .toast { bottom: calc(36px + env(safe-area-inset-bottom, 0px)); }
             <div class="actions"><button class="btn small primary" type="button" data-act="install" hidden>Instalar app</button></div>
           </div>
         </div>
+        </div>
+
+        <div class="settings" id="sub-novidades" hidden>
+          <div class="card">
+            <div class="card-head"><h2>Novidades</h2><span class="hint" id="clVer"></span></div>
+            <p class="hint">Uma versão por dia: todas as correções do mesmo dia ficam na mesma versão.</p>
+            <div class="cl-list" id="clList"></div>
+          </div>
+        </div>
+
+        <div class="settings" id="sub-geral">
 
         <h2 class="sec-h">Aparência</h2>
         <div class="card">
@@ -1067,6 +1090,7 @@ body.carmode .toast { bottom: calc(36px + env(safe-area-inset-bottom, 0px)); }
               </ul>
             </div>
           </details>
+        </div>
         </div>
       </div>
     </section>
@@ -2483,7 +2507,7 @@ const OBD = (() => {
   const APP_VER='0.1';
   const CHANGELOG=[
     {v:'0.1',d:'2026-10-24',t:'Primeira versão',items:[
-      'App Android instalada, com atualizações pelo GitHub dentro da app (Definições, Aplicação)',
+      'App Android instalada, com atualizações pelo GitHub dentro da app',
       'Ligação ao adaptador V011 pelo Bluetooth do próprio Android, com os comandos ELM327. Ligar vai direto ao último adaptador usado',
       'Novo design com três estilos à escolha em Definições, Aparência: Cockpit digital, Clássico com ponteiros e HUD de corrida',
       'Separador Painéis: várias páginas de mostradores (Estrada, Motor e Consumo), que mudas a deslizar o dedo. Crias, renomeias e apagas páginas, e escolhes o estilo, o tamanho (normal, largo ou grande), a escala e os alertas de cada mostrador',
@@ -2496,7 +2520,8 @@ const OBD = (() => {
       'Com a ignição desligada, a ligação fica «À espera do carro» e as leituras voltam sozinhas quando a ligas. Se a ligação cair, a app volta a ligar durante cerca de 2 minutos',
       'Segurança: a consola só aceita comandos de leitura e não deixa apagar erros com o motor a trabalhar',
       'Versão e compilação sempre à vista no topo: toca nelas para ver o que mudou',
-      'Cores de fundo mais equilibradas: os três estilos usam o mesmo fundo grafite e só os mostradores mudam de cor'
+      'Cores de fundo mais equilibradas: os três estilos usam o mesmo fundo grafite e só os mostradores mudam de cor',
+      'Definições com três abas: Geral, Atualizações (procurar e instalar versões novas) e Novidades (o que mudou em cada versão). Tocar na versão no topo abre as Novidades'
     ]}
   ];
 
@@ -4603,6 +4628,19 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
     else if (a === 'paineis' && st.view === 'inicio') showView('paineis');
   }
 
+  // Definições: Geral, Atualizações e Novidades
+  let defSub = 'geral';
+  function showSub(sub) {
+    defSub = ['geral', 'atualizacoes', 'novidades'].includes(sub) ? sub : 'geral';
+    document.querySelectorAll('#defTabs [data-sub]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.sub === defSub)));
+    for (const k of ['geral', 'atualizacoes', 'novidades']) $('#sub-' + k).hidden = k !== defSub;
+    if (defSub === 'novidades') renderChangelog();
+    if (defSub === 'atualizacoes') renderUpdates();
+    $('#main').scrollTop = 0;
+  }
+  $('#defTabs').addEventListener('click', e => { const b = e.target.closest('[data-sub]'); if (b) showSub(b.dataset.sub); });
+  const openSettings = sub => { showView('definicoes'); showSub(sub); };
+
   /* ---------- Separadores e botões do topo ---------- */
   const VIEWS = ['inicio', 'paineis', 'diag', 'testes', 'viagens', 'definicoes'];
   function renderAllViews() { renderDiag(); renderPerf(); renderBat(); renderViagens(); renderLigacao(); renderStatus(); }
@@ -4688,7 +4726,7 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
     }).join('').replace(/(<li>.*?<\/li>)+/g, m => `<ul>${m}</ul>`);
   }
   async function checkUpdates(silent) {
-    if (!repoOK()) { UP.st = 'error'; UP.err = 'Só funciona na app instalada, gerada pelo GitHub.'; renderUpdates(); return; }
+    if (!repoOK()) { UP.st = 'error'; UP.err = 'Esta é uma versão de teste: só a app gerada pelo GitHub sabe onde procurar.'; renderUpdates(); return; }
     UP.st = 'checking'; UP.err = ''; renderUpdates();
     try {
       const r = await fetch(`https://api.github.com/repos/${UPDATE_REPO}/releases/latest`, { headers: { Accept: 'application/vnd.github+json' }, cache: 'no-store' });
@@ -4743,25 +4781,27 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
     if (vc.textContent !== vt) vc.textContent = vt;
     const status = $('#updStatus'), notes = $('#updNotes');
     let html = '', cls = '';
-    if (!NATIVE) {
-      html = 'As atualizações dentro da app funcionam na app instalada no telemóvel (APK).' +
-        (repoOK() ? ` <a href="https://github.com/${esc(UPDATE_REPO)}/releases/latest" target="_blank" rel="noopener">Descarregar a app</a>` : '');
-    } else if (stt === 'checking') html = '<b>A procurar atualizações…</b>';
+    if (stt === 'checking') html = '<b>A procurar atualizações…</b>';
     else if (stt === 'none') { html = `<b>Estás na versão mais recente.</b> v${esc(r.ver)}, compilação ${r.build}, publicada a ${fmtDataCurta(r.date)}.`; cls = 'ok'; }
     else if (stt === 'error') { html = `<b>Não foi possível verificar.</b> ${esc(UP.err)}`; cls = 'bad'; }
     else if (stt === 'avail') {
       html = `<b>Nova versão: v${esc(r.ver)}</b> · compilação ${r.build} · ${fmtDataCurta(r.date)}${r.size ? ' · ' + fmtN(r.size / 1048576, 1) + ' MB' : ''}`;
       cls = 'new';
+    } else if (!NATIVE) {
+      html = 'Estás a usar a app no browser. A instalação automática só funciona na app instalada no telemóvel (APK).' +
+        (repoOK() ? ` <a href="https://github.com/${esc(UPDATE_REPO)}/releases/latest" target="_blank" rel="noopener">Descarregar a app</a>` : '');
     } else html = store.opts.updLast ? `Última verificação: ${fmtDataCurta(store.opts.updLast)} às ${fmtHora(Date.parse(store.opts.updLast))}.` : 'Ainda não verificaste.';
     status.innerHTML = html;
     status.className = 'upd-status ' + cls;
-    const showNotes = NATIVE && stt === 'avail' && !!r.notes;
+    const showNotes = stt === 'avail' && !!r.notes;
     notes.hidden = !showNotes;
     if (showNotes) notes.innerHTML = mdLite(r.notes);
     const nat = NATIVE;
-    $('#btnUpdCheck').hidden = !nat || stt === 'avail';
+    $('#btnUpdCheck').hidden = stt === 'avail';
     $('#btnUpdCheck').disabled = stt === 'checking';
-    $('#btnUpdInstall').hidden = !nat || stt !== 'avail' || !!UP.dl;
+    $('#btnUpdCheck').textContent = stt === 'checking' ? 'A procurar…' : 'Procurar atualizações';
+    $('#btnUpdInstall').hidden = stt !== 'avail' || !!UP.dl;
+    $('#btnUpdInstall').textContent = nat ? 'Descarregar e instalar' : 'Descarregar o APK';
     $('#updBar').hidden = !UP.dl;
     if (UP.dl) renderUpdProgress();
     $('#oUpdAuto').checked = store.opts.updAuto !== false;
@@ -4770,9 +4810,17 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
       : `As atualizações vêm do GitHub${repoOK() ? ' (' + UPDATE_REPO + ')' : ''}. O Android pede sempre confirmação para instalar.`) : '';
     const avail = stt === 'avail';
     $('#updDot').hidden = !avail;
+    $('#updDot2').hidden = !avail;
     const bn = $('#updBanner');
-    bn.hidden = !(avail && !UP.hideBanner && st.view !== 'definicoes');
+    bn.hidden = !(avail && !UP.hideBanner && !(st.view === 'definicoes' && defSub === 'atualizacoes'));
     if (avail) $('#updBannerText').textContent = `Nova versão ${r.ver} da app disponível.`;
+  }
+  const clHtml = () => CHANGELOG.map(c => `<section class="cl${c.v === APP_VER ? ' now' : ''}"><div class="cl-h"><b>v${esc(c.v)}</b><span>${fmtDataCurta(c.d)}</span></div>
+<p class="cl-t">${esc(c.t)}</p><ul>${c.items.map(i => `<li>${esc(i)}</li>`).join('')}</ul></section>`).join('');
+  function renderChangelog() {
+    $('#clVer').textContent = `instalada: v${APP_VER}${APP_BUILD ? ' · compilação ' + APP_BUILD : ''}`;
+    const html = clHtml();
+    if ($('#clList').innerHTML !== html) $('#clList').innerHTML = html;
   }
   function openChangelog() {
     openDlg(`<div class="dlg-head"><h2 id="dlgTitle">O que mudou</h2><button type="button" class="btn small ghost" data-act="close">Fechar</button></div>
@@ -4782,10 +4830,10 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
   }
   $('#btnUpdCheck').addEventListener('click', () => checkUpdates(false));
   $('#btnUpdInstall').addEventListener('click', installUpdate);
-  $('#btnChangelog').addEventListener('click', openChangelog);
-  $('#verChip').addEventListener('click', openChangelog);
+  $('#btnChangelog').addEventListener('click', () => showSub('novidades'));
+  $('#verChip').addEventListener('click', () => openSettings('novidades'));
   $('#oUpdAuto').addEventListener('change', e => { store.opts.updAuto = e.target.checked; save(); });
-  $('#btnUpdBanner').addEventListener('click', () => { UP.hideBanner = true; showView('definicoes'); });
+  $('#btnUpdBanner').addEventListener('click', () => { UP.hideBanner = true; openSettings('atualizacoes'); });
   $('#btnUpdBannerX').addEventListener('click', () => { UP.hideBanner = true; renderUpdates(); });
 
   /* ---------- Botão Voltar do Android ---------- */
