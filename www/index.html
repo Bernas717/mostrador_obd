@@ -2891,10 +2891,8 @@ const OBD = (() => {
   // Regra: todas as alterações do mesmo dia = uma versão; cada novo dia com alterações = +0.1
   const APP_VER='0.2';
   const CHANGELOG=[
-    {v:'0.2',d:'2026-10-26',t:'Android Auto (experimental)',items:[
-      'Ecrã do Mostrador OBD no Android Auto: estado da ligação, os quatro contadores do Início e o consumo, atualizados a cada 2 segundos',
-      'Os alertas (limites dos mostradores e avarias novas) aparecem também como aviso no ecrã do carro',
-      'Como a app não vem da Play Store, no Android Auto é preciso ligar as «Origens desconhecidas» nas definições de programador'
+    {v:'0.2',d:'2026-10-26',t:'Android Auto retirado',items:[
+      'O ecrã experimental do Android Auto foi retirado: não funcionou no carro. A app fica como na 0.1, com todas as outras funcionalidades'
     ]},
     {v:'0.1',d:'2026-10-24',t:'Primeira versão',items:[
       'App Android instalada, com atualizações pelo GitHub dentro da app',
@@ -4086,7 +4084,6 @@ ${opt.home ? '' : editBar()}`;
     renderStatus();
     checkAlarms();
     vigiaTick();
-    carroTick();
     if (st.grav) { if (st.view === 'viagens') renderGrav(); }
     if (st.carMode) { const cl = carLabel(); if ($('#carPage').textContent !== cl) $('#carPage').textContent = cl; applyNight(); }
     if (st.view === 'definicoes') { renderAdapterLive(); renderConsole(); }
@@ -4960,8 +4957,6 @@ ${m.tests.map(t => `<tr class="${t.ok ? '' : 'bad'}"><td>${esc(t.nome)}${t.escal
   }
   function alertUser(msg, voz, kind) {
     toast(msg, 6000);
-    const C = plug('Carro');
-    if (NATIVE && C && C.aviso) C.aviso({ texto: msg }).catch(() => {});
     if (store.opts.somAlerta !== false) beep(kind);
     if (store.opts.voz && voz) setTimeout(() => speak(voz), kind === 'avaria' ? 650 : 480);
   }
@@ -6507,23 +6502,6 @@ ${p.vin ? '' : `<button type="button" class="btn" data-a="novo">É outro carro</
   });
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && SY.ligado && Date.now() - SY.ultimo > 60000) syncSoon(1500); });
   setInterval(() => { if (SY.ligado && document.visibilityState !== 'hidden') syncNow(); }, 10 * 60000);
-
-  /* ---------- Android Auto: manda para o ecrã do carro o estado e os valores principais ---------- */
-  function carroTick() {
-    const C = plug('Carro');
-    if (!NATIVE || !C || !C.atualizar) return;
-    const estado = st.mode === 'connecting' ? 'A ligar ao V011…' : st.mode === 'lost' ? 'Ligação perdida: a voltar a ligar…'
-      : live() ? (st.carAbsent ? 'À espera do carro: liga a ignição' : st.mode === 'demo' ? 'Demonstração (valores simulados)' : 'Ligado ao carro')
-        : 'Desligado: toca em Ligar na app';
-    const linhas = [{ t: 'Estado', v: estado }];
-    for (const id of prof().inicio.slice(0, 4)) {
-      const d = S[id], v = live() && !st.carAbsent ? sensorValue(d) : null;
-      linhas.push({ t: d.nome, v: v == null ? '—' : `${fmtVal(d, v)} ${d.un}`.trim() });
-    }
-    const cons = st.calc.cons, lph = st.calc.lph;
-    linhas.push({ t: 'Consumo agora', v: live() && cons != null ? `${fmtN(cons, 1)} L/100 km` : live() && lph != null ? `${fmtN(lph, 1)} L/h (parado)` : '—' });
-    C.atualizar({ linhas }).catch(() => {});
-  }
 
   /* ---------- Separadores e botões do topo ---------- */
   const VIEWS = ['inicio', 'paineis', 'diag', 'testes', 'viagens', 'definicoes'];
